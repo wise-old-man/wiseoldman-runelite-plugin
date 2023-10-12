@@ -1,6 +1,5 @@
 package dev.dkvl.womutils.panel;
 
-import dev.dkvl.womutils.beans.PlayerBuild;
 import dev.dkvl.womutils.ui.CountryIcon;
 import dev.dkvl.womutils.util.Format;
 import dev.dkvl.womutils.util.Utils;
@@ -48,9 +47,7 @@ public class MiscInfoLabel extends JLabel
                 setText(countryText);
                 break;
             case BUILD:
-                PlayerBuild build = result.getBuild();
-                String buildText = build == null ? PlayerBuild.MAIN.toString() : build.toString();
-                setText(buildText);
+                setText(result.getBuild().toString());
                 setIcon(Utils.getIcon(result.getType()));
                 break;
             case TTM:
