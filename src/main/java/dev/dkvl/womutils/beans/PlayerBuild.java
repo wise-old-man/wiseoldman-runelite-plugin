@@ -15,9 +15,6 @@ public enum PlayerBuild
     @SerializedName("f2p")
     F2P("F2P"),
 
-    @SerializedName("f2p_lvl3")
-    F2P_LEVEL_3("F2P & Level 3"),
-
     @SerializedName("10hp")
     HP_PURE("10 HP Pure"),
 
