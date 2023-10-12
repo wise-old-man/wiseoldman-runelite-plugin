@@ -265,8 +265,6 @@ public class WomUtilsPlugin extends Plugin
 	private boolean recentlyLoggedIn;
 	private String playerName;
 	private long accountHash;
-	private boolean namechangesSubmitted = false;
-	private SyncButton syncButton;
 
 	private NavigationButton navButton;
 
@@ -491,9 +489,6 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (queue.isEmpty())
 		{
-			if (syncButton != null) syncButton.setEnabled();
-			namechangesSubmitted = true;
-
 			return;
 		}
 
@@ -503,8 +498,6 @@ public class WomUtilsPlugin extends Plugin
 		try
 		{
 			saveFile();
-			if (syncButton != null) syncButton.setEnabled();
-			namechangesSubmitted = true;
 		}
 		catch (IOException e)
 		{
@@ -738,14 +731,6 @@ public class WomUtilsPlugin extends Plugin
 				break;
 			case CLAN_SETTINGS_INFO_PAGE_WIDGET:
 				clientThread.invoke(() -> createSyncButton(CLAN_SETTINGS_INFO_PAGE_WIDGET_ID));
-				if (namechangesSubmitted)
-				{
-					syncButton.setEnabled();
-				} else
-				{
-					clientThread.invokeLater(this::sendUpdate);
-				}
-
 				break;
 		}
 	}
@@ -894,8 +879,6 @@ public class WomUtilsPlugin extends Plugin
 				lastXp = totalXp;
 				levelupThisSession = false;
 			}
-
-			namechangesSubmitted = false;
 		}
 	}
 
@@ -1191,9 +1174,8 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (config.syncClanButton() && config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode()))
 		{
-			syncButton = new SyncButton(client, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
+			new SyncButton(client, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
 		}
-
 	}
 
 	@Provides
