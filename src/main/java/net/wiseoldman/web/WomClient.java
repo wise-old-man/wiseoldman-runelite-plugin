@@ -20,7 +20,6 @@ import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
 import java.awt.Color;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -367,12 +366,25 @@ public class WomClient
 
 		final double time;
 
-		// TODO: Write something proper that doesn't use reflection
 		try
 		{
-			Field field = info.getClass().getDeclaredField(command.getField());
-			field.setAccessible(true);
-			time = (double) field.get(info);
+			String cmd = command.getCommand();
+			if (cmd.equals("!ehp"))
+			{
+				time = info.getEhp();
+			}
+			else if (cmd.equals("!ehb"))
+			{
+				time = info.getEhb();
+			}
+			else if (cmd.equals("!ttm"))
+			{
+				time = info.getTtm();
+			}
+			else
+			{
+				time = info.getTt200m();
+			}
 		}
 		catch (Throwable e)
 		{

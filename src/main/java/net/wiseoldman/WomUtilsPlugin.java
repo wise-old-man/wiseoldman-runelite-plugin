@@ -5,8 +5,10 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import net.wiseoldman.beans.Competition;
@@ -34,7 +36,6 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -205,6 +206,9 @@ public class WomUtilsPlugin extends Plugin
 	private Gson gson;
 
 	@Inject
+	private JsonParser jsonParser;
+
+	@Inject
 	private WomIconHandler iconHandler;
 
 	@Inject
@@ -316,6 +320,8 @@ public class WomUtilsPlugin extends Plugin
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			iconHandler.rebuildLists(groupMembers, config.showicons());
+			womClient.fetchOngoingPlayerCompetitions(playerName);
+			womClient.fetchUpcomingPlayerCompetitions(playerName);
 		}
 
 		for (WomCommand c : WomCommand.values())
@@ -323,8 +329,8 @@ public class WomUtilsPlugin extends Plugin
 			chatCommandManager.registerCommandAsync(c.getCommand(), this::commandHandler);
 		}
 
-		Type intListType = new TypeToken<List<Integer>>() {}.getType();
-		hiddenCompetitions = gson.fromJson(config.hiddenCompetitionIds(), intListType);
+		hiddenCompetitions = new ArrayList<>(Arrays.asList(gson.fromJson(config.hiddenCompetitionIds(), Integer[].class)));
+
 		showTimerOngoing = config.timerOngoing();
 		showTimerUpcoming = config.timerUpcoming();
 		upcomingInfoboxesMaxDays = config.upcomingMaxDays();
@@ -332,8 +338,7 @@ public class WomUtilsPlugin extends Plugin
 		placeHolderCompetitionInfobox = new PlaceHolderCompetitionInfobox(this);
 		infoBoxManager.addInfoBox(placeHolderCompetitionInfobox);
 
-		Type stringListType = new TypeToken<List<String>>() {}.getType();
-		ignoredRanks = gson.fromJson(config.ignoredRanks(), stringListType);
+		ignoredRanks = new ArrayList<>(Arrays.asList(gson.fromJson(config.ignoredRanks(), String[].class)));
 
 		alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
 
@@ -511,8 +516,12 @@ public class WomUtilsPlugin extends Plugin
 		if (file.exists())
 		{
 			String json = Files.asCharSource(file, Charsets.UTF_8).read();
-			Type typeOfHashMap = new TypeToken<Map<String, String>>() {}.getType();
-			nameChanges = gson.fromJson(json, typeOfHashMap);
+			JsonObject jsonObject = jsonParser.parse(json).getAsJsonObject();
+
+			for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet())
+			{
+				nameChanges.put(entry.getKey(), entry.getValue().getAsString());
+			}
 		}
 	}
 
