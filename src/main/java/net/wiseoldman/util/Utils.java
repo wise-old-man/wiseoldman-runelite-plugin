@@ -13,7 +13,7 @@ public class Utils
 	private static final Icon ULTIMATE_ICON = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "ultimate_ironman.png"));
 	private static final Icon HARDCORE_ICON = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "hardcore_ironman.png"));
 	private static final Icon FRESH_START_ICON = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "fresh_start.png"));
-	private static final Icon REGULAR_ICON = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "build.png"));
+	private static final Icon REGULAR_ICON = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "regular.png"));
 
     public static int getMinimumKc(HiscoreSkill boss)
     {
