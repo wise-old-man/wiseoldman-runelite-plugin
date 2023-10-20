@@ -322,6 +322,8 @@ public class WomUtilsPlugin extends Plugin
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			iconHandler.rebuildLists(groupMembers, config.showicons());
+			// Set this to true here so when the plugin is enabled after the player has logged in
+			// the player name is set correctly for fetching competitions in onGameTick.
 			recentlyLoggedIn = true;
 		}
 
