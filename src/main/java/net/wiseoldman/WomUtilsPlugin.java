@@ -322,8 +322,7 @@ public class WomUtilsPlugin extends Plugin
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
 			iconHandler.rebuildLists(groupMembers, config.showicons());
-			womClient.fetchOngoingPlayerCompetitions(playerName);
-			womClient.fetchUpcomingPlayerCompetitions(playerName);
+			recentlyLoggedIn = true;
 		}
 
 		for (WomCommand c : WomCommand.values())
