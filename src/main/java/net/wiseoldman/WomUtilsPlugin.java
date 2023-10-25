@@ -745,6 +745,7 @@ public class WomUtilsPlugin extends Plugin
 		{
 			case CLAN_SETTINGS_MEMBERS_PAGE_WIDGET:
 				clientThread.invoke(() -> createSyncButton(CLAN_SETTINGS_MEMBERS_PAGE_WIDGET_ID));
+				if (syncButton != null) syncButton.setEnabled();
 				clientThread.invokeLater(this::updateIgnoredRankColors);
 				break;
 			case CLAN_SETTINGS_INFO_PAGE_WIDGET:
