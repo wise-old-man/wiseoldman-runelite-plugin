@@ -11,6 +11,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import net.runelite.api.widgets.InterfaceID;
+import net.runelite.api.widgets.WidgetUtil;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionInfo;
 import net.wiseoldman.beans.NameChangeEntry;
@@ -76,8 +78,7 @@ import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetID;
-import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.client.Notifier;
 import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
@@ -140,25 +141,25 @@ public class WomUtilsPlugin extends Plugin
 
 	private static final ImmutableList<String> AFTER_OPTIONS = ImmutableList.of("Message", "Add ignore", "Remove friend", "Delete", KICK_OPTION);
 
-	// 164.38 is the Friend_Chat_TAB in resizable-modern
-	private static final int RESIZABLE_VIEWPORT_BOTTOM_LINE_FRIEND_CHAT_TAB_ID = WidgetInfo.PACK(WidgetID.RESIZABLE_VIEWPORT_BOTTOM_LINE_GROUP_ID, 38);
+	// 10747941 is the Friend_Chat_TAB in resizable-modern
+	private final int RESIZABLE_VIEWPORT_BOTTOM_LINE_FRIEND_CHAT_TAB_ID = 10747941;
 
-	private static final ImmutableList<WidgetMenuOption> WIDGET_IMPORT_MENU_OPTIONS =
+	private final ImmutableList<WidgetMenuOption> WIDGET_IMPORT_MENU_OPTIONS =
 		new ImmutableList.Builder<WidgetMenuOption>()
-		.add(new WidgetMenuOption(IMPORT_MEMBERS,
-			MENU_TARGET, WidgetInfo.FIXED_VIEWPORT_FRIENDS_CHAT_TAB))
-		.add(new WidgetMenuOption(IMPORT_MEMBERS,
-			MENU_TARGET, WidgetInfo.RESIZABLE_VIEWPORT_FRIENDS_CHAT_TAB))
-		.add(new WidgetMenuOption(IMPORT_MEMBERS,
-			MENU_TARGET, RESIZABLE_VIEWPORT_BOTTOM_LINE_FRIEND_CHAT_TAB_ID))
-		.build();
+			.add(new WidgetMenuOption(IMPORT_MEMBERS,
+				MENU_TARGET, ComponentID.FIXED_VIEWPORT_FRIENDS_CHAT_TAB))
+			.add(new WidgetMenuOption(IMPORT_MEMBERS,
+				MENU_TARGET, ComponentID.RESIZABLE_VIEWPORT_FRIENDS_CHAT_TAB))
+			.add(new WidgetMenuOption(IMPORT_MEMBERS,
+				MENU_TARGET, RESIZABLE_VIEWPORT_BOTTOM_LINE_FRIEND_CHAT_TAB_ID))
+			.build();
 
-	private static final ImmutableList<WidgetMenuOption> WIDGET_BROWSE_MENU_OPTIONS =
+	private final ImmutableList<WidgetMenuOption> WIDGET_BROWSE_MENU_OPTIONS =
 		new ImmutableList.Builder<WidgetMenuOption>()
 			.add(new WidgetMenuOption(BROWSE_GROUP,
-				MENU_TARGET, WidgetInfo.FIXED_VIEWPORT_FRIENDS_CHAT_TAB))
+				MENU_TARGET, ComponentID.FIXED_VIEWPORT_FRIENDS_CHAT_TAB))
 			.add(new WidgetMenuOption(BROWSE_GROUP,
-				MENU_TARGET, WidgetInfo.RESIZABLE_VIEWPORT_FRIENDS_CHAT_TAB))
+				MENU_TARGET, ComponentID.RESIZABLE_VIEWPORT_FRIENDS_CHAT_TAB))
 			.add(new WidgetMenuOption(BROWSE_GROUP,
 				MENU_TARGET, RESIZABLE_VIEWPORT_BOTTOM_LINE_FRIEND_CHAT_TAB_ID))
 			.build();
@@ -169,11 +170,15 @@ public class WomUtilsPlugin extends Plugin
 	private static final int CLAN_SETTINGS_MEMBERS_DRAW = 4232;
 
 	private static final int CLAN_SETTINGS_INFO_PAGE_WIDGET = 690;
-	private static final int CLAN_SETTINGS_INFO_PAGE_WIDGET_ID = WidgetInfo.PACK(CLAN_SETTINGS_INFO_PAGE_WIDGET, 2);
+	private static final int CLAN_SETTINGS_INFO_PAGE_WIDGET_ID = 45219842;
 	private static final int CLAN_SETTINGS_MEMBERS_PAGE_WIDGET = 693;
-	private static final int CLAN_SETTINGS_MEMBERS_PAGE_WIDGET_ID = WidgetInfo.PACK(CLAN_SETTINGS_MEMBERS_PAGE_WIDGET, 2);
+	private static final int CLAN_SETTINGS_MEMBERS_PAGE_WIDGET_ID = 45416450;
 
-	private static final int CLAN_OPTIONS_RANKS_WIDGET = WidgetInfo.PACK(693, 11);
+	// In reality this isn't specifically the ranks widget. It's the left widget that can hold
+	// different things.
+	// TODO: Make it so the ignored ranks show up properly even if the ranks have been
+	//  chosen to show in the right widget
+	private static final int CLAN_OPTIONS_RANKS_WIDGET = 45416459;
 
 	private static final Color SUCCESS = new Color(170, 255, 40);
 	private static final Color DEFAULT_CLAN_SETTINGS_TEXT_COLOR = new Color(0xff981f);
@@ -549,12 +554,12 @@ public class WomUtilsPlugin extends Plugin
 			return;
 		}
 
-		int groupId = WidgetInfo.TO_GROUP(event.getActionParam1());
+		int groupId = WidgetUtil.componentToInterface(event.getActionParam1());
 		String option = event.getOption();
 
 		if (!AFTER_OPTIONS.contains(option)
 			// prevent duplicate menu options in friends list
-			|| (option.equals("Delete") && groupId != WidgetInfo.IGNORE_LIST.getGroupId()))
+			|| (option.equals("Delete") && groupId != InterfaceID.IGNORE_LIST))
 		{
 			return;
 		}
@@ -562,21 +567,21 @@ public class WomUtilsPlugin extends Plugin
 		boolean addModifyMember = config.addRemoveMember()
 			&& config.groupId() > 0
 			&& !Strings.isNullOrEmpty(config.verificationCode())
-			&& (groupId == WidgetInfo.FRIENDS_CHAT.getGroupId()
-				|| groupId == WidgetInfo.FRIENDS_LIST.getGroupId()
-				|| groupId == WidgetID.CLAN_GROUP_ID
-				|| groupId == WidgetID.CLAN_GUEST_GROUP_ID);
+			&& (groupId == InterfaceID.FRIENDS_CHAT
+				|| groupId == InterfaceID.FRIEND_LIST
+				|| groupId == InterfaceID.CLAN
+				|| groupId == InterfaceID.CLAN_GUEST);
 
 		boolean addMenuLookup = config.menuLookupOption()
-			&& (groupId == WidgetInfo.FRIENDS_LIST.getGroupId()
-			|| groupId == WidgetInfo.FRIENDS_CHAT.getGroupId()
-			|| groupId == WidgetID.CLAN_GROUP_ID
-			|| groupId == WidgetID.CLAN_GUEST_GROUP_ID
+			&& (groupId == InterfaceID.FRIEND_LIST
+			|| groupId == InterfaceID.FRIENDS_CHAT
+			|| groupId == InterfaceID.CLAN
+			|| groupId == InterfaceID.CLAN_GUEST
 			// prevent from adding for Kick option (interferes with the raiding party one)
-			|| groupId == WidgetInfo.CHATBOX.getGroupId() && !KICK_OPTION.equals(option)
-			|| groupId == WidgetInfo.RAIDING_PARTY.getGroupId()
-			|| groupId == WidgetInfo.PRIVATE_CHAT_MESSAGE.getGroupId()
-			|| groupId == WidgetInfo.IGNORE_LIST.getGroupId());
+			|| groupId == InterfaceID.CHATBOX && !KICK_OPTION.equals(option)
+			|| groupId == InterfaceID.RAIDING_PARTY
+			|| groupId == InterfaceID.PRIVATE_CHAT
+			|| groupId == InterfaceID.IGNORE_LIST);
 
 		int offset = (addModifyMember ? 1:0) + (addMenuLookup ? 1:0);
 
@@ -719,12 +724,12 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (event.getScriptId() == ScriptID.FRIENDS_CHAT_CHANNEL_REBUILD)
 		{
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, WidgetInfo.FRIENDS_CHAT_LIST);
+			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, ComponentID.FRIENDS_CHAT_LIST);
 		}
 		else if (event.getScriptId() == CLAN_SIDEPANEL_DRAW)
 		{
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, WidgetInfo.CLAN_MEMBER_LIST);
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, WidgetInfo.CLAN_GUEST_MEMBER_LIST);
+			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, ComponentID.CLAN_MEMBERS);
+			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, ComponentID.CLAN_GUEST_MEMBERS);
 		}
 		else if (event.getScriptId() == CLAN_SETTINGS_MEMBERS_DRAW)
 		{
