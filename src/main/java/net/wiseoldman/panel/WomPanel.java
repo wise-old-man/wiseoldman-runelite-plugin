@@ -1,6 +1,7 @@
 package net.wiseoldman.panel;
 
 import com.google.common.base.Strings;
+import net.runelite.api.WorldType;
 import net.wiseoldman.WomUtilsConfig;
 import net.wiseoldman.beans.PlayerInfo;
 import net.wiseoldman.web.WomClient;
@@ -28,6 +29,8 @@ import java.util.ArrayList;
 @Slf4j
 public class WomPanel extends PluginPanel
 {
+	@Inject
+	private Client client;
 
     /* The maximum allowed username length in RuneScape accounts */
     private static final int MAX_USERNAME_LENGTH = 12;
@@ -297,7 +300,7 @@ public class WomPanel extends PluginPanel
     {
         String url = new HttpUrl.Builder()
             .scheme("https")
-            .host("wiseoldman.net")
+            .host(client.getWorldType().contains(WorldType.SEASONAL) ? "league.wiseoldman.net" : "wiseoldman.net")
             .addPathSegment("players")
             .addPathSegment(username)
             .build()

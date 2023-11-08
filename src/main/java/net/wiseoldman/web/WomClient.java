@@ -153,22 +153,13 @@ public class WomClient
 
 	private HttpUrl buildUrl(String[] pathSegments)
 	{
-		HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
-			.scheme("https");
+
 
 		boolean isSeasonal = client.getWorldType().contains(WorldType.SEASONAL);
-
-		if (isSeasonal)
-		{
-			urlBuilder.host("league.wiseoldman.net")
-				.addPathSegment("api");
-		}
-		else
-		{
-			urlBuilder.host("api.wiseoldman.net");
-		}
-
-		urlBuilder.addPathSegment("v2");
+		HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
+			.scheme("https")
+			.host("api.wiseoldman.net")
+			.addPathSegment(isSeasonal ? "league" : "v2");
 
 		for (String pathSegment : pathSegments)
 		{
