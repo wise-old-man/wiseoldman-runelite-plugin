@@ -1,5 +1,7 @@
 package net.wiseoldman.ui;
 
+import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.widgets.InterfaceID;
 import net.wiseoldman.WomUtilsConfig;
 
 import java.awt.image.BufferedImage;
@@ -15,7 +17,6 @@ import net.runelite.api.IndexedSprite;
 import net.runelite.api.ScriptID;
 import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.Text;
@@ -24,7 +25,8 @@ import net.runelite.client.util.Text;
 @Singleton
 public class WomIconHandler
 {
-	private static final int CLAN_SETTINGS_MEMBERS_WIDGET = WidgetInfo.PACK(693, 10);
+	// Members list in the clan members settings
+	private static final int CLAN_SETTINGS_MEMBERS_WIDGET = 45416458;
 
 	private final Client client;
 	private final ClientThread clientThread;
@@ -112,9 +114,9 @@ public class WomIconHandler
 		}
 	}
 
-	public void rebuildMemberList(boolean disable, Map<String, GroupMembership> groupMembers, WidgetInfo widgetInfo)
+	public void rebuildMemberList(boolean disable, Map<String, GroupMembership> groupMembers, int componentId)
 	{
-		Widget containerWidget = client.getWidget(widgetInfo);
+		Widget containerWidget = client.getWidget(componentId);
 		if (containerWidget == null)
 		{
 			return;
@@ -215,9 +217,9 @@ public class WomIconHandler
 		clientThread.invokeLater(() ->
 		{
 			rebuildFriendsList();
-			rebuildMemberList(!showIcons, members, WidgetInfo.FRIENDS_CHAT_LIST);
-			rebuildMemberList(!showIcons, members, WidgetInfo.CLAN_MEMBER_LIST);
-			rebuildMemberList(!showIcons, members, WidgetInfo.CLAN_GUEST_MEMBER_LIST);
+			rebuildMemberList(!showIcons, members, ComponentID.FRIENDS_CHAT_LIST);
+			rebuildMemberList(!showIcons, members, ComponentID.CLAN_MEMBERS);
+			rebuildMemberList(!showIcons, members, ComponentID.CLAN_GUEST_MEMBERS);
 		});
 	}
 
@@ -225,15 +227,15 @@ public class WomIconHandler
 	{
 		client.runScript(
 			ScriptID.FRIENDS_UPDATE,
-			WidgetInfo.FRIEND_LIST_FULL_CONTAINER.getPackedId(),
-			WidgetInfo.FRIEND_LIST_SORT_BY_NAME_BUTTON.getPackedId(),
-			WidgetInfo.FRIEND_LIST_SORT_BY_LAST_WORLD_CHANGE_BUTTON.getPackedId(),
-			WidgetInfo.FRIEND_LIST_SORT_BY_WORLD_BUTTON.getPackedId(),
-			WidgetInfo.FRIEND_LIST_LEGACY_SORT_BUTTON.getPackedId(),
-			WidgetInfo.FRIEND_LIST_NAMES_CONTAINER.getPackedId(),
-			WidgetInfo.FRIEND_LIST_SCROLL_BAR.getPackedId(),
-			WidgetInfo.FRIEND_LIST_LOADING_TEXT.getPackedId(),
-			WidgetInfo.FRIEND_LIST_PREVIOUS_NAME_HOLDER.getPackedId()
+			ComponentID.FRIEND_LIST_FULL_CONTAINER,
+			ComponentID.FRIEND_LIST_SORT_BY_NAME_BUTTON,
+			ComponentID.FRIEND_LIST_SORT_BY_LAST_WORLD_CHANGE_BUTTON,
+			ComponentID.FRIEND_LIST_SORT_BY_WORLD_BUTTON,
+			ComponentID.FRIEND_LIST_LEGACY_SORT_BUTTON,
+			ComponentID.FRIEND_LIST_NAMES_CONTAINER,
+			ComponentID.FRIEND_LIST_SCROLL_BAR,
+			ComponentID.FRIEND_LIST_LOADING_TEXT,
+			ComponentID.FRIEND_LIST_PREVIOUS_NAME_HOLDER
 		);
 	}
 }
