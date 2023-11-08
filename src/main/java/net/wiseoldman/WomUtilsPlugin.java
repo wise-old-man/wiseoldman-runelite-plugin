@@ -880,34 +880,36 @@ public class WomUtilsPlugin extends Plugin
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
 		GameState state = gameStateChanged.getGameState();
-		if (state == GameState.LOGGED_IN)
-		{
-			if (accountHash != client.getAccountHash())
-			{
-				fetchXp = true;
-			}
+		switch (state) {
+			case LOGGED_IN:
+				if (accountHash != client.getAccountHash())
+				{
+					fetchXp = true;
+				}
 
-			recentlyLoggedIn = true;
-		}
-		else if (state == GameState.LOGIN_SCREEN)
-		{
-			visitedLoginScreen = true;
-			Player local = client.getLocalPlayer();
-			if (local == null)
-			{
-				return;
-			}
+				recentlyLoggedIn = true;
+				break;
+			case LOGIN_SCREEN:
+				// When a player logs out we want to set these variables
+				// and also submit update request
+				visitedLoginScreen = true;
+				namechangesSubmitted = false;
+			case HOPPING:
+				Player local = client.getLocalPlayer();
+				if (local == null)
+				{
+					return;
+				}
 
-			long totalXp = client.getOverallExperience();
-			// Don't submit update unless xp threshold is reached
-			if (Math.abs(totalXp - lastXp) > XP_THRESHOLD || levelupThisSession)
-			{
-				updateMostRecentPlayer();
-				lastXp = totalXp;
-				levelupThisSession = false;
-			}
-
-			namechangesSubmitted = false;
+				long totalXp = client.getOverallExperience();
+				// Don't submit update unless xp threshold is reached
+				if (Math.abs(totalXp - lastXp) > XP_THRESHOLD || levelupThisSession)
+				{
+					updateMostRecentPlayer();
+					lastXp = totalXp;
+					levelupThisSession = false;
+				}
+				break;
 		}
 	}
 
