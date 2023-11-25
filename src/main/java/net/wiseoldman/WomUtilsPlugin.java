@@ -11,6 +11,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
 import net.wiseoldman.beans.Competition;
@@ -188,6 +189,8 @@ public class WomUtilsPlugin extends Plugin
 	private boolean levelupThisSession = false;
 
 	private static String MESSAGE_PREFIX = "Wom: ";
+
+	public boolean isSeasonal = false;
 
 	@Inject
 	private Client client;
@@ -655,7 +658,7 @@ public class WomUtilsPlugin extends Plugin
 	{
 		String url = new HttpUrl.Builder()
 		.scheme("https")
-		.host("wiseoldman.net")
+		.host(isSeasonal ? "league.wiseoldman.net" : "wiseoldman.net")
 		.addPathSegment("groups")
 		.addPathSegment("" + config.groupId())
 		.build()
@@ -893,6 +896,7 @@ public class WomUtilsPlugin extends Plugin
 				}
 
 				recentlyLoggedIn = true;
+				isSeasonal = client.getWorldType().contains(WorldType.SEASONAL);
 				break;
 			case LOGIN_SCREEN:
 				// When a player logs out we want to set these variables

@@ -1,6 +1,7 @@
 package net.wiseoldman.web;
 
 import com.google.gson.Gson;
+import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.MessageNode;
-import net.runelite.api.WorldType;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.chat.ChatColorType;
@@ -77,12 +77,17 @@ public class WomClient
 
 	private static final DecimalFormat NUMBER_FORMAT = new DecimalFormat("#.##");
 
+	private final WomUtilsPlugin plugin;
+	private final String leagueError = " You are currently in a League world. Your group configurations might be for the main game.";
+
 	@Inject
-	public WomClient(Gson gson)
+	public WomClient(Gson gson, WomUtilsPlugin plugin)
 	{
 		this.gson = gson.newBuilder()
 				.setDateFormat(DateFormat.FULL, DateFormat.FULL)
 				.create();
+
+		this.plugin = plugin;
 	}
 
 	public void submitNameChanges(NameChangeEntry[] changes)
@@ -153,13 +158,10 @@ public class WomClient
 
 	private HttpUrl buildUrl(String[] pathSegments)
 	{
-
-
-		boolean isSeasonal = client.getWorldType().contains(WorldType.SEASONAL);
 		HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
 			.scheme("https")
 			.host("api.wiseoldman.net")
-			.addPathSegment(isSeasonal ? "league" : "v2");
+			.addPathSegment(this.plugin.isSeasonal ? "league" : "v2");
 
 		for (String pathSegment : pathSegments)
 		{
@@ -211,7 +213,8 @@ public class WomClient
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
-			message = "Error: " + data.getMessage();
+			message = "Error: " + data.getMessage() + (this.plugin.isSeasonal ? leagueError : "");
+
 			sendResponseToChat(message, ERROR);
 		}
 	}
@@ -227,7 +230,7 @@ public class WomClient
 		}
 		else
 		{
-			message = "Error: " + data.getMessage();
+			message = "Error: " + data.getMessage() + (this.plugin.isSeasonal ? leagueError : "");
 			sendResponseToChat(message, ERROR);
 		}
 	}
@@ -243,7 +246,7 @@ public class WomClient
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
-			message = "Error: " + data.getMessage();
+			message = "Error: " + data.getMessage() + (this.plugin.isSeasonal ? leagueError : "");
 			sendResponseToChat(message, ERROR);
 		}
 	}
