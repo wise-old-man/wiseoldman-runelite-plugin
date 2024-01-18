@@ -988,10 +988,7 @@ public class WomUtilsPlugin extends Plugin
 	{
 		SwingUtilities.invokeLater(() ->
 		{
-			if (!navButton.isSelected())
-			{
-				navButton.getOnSelect().run();
-			}
+			clientToolbar.openPanel(navButton);
 			womPanel.lookup(playerName);
 		});
 	}
