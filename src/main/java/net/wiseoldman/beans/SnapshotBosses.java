@@ -43,6 +43,7 @@ public class SnapshotBosses
     Boss phantom_muspah;
     Boss sarachnis;
     Boss scorpia;
+    Boss scurrius;
     Boss skotizo;
     Boss spindel;
     Boss tempoross;
@@ -143,6 +144,8 @@ public class SnapshotBosses
                 return getSarachnis();
             case SCORPIA:
                 return getScorpia();
+            case SCURRIUS:
+                return getScurrius();
             case SKOTIZO:
                 return getSkotizo();
             case SPINDEL:
