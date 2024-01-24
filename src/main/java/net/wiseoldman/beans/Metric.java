@@ -154,6 +154,8 @@ public enum Metric
 	SARACHNIS(HiscoreSkill.SARACHNIS),
 	@SerializedName("scorpia")
 	SCORPIA(HiscoreSkill.SCORPIA),
+	@SerializedName("scurrius")
+	SCURRIUS(HiscoreSkill.SCURRIUS),
 	@SerializedName("skotizo")
 	SKOTIZO(HiscoreSkill.SKOTIZO),
 	@SerializedName("spindel")
