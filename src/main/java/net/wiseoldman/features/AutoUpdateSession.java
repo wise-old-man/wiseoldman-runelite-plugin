@@ -30,7 +30,7 @@ public class AutoUpdateSession {
     /**
      * The number of hours which a session lasts for.
      */
-    private static final int HOURS_BETWEEN_SESSION = 6;
+    private static final int HOURS_BETWEEN_SESSION = 24;
 
     /**
      * A record of players that have been updated for the current session.
