@@ -14,6 +14,7 @@ import com.google.inject.Provides;
 import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
+import net.runelite.client.eventbus.EventBus;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionInfo;
 import net.wiseoldman.beans.NameChangeEntry;
@@ -25,6 +26,7 @@ import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
 import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
 import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
+import net.wiseoldman.features.AutoUpdateSession;
 import net.wiseoldman.panel.NameAutocompleter;
 import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
@@ -33,6 +35,7 @@ import net.wiseoldman.ui.PlaceHolderCompetitionInfobox;
 import net.wiseoldman.ui.SyncButton;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
+import net.wiseoldman.util.LocalPlayer;
 import net.wiseoldman.web.WomClient;
 import net.wiseoldman.web.WomCommand;
 import java.awt.Color;
@@ -212,6 +215,9 @@ public class WomUtilsPlugin extends Plugin
 	private JsonParser jsonParser;
 
 	@Inject
+	private LocalPlayer localPlayer;
+
+	@Inject
 	private WomIconHandler iconHandler;
 
 	@Inject
@@ -245,6 +251,13 @@ public class WomUtilsPlugin extends Plugin
 
 	@Inject
 	ClientToolbar clientToolbar;
+
+	@Inject
+	private EventBus eventBus;
+
+	private static final Class<?>[] FEATURES = new Class[]{
+			AutoUpdateSession.class
+	};
 
 	private Map<String, String> nameChanges = new HashMap<>();
 	private LinkedBlockingQueue<NameChangeEntry> queue = new LinkedBlockingQueue<>();
@@ -295,6 +308,10 @@ public class WomUtilsPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		log.info("Wise Old Man started!");
+
+		for (Class<?> feature : FEATURES) {
+			eventBus.register(injector.getInstance(feature));
+		}
 
 		// This will work, idk why really, but ok
 		womPanel = injector.getInstance(WomPanel.class);
@@ -921,27 +938,6 @@ public class WomUtilsPlugin extends Plugin
 		}
 	}
 
-	/**
-	 * Determine if the players stats should be updated or not.
-	 */
-	private boolean shouldUpdatePlayerStats(String playerName)
-	{
-		if (lastSubmittedXpAt == null || lastSubmittedPlayerName == null) {
-			return true;
-		}
-
-		if (! playerName.equals(lastSubmittedPlayerName)) {
-			// If the player has changed mid-session then we can update them.
-			return true;
-		}
-
-		long currentTimeMilliseconds = System.currentTimeMillis();
-		long timeDifference = currentTimeMilliseconds - lastSubmittedXpAt.getTime();
-		long sixHoursMilliseconds = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
-
-		return timeDifference > sixHoursMilliseconds;
-	}
-
 	@Subscribe
 	public void onGameTick(GameTick gameTick)
 	{
@@ -962,11 +958,8 @@ public class WomUtilsPlugin extends Plugin
 			recentlyLoggedIn = false;
 			visitedLoginScreen = false;
 
-			if (shouldUpdatePlayerStats(playerName)) {
-				womClient.updatePlayer(playerName, accountHash);
-				lastSubmittedXpAt = new Date();
-				lastSubmittedPlayerName = playerName;
-			}
+			localPlayer.setName(playerName);
+			localPlayer.setHash(accountHash);
 		}
 	}
 
