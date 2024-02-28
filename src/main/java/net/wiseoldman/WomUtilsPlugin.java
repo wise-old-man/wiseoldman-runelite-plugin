@@ -40,12 +40,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -285,6 +280,10 @@ public class WomUtilsPlugin extends Plugin
 	private PlaceHolderCompetitionInfobox placeHolderCompetitionInfobox;
 
 	private final Map<Skill, Integer> previousSkillLevels = new EnumMap<>(Skill.class);
+
+	private Date lastSubmittedXpAt = null;
+
+	private String lastSubmittedPlayerName = null;
 
 	static
 	{
@@ -922,6 +921,27 @@ public class WomUtilsPlugin extends Plugin
 		}
 	}
 
+	/**
+	 * Determine if the players stats should be updated or not.
+	 */
+	private boolean shouldUpdatePlayerStats(String playerName)
+	{
+		if (lastSubmittedXpAt == null || lastSubmittedPlayerName == null) {
+			return true;
+		}
+
+		if (! playerName.equals(lastSubmittedPlayerName)) {
+			// If the player has changed mid-session then we can update them.
+			return true;
+		}
+
+		long currentTimeMilliseconds = System.currentTimeMillis();
+		long timeDifference = currentTimeMilliseconds - lastSubmittedXpAt.getTime();
+		long sixHoursMilliseconds = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+
+		return timeDifference > sixHoursMilliseconds;
+	}
+
 	@Subscribe
 	public void onGameTick(GameTick gameTick)
 	{
@@ -941,6 +961,12 @@ public class WomUtilsPlugin extends Plugin
 			womClient.fetchUpcomingPlayerCompetitions(playerName);
 			recentlyLoggedIn = false;
 			visitedLoginScreen = false;
+
+			if (shouldUpdatePlayerStats(playerName)) {
+				womClient.updatePlayer(playerName, accountHash);
+				lastSubmittedXpAt = new Date();
+				lastSubmittedPlayerName = playerName;
+			}
 		}
 	}
 
