@@ -35,7 +35,6 @@ import net.wiseoldman.ui.PlaceHolderCompetitionInfobox;
 import net.wiseoldman.ui.SyncButton;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
-import net.wiseoldman.util.LocalPlayer;
 import net.wiseoldman.web.WomClient;
 import net.wiseoldman.web.WomCommand;
 import java.awt.Color;
@@ -215,9 +214,6 @@ public class WomUtilsPlugin extends Plugin
 	private JsonParser jsonParser;
 
 	@Inject
-	private LocalPlayer localPlayer;
-
-	@Inject
 	private WomIconHandler iconHandler;
 
 	@Inject
@@ -283,8 +279,8 @@ public class WomUtilsPlugin extends Plugin
 	private long lastXp;
 	private boolean visitedLoginScreen = true;
 	private boolean recentlyLoggedIn;
-	private String playerName;
-	private long accountHash;
+	public String playerName;
+	public long accountHash;
 	private boolean namechangesSubmitted = false;
 	private SyncButton syncButton;
 
@@ -293,10 +289,6 @@ public class WomUtilsPlugin extends Plugin
 	private PlaceHolderCompetitionInfobox placeHolderCompetitionInfobox;
 
 	private final Map<Skill, Integer> previousSkillLevels = new EnumMap<>(Skill.class);
-
-	private Date lastSubmittedXpAt = null;
-
-	private String lastSubmittedPlayerName = null;
 
 	static
 	{
@@ -957,9 +949,6 @@ public class WomUtilsPlugin extends Plugin
 			womClient.fetchUpcomingPlayerCompetitions(playerName);
 			recentlyLoggedIn = false;
 			visitedLoginScreen = false;
-
-			localPlayer.setName(playerName);
-			localPlayer.setHash(accountHash);
 		}
 	}
 
