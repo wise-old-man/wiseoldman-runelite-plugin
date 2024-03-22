@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import java.util.stream.Collectors;
 import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
@@ -351,6 +352,17 @@ public class WomUtilsPlugin extends Plugin
 		infoBoxManager.addInfoBox(placeHolderCompetitionInfobox);
 
 		ignoredRanks = new ArrayList<>(Arrays.asList(gson.fromJson(config.ignoredRanks(), String[].class)));
+
+		String ignoreRanksDisplayText = ignoredRanks.stream()
+			.map(Object::toString)
+			.collect(Collectors.joining(", "));
+
+		// update the ignored ignoreRanksDisplayed text on load if it was modified, it's meant to be read only.
+		if (!config.ignoredRanksDisplay().equals(ignoreRanksDisplayText))
+		{
+			config.ignoreRanksDisplay(ignoreRanksDisplayText);
+		}
+
 
 		alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
 
@@ -856,7 +868,11 @@ public class WomUtilsPlugin extends Plugin
 				{
 					ignoredRanks.removeIf(r -> r.equals(rankTitle.toLowerCase()));
 				}
+				// TODO only run this if the ignoreRanks did get updated
 				config.ignoredRanks(gson.toJson(ignoredRanks));
+				config.ignoreRanksDisplay(ignoredRanks.stream()
+					.map(Object::toString)
+					.collect(Collectors.joining(", ")));
 				updateIgnoredRankColors();
 			});
 	}

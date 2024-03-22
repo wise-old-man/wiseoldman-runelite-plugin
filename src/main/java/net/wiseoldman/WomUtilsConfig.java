@@ -39,6 +39,14 @@ public interface WomUtilsConfig extends Config
 	)
 	String eventCodeword = "eventCodeword";
 
+	@ConfigSection(
+		name = "Not Synced Ranks",
+		description = "Ignored Ranks for WOM sync",
+		position = 5,
+		closedByDefault = true
+	)
+	String ignoredRanks = "ignoredRanks";
+	
 	@ConfigItem(
 		keyName = "playerLookupOption",
 		name = "Player option",
@@ -309,6 +317,18 @@ public interface WomUtilsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "ignoredRanksDisplay",
+		name = "Ignored Ranks from WOM Sync",
+		description = "List of ignored ranks from WOM Sync (read only)",
+		position = 17,
+		section = ignoredRanks
+	)
+	default String ignoredRanksDisplay()
+	{
+		return "";
+	}
+
+	@ConfigItem(
 		keyName = "hiddenCompetitionIds",
 		name = "",
 		description = "",
@@ -345,4 +365,12 @@ public interface WomUtilsConfig extends Config
 		hidden = true
 	)
 	void ignoredRanks(String value);
+
+	@ConfigItem(
+		keyName = "ignoredRanksDisplay",
+		name = "",
+		description = "",
+		hidden = true
+	)
+	void ignoreRanksDisplay(String value);
 }
