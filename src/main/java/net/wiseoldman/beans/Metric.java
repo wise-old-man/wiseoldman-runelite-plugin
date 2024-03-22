@@ -60,6 +60,8 @@ public enum Metric
 	CLUE_SCROLLS_MEDIUM(HiscoreSkill.CLUE_SCROLL_MEDIUM),
 	@SerializedName("commander_zilyana")
 	COMMANDER_ZILYANA(HiscoreSkill.COMMANDER_ZILYANA),
+	@SerializedName("colosseum_glory")
+	COLOSSEUM_GLORY(HiscoreSkill.COLOSSEUM_GLORY),
 	@SerializedName("construction")
 	CONSTRUCTION(HiscoreSkill.CONSTRUCTION),
 	@SerializedName("cooking")
@@ -122,6 +124,8 @@ public enum Metric
 	KRIL_TSUTSAROTH(HiscoreSkill.KRIL_TSUTSAROTH),
 	@SerializedName("last_man_standing")
 	LAST_MAN_STANDING(HiscoreSkill.LAST_MAN_STANDING),
+	@SerializedName("lunar_chests")
+	LUNAR_CHESTS(HiscoreSkill.LUNAR_CHESTS),
 	@SerializedName("pvp_arena")
 	PVP_ARENA(HiscoreSkill.PVP_ARENA_RANK),
 	@SerializedName("league_points")
@@ -158,6 +162,8 @@ public enum Metric
 	SCURRIUS(HiscoreSkill.SCURRIUS),
 	@SerializedName("skotizo")
 	SKOTIZO(HiscoreSkill.SKOTIZO),
+	@SerializedName("sol_heredit")
+	SOL_HEREDIT(HiscoreSkill.SOL_HEREDIT),
 	@SerializedName("spindel")
 	SPINDEL(HiscoreSkill.SPINDEL),
 	@SerializedName("slayer")
@@ -209,8 +215,7 @@ public enum Metric
 	@SerializedName("zalcano")
 	ZALCANO(HiscoreSkill.ZALCANO),
 	@SerializedName("zulrah")
-	ZULRAH(HiscoreSkill.ZULRAH)
-	;
+	ZULRAH(HiscoreSkill.ZULRAH);
 
 	@Getter
 	private HiscoreSkill hiscoreSkill;
