@@ -5,6 +5,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.Runnables;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -846,7 +847,10 @@ public class WomUtilsPlugin extends Plugin
 			.onClick(e -> {
 				if (!rankIsIgnored)
 				{
-					ignoredRanks.add(rankTitle.toLowerCase());
+					chatboxPanelManager.openTextMenuInput("Are you sure you want to ignore " + rankTitle + " from WOM Sync?")
+						.option("Yes", () -> ignoredRanks.add(rankTitle.toLowerCase()))
+						.option("No", Runnables.doNothing())
+						.build();
 				}
 				else
 				{
