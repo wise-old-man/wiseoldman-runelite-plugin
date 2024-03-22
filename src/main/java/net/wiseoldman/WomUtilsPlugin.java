@@ -179,9 +179,12 @@ public class WomUtilsPlugin extends Plugin
 
 	// In reality this isn't specifically the ranks widget. It's the left widget that can hold
 	// different things.
-	// TODO: Make it so the ignored ranks show up properly even if the ranks have been
-	//  chosen to show in the right widget
-	private static final int CLAN_OPTIONS_RANKS_WIDGET = 45416459;
+	// TODO make it so these widgets are recolored even if the section is updated. Either a script event or onClientTicket
+
+	private static final int CLAN_OPTIONS_RANKS_WIDGET_LEFT_TITLE = 45416455;
+	private static final int CLAN_OPTIONS_RANKS_WIDGET_LEFT = 45416459;
+	private static final int CLAN_OPTIONS_RANKS_WIDGET_RIGHT_TITLE = 45416456;
+	private static final int CLAN_OPTIONS_RANKS_WIDGET_RIGHT = 45416461;
 
 	private static final Color SUCCESS = new Color(170, 255, 40);
 	private static final Color DEFAULT_CLAN_SETTINGS_TEXT_COLOR = new Color(0xff981f);
@@ -839,8 +842,31 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		final MenuEntry entry = event.getMenuEntries()[event.getMenuEntries().length - 1];
+		Widget clanWidgetTitleLeftSide = client.getWidget(CLAN_OPTIONS_RANKS_WIDGET_LEFT_TITLE);
+		boolean leftSideRanks = false;
+		if (clanWidgetTitleLeftSide != null)
+		{
+			if (clanWidgetTitleLeftSide.getDynamicChildren().length == 5)
+			{
+				leftSideRanks = entry.getParam1() == CLAN_OPTIONS_RANKS_WIDGET_LEFT && clanWidgetTitleLeftSide.getDynamicChildren()[4].getText().equals("Rank");
+			}
+		}
+		boolean rightSideRanks = false;
+		Widget clanWidgetTitleRightSide = client.getWidget(CLAN_OPTIONS_RANKS_WIDGET_RIGHT_TITLE);
+		if (clanWidgetTitleRightSide != null)
+		{
+			if (clanWidgetTitleRightSide.getDynamicChildren().length == 5)
+			{
+				rightSideRanks = entry.getParam1() == CLAN_OPTIONS_RANKS_WIDGET_RIGHT && clanWidgetTitleRightSide.getDynamicChildren()[4].getText().equals("Rank");
+			}
+		}
 
-		if (entry.getType() != MenuAction.CC_OP || entry.getParam1() != CLAN_OPTIONS_RANKS_WIDGET)
+		if (entry.getType() != MenuAction.CC_OP)
+		{
+			return;
+		}
+
+		if (!leftSideRanks && !rightSideRanks)
 		{
 			return;
 		}
@@ -894,7 +920,13 @@ public class WomUtilsPlugin extends Plugin
 
 	private void updateIgnoredRankColors()
 	{
-		Widget parent = client.getWidget(CLAN_OPTIONS_RANKS_WIDGET);
+		updateIgnoredRankColorsByID(CLAN_OPTIONS_RANKS_WIDGET_LEFT);
+		updateIgnoredRankColorsByID(CLAN_OPTIONS_RANKS_WIDGET_RIGHT);
+	}
+
+	private void updateIgnoredRankColorsByID(int widgetID)
+	{
+		Widget parent = client.getWidget(widgetID);
 		if (parent == null)
 		{
 			return;
