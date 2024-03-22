@@ -860,21 +860,36 @@ public class WomUtilsPlugin extends Plugin
 				if (!rankIsIgnored)
 				{
 					chatboxPanelManager.openTextMenuInput("Are you sure you want to ignore " + rankTitle + " from WOM Sync?")
-						.option("Yes", () -> ignoredRanks.add(rankTitle.toLowerCase()))
+						.option("Yes", () -> addIgnoredRank(rankTitle))
 						.option("No", Runnables.doNothing())
 						.build();
 				}
 				else
 				{
-					ignoredRanks.removeIf(r -> r.equals(rankTitle.toLowerCase()));
+					removeIgnoreRank(rankTitle);
 				}
-				// TODO only run this if the ignoreRanks did get updated
-				config.ignoredRanks(gson.toJson(ignoredRanks));
-				config.ignoreRanksDisplay(ignoredRanks.stream()
-					.map(Object::toString)
-					.collect(Collectors.joining(", ")));
-				updateIgnoredRankColors();
 			});
+	}
+
+	private void addIgnoredRank(String rankTitle)
+	{
+		ignoredRanks.add(rankTitle.toLowerCase());
+		updateIgnoredRanks();
+	}
+
+	private void removeIgnoreRank(String rankTitle)
+	{
+		ignoredRanks.removeIf(r -> r.equals(rankTitle.toLowerCase()));
+		updateIgnoredRanks();
+	}
+
+	private void updateIgnoredRanks()
+	{
+		config.ignoredRanks(gson.toJson(ignoredRanks));
+		config.ignoreRanksDisplay(ignoredRanks.stream()
+			.map(Object::toString)
+			.collect(Collectors.joining(", ")));
+		updateIgnoredRankColors();
 	}
 
 	private void updateIgnoredRankColors()
@@ -1198,8 +1213,8 @@ public class WomUtilsPlugin extends Plugin
 
 		int membersRemoved = oldMembers.size() + membersAdded - newMembers.size();
 
-		return String.format("Synced %d clan members. %d added, %d removed, %d ranks changed.",
-			newMembers.size(), membersAdded, membersRemoved, ranksChanged);
+		return String.format("Synced WOM group members. %d added, %d removed, %d ranks changed. (%d ranks ignored).",
+			newMembers.size(), membersAdded, membersRemoved, ranksChanged, ignoredRanks.size());
 	}
 
 	private void sendResponseToChat(String message, Color color)
