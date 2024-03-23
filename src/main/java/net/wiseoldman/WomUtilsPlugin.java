@@ -1245,7 +1245,7 @@ public class WomUtilsPlugin extends Plugin
 
 		int membersRemoved = oldMembers.size() + membersAdded - newMembers.size();
 
-		return String.format("Synced WOM group members. %d added, %d removed, %d ranks changed. (%d ranks ignored).",
+		return String.format("Synced %d clan members. %d added, %d removed, %d ranks changed, %d ranks ignored.",
 			newMembers.size(), membersAdded, membersRemoved, ranksChanged, ignoredRanks.size());
 	}
 
