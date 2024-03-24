@@ -5,12 +5,14 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.Runnables;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import java.util.stream.Collectors;
 import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
@@ -177,9 +179,12 @@ public class WomUtilsPlugin extends Plugin
 
 	// In reality this isn't specifically the ranks widget. It's the left widget that can hold
 	// different things.
-	// TODO: Make it so the ignored ranks show up properly even if the ranks have been
-	//  chosen to show in the right widget
-	private static final int CLAN_OPTIONS_RANKS_WIDGET = 45416459;
+	// TODO make it so these widgets are recolored even if the section is updated. Either a script event or onClientTicket
+
+	private static final int CLAN_OPTIONS_RANKS_WIDGET_LEFT_TITLE = 45416455;
+	private static final int CLAN_OPTIONS_RANKS_WIDGET_LEFT = 45416459;
+	private static final int CLAN_OPTIONS_RANKS_WIDGET_RIGHT_TITLE = 45416456;
+	private static final int CLAN_OPTIONS_RANKS_WIDGET_RIGHT = 45416461;
 
 	private static final Color SUCCESS = new Color(170, 255, 40);
 	private static final Color DEFAULT_CLAN_SETTINGS_TEXT_COLOR = new Color(0xff981f);
@@ -350,6 +355,17 @@ public class WomUtilsPlugin extends Plugin
 		infoBoxManager.addInfoBox(placeHolderCompetitionInfobox);
 
 		ignoredRanks = new ArrayList<>(Arrays.asList(gson.fromJson(config.ignoredRanks(), String[].class)));
+
+		String ignoreRanksDisplayText = ignoredRanks.stream()
+			.map(Object::toString)
+			.collect(Collectors.joining(", "));
+
+		// update the ignored ignoreRanksDisplayed text on load if it was modified, it's meant to be read only.
+		if (!config.ignoredRanksDisplay().equals(ignoreRanksDisplayText))
+		{
+			config.ignoreRanksDisplay(ignoreRanksDisplayText);
+		}
+
 
 		alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
 
@@ -826,8 +842,31 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		final MenuEntry entry = event.getMenuEntries()[event.getMenuEntries().length - 1];
+		Widget clanWidgetTitleLeftSide = client.getWidget(CLAN_OPTIONS_RANKS_WIDGET_LEFT_TITLE);
+		boolean leftSideRanks = false;
+		if (clanWidgetTitleLeftSide != null)
+		{
+			if (clanWidgetTitleLeftSide.getDynamicChildren().length == 5)
+			{
+				leftSideRanks = entry.getParam1() == CLAN_OPTIONS_RANKS_WIDGET_LEFT && clanWidgetTitleLeftSide.getDynamicChildren()[4].getText().equals("Rank");
+			}
+		}
+		boolean rightSideRanks = false;
+		Widget clanWidgetTitleRightSide = client.getWidget(CLAN_OPTIONS_RANKS_WIDGET_RIGHT_TITLE);
+		if (clanWidgetTitleRightSide != null)
+		{
+			if (clanWidgetTitleRightSide.getDynamicChildren().length == 5)
+			{
+				rightSideRanks = entry.getParam1() == CLAN_OPTIONS_RANKS_WIDGET_RIGHT && clanWidgetTitleRightSide.getDynamicChildren()[4].getText().equals("Rank");
+			}
+		}
 
-		if (entry.getType() != MenuAction.CC_OP || entry.getParam1() != CLAN_OPTIONS_RANKS_WIDGET)
+		if (entry.getType() != MenuAction.CC_OP)
+		{
+			return;
+		}
+
+		if (!leftSideRanks && !rightSideRanks)
 		{
 			return;
 		}
@@ -846,20 +885,48 @@ public class WomUtilsPlugin extends Plugin
 			.onClick(e -> {
 				if (!rankIsIgnored)
 				{
-					ignoredRanks.add(rankTitle.toLowerCase());
+					chatboxPanelManager.openTextMenuInput("Are you sure you want to ignore " + rankTitle + " from WOM Sync?")
+						.option("Yes", () -> addIgnoredRank(rankTitle))
+						.option("No", Runnables.doNothing())
+						.build();
 				}
 				else
 				{
-					ignoredRanks.removeIf(r -> r.equals(rankTitle.toLowerCase()));
+					removeIgnoreRank(rankTitle);
 				}
-				config.ignoredRanks(gson.toJson(ignoredRanks));
-				updateIgnoredRankColors();
 			});
+	}
+
+	private void addIgnoredRank(String rankTitle)
+	{
+		ignoredRanks.add(rankTitle.toLowerCase());
+		updateIgnoredRanks();
+	}
+
+	private void removeIgnoreRank(String rankTitle)
+	{
+		ignoredRanks.removeIf(r -> r.equals(rankTitle.toLowerCase()));
+		updateIgnoredRanks();
+	}
+
+	private void updateIgnoredRanks()
+	{
+		config.ignoredRanks(gson.toJson(ignoredRanks));
+		config.ignoreRanksDisplay(ignoredRanks.stream()
+			.map(Object::toString)
+			.collect(Collectors.joining(", ")));
+		updateIgnoredRankColors();
 	}
 
 	private void updateIgnoredRankColors()
 	{
-		Widget parent = client.getWidget(CLAN_OPTIONS_RANKS_WIDGET);
+		updateIgnoredRankColorsByID(CLAN_OPTIONS_RANKS_WIDGET_LEFT);
+		updateIgnoredRankColorsByID(CLAN_OPTIONS_RANKS_WIDGET_RIGHT);
+	}
+
+	private void updateIgnoredRankColorsByID(int widgetID)
+	{
+		Widget parent = client.getWidget(widgetID);
 		if (parent == null)
 		{
 			return;
@@ -1178,8 +1245,8 @@ public class WomUtilsPlugin extends Plugin
 
 		int membersRemoved = oldMembers.size() + membersAdded - newMembers.size();
 
-		return String.format("Synced %d clan members. %d added, %d removed, %d ranks changed.",
-			newMembers.size(), membersAdded, membersRemoved, ranksChanged);
+		return String.format("Synced %d clan members. %d added, %d removed, %d ranks changed, %d ranks ignored.",
+			newMembers.size(), membersAdded, membersRemoved, ranksChanged, ignoredRanks.size());
 	}
 
 	private void sendResponseToChat(String message, Color color)
