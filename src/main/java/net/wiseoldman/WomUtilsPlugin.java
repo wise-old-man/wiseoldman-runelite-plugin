@@ -876,7 +876,8 @@ public class WomUtilsPlugin extends Plugin
 		ClanRank rank = clanSettings.findMember(targetPlayer).getRank();
 		String rankTitle = clanSettings.titleForRank(rank).getName();
 		String targetRank = ColorUtil.wrapWithColorTag(rankTitle, new Color(0xff9040));
-		boolean rankIsIgnored = ignoredRanks.contains(rankTitle.toLowerCase());
+		String standardisedRankTitle = rankTitle.toLowerCase().replaceAll("[-\\s]", "_");
+		boolean rankIsIgnored = ignoredRanks.contains(standardisedRankTitle);
 
 		client.createMenuEntry(-1)
 			.setOption(!rankIsIgnored ? IGNORE_RANK : UNIGNORE_RANK)
@@ -886,26 +887,26 @@ public class WomUtilsPlugin extends Plugin
 				if (!rankIsIgnored)
 				{
 					chatboxPanelManager.openTextMenuInput("Are you sure you want to ignore " + rankTitle + " from WOM Sync?")
-						.option("Yes", () -> addIgnoredRank(rankTitle))
+						.option("Yes", () -> addIgnoredRank(standardisedRankTitle))
 						.option("No", Runnables.doNothing())
 						.build();
 				}
 				else
 				{
-					removeIgnoreRank(rankTitle);
+					removeIgnoreRank(standardisedRankTitle);
 				}
 			});
 	}
 
 	private void addIgnoredRank(String rankTitle)
 	{
-		ignoredRanks.add(rankTitle.toLowerCase());
+		ignoredRanks.add(rankTitle);
 		updateIgnoredRanks();
 	}
 
 	private void removeIgnoreRank(String rankTitle)
 	{
-		ignoredRanks.removeIf(r -> r.equals(rankTitle.toLowerCase()));
+		ignoredRanks.removeIf(r -> r.equals(rankTitle));
 		updateIgnoredRanks();
 	}
 
@@ -940,7 +941,7 @@ public class WomUtilsPlugin extends Plugin
 
 		for (Widget child : children)
 		{
-			if (ignoredRanks.contains(child.getText().toLowerCase()))
+			if (ignoredRanks.contains(child.getText().toLowerCase().replaceAll("[-\\s]", "_")))
 			{
 				child.setTextColor(Color.RED.getRGB());
 			}
