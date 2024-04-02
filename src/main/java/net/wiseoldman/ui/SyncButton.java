@@ -1,6 +1,7 @@
 package net.wiseoldman.ui;
 
 import com.google.common.util.concurrent.Runnables;
+import net.runelite.client.callback.ClientThread;
 import net.wiseoldman.beans.GroupMembership;
 import net.wiseoldman.web.WomClient;
 import net.wiseoldman.beans.Member;
@@ -19,7 +20,8 @@ import java.util.List;
 
 public class SyncButton
 {
-    private final Client client;
+	private final Client client;
+	private final ClientThread clientThread;
     private final WomClient womClient;
     private final ChatboxPanelManager chatboxPanelManager;
     private final Widget parent;
@@ -32,11 +34,12 @@ public class SyncButton
     private Widget textWidget;
 
 
-    public SyncButton(Client client, WomClient womClient, ChatboxPanelManager chatboxPanelManager,
+    public SyncButton(Client client, ClientThread clientThread, WomClient womClient, ChatboxPanelManager chatboxPanelManager,
                       int parent, Map<String, GroupMembership> groupMembers, List<String> ignoredRanks,
                       List<String> alwaysIncludedOnSync)
     {
-        this.client = client;
+		this.client = client;
+		this.clientThread = clientThread;
         this.womClient = womClient;
         this.chatboxPanelManager = chatboxPanelManager;
         this.parent = client.getWidget(parent);
@@ -157,8 +160,8 @@ public class SyncButton
             chatboxPanelManager.openTextMenuInput(
                     "Any members not in your clan will be removed" +
                         "<br>from your WOM group. Proceed?")
-                .option("1. Yes, overwrite WOM group", this::syncMembers)
-                .option("2. No, only add new members", () -> syncMembers(false))
+                .option("1. Yes, overwrite WOM group", () -> clientThread.invoke(() -> syncMembers()))
+                .option("2. No, only add new members", () -> clientThread.invoke(() -> syncMembers(false)))
                 .option("3. Cancel", Runnables.doNothing())
                 .build();
         });
