@@ -768,19 +768,31 @@ public class WomUtilsPlugin extends Plugin
 		switch (widgetLoaded.getGroupId())
 		{
 			case CLAN_SETTINGS_MEMBERS_PAGE_WIDGET:
-				clientThread.invoke(() -> createSyncButton(CLAN_SETTINGS_MEMBERS_PAGE_WIDGET_ID));
-				if (syncButton != null) syncButton.setEnabled();
-				clientThread.invokeLater(this::updateIgnoredRankColors);
+				clientThread.invoke(() ->
+				{
+					createSyncButton(CLAN_SETTINGS_MEMBERS_PAGE_WIDGET_ID);
+					if (syncButton != null)
+					{
+						syncButton.setEnabled();
+					}
+					clientThread.invokeLater(this::updateIgnoredRankColors);
+				});
 				break;
 			case CLAN_SETTINGS_INFO_PAGE_WIDGET:
-				clientThread.invoke(() -> createSyncButton(CLAN_SETTINGS_INFO_PAGE_WIDGET_ID));
-				if (namechangesSubmitted)
+				clientThread.invoke(() ->
 				{
-					syncButton.setEnabled();
-				} else
-				{
-					clientThread.invokeLater(this::sendUpdate);
-				}
+					createSyncButton(CLAN_SETTINGS_INFO_PAGE_WIDGET_ID);
+					if (namechangesSubmitted)
+					{
+						if (syncButton != null) {
+							syncButton.setEnabled();
+						}
+					}
+					else
+					{
+						clientThread.invokeLater(this::sendUpdate);
+					}
+				});
 
 				break;
 		}
@@ -1279,7 +1291,7 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (config.syncClanButton() && config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode()))
 		{
-			syncButton = new SyncButton(client, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
+			syncButton = new SyncButton(client, clientThread, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
 		}
 	}
 
