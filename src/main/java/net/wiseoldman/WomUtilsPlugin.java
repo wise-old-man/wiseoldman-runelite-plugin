@@ -13,7 +13,9 @@ import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import java.util.stream.Collectors;
+import net.runelite.api.VarbitComposition;
 import net.runelite.api.WorldType;
+import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
 import net.wiseoldman.beans.Competition;
@@ -82,6 +84,8 @@ import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.VarPlayer;
+import net.runelite.api.Varbits;
 import net.runelite.client.Notifier;
 import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
@@ -186,7 +190,6 @@ public class WomUtilsPlugin extends Plugin
 	private static final int CLAN_OPTIONS_RANKS_WIDGET_RIGHT_TITLE = 45416456;
 	private static final int CLAN_OPTIONS_RANKS_WIDGET_RIGHT = 45416461;
 
-	private static final Color SUCCESS = new Color(170, 255, 40);
 	private static final Color DEFAULT_CLAN_SETTINGS_TEXT_COLOR = new Color(0xff981f);
 
 	private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
@@ -521,7 +524,10 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (queue.isEmpty())
 		{
-			if (syncButton != null) syncButton.setEnabled();
+			if (syncButton != null)
+			{
+				syncButton.setEnabled();
+			}
 			namechangesSubmitted = true;
 
 			return;
@@ -534,7 +540,10 @@ public class WomUtilsPlugin extends Plugin
 		{
 			saveFile();
 
-			if (syncButton != null) syncButton.setEnabled();
+			if (syncButton != null)
+			{
+				syncButton.setEnabled();
+			}
 			namechangesSubmitted = true;
 		}
 		catch (IOException e)
@@ -587,9 +596,9 @@ public class WomUtilsPlugin extends Plugin
 			&& config.groupId() > 0
 			&& !Strings.isNullOrEmpty(config.verificationCode())
 			&& (groupId == InterfaceID.FRIENDS_CHAT
-				|| groupId == InterfaceID.FRIEND_LIST
-				|| groupId == InterfaceID.CLAN
-				|| groupId == InterfaceID.CLAN_GUEST);
+			|| groupId == InterfaceID.FRIEND_LIST
+			|| groupId == InterfaceID.CLAN
+			|| groupId == InterfaceID.CLAN_GUEST);
 
 		boolean addMenuLookup = config.menuLookupOption()
 			&& (groupId == InterfaceID.FRIEND_LIST
@@ -602,7 +611,7 @@ public class WomUtilsPlugin extends Plugin
 			|| groupId == InterfaceID.PRIVATE_CHAT
 			|| groupId == InterfaceID.IGNORE_LIST);
 
-		int offset = (addModifyMember ? 1:0) + (addMenuLookup ? 1:0);
+		int offset = (addModifyMember ? 1 : 0) + (addMenuLookup ? 1 : 0);
 
 		if (offset == 0)
 		{
@@ -673,12 +682,12 @@ public class WomUtilsPlugin extends Plugin
 	private void openGroupInBrowser()
 	{
 		String url = new HttpUrl.Builder()
-		.scheme("https")
-		.host(isSeasonal ? "league.wiseoldman.net" : "wiseoldman.net")
-		.addPathSegment("groups")
-		.addPathSegment("" + config.groupId())
-		.build()
-		.toString();
+			.scheme("https")
+			.host(isSeasonal ? "league.wiseoldman.net" : "wiseoldman.net")
+			.addPathSegment("groups")
+			.addPathSegment("" + config.groupId())
+			.build()
+			.toString();
 
 		SwingUtilities.invokeLater(() -> LinkBrowser.browse(url));
 	}
@@ -784,7 +793,8 @@ public class WomUtilsPlugin extends Plugin
 					createSyncButton(CLAN_SETTINGS_INFO_PAGE_WIDGET_ID);
 					if (namechangesSubmitted)
 					{
-						if (syncButton != null) {
+						if (syncButton != null)
+						{
 							syncButton.setEnabled();
 						}
 					}
@@ -968,7 +978,8 @@ public class WomUtilsPlugin extends Plugin
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
 		GameState state = gameStateChanged.getGameState();
-		switch (state) {
+		switch (state)
+		{
 			case LOGGED_IN:
 				if (accountHash != client.getAccountHash())
 				{
@@ -1013,7 +1024,7 @@ public class WomUtilsPlugin extends Plugin
 
 		Player local = client.getLocalPlayer();
 
-		if(visitedLoginScreen && recentlyLoggedIn && local != null)
+		if (visitedLoginScreen && recentlyLoggedIn && local != null)
 		{
 			playerName = local.getName();
 			accountHash = client.getAccountHash();
@@ -1053,8 +1064,8 @@ public class WomUtilsPlugin extends Plugin
 	private void updateMostRecentPlayer(boolean always)
 	{
 		boolean coreUpdaterIsOff = pluginManager
-				.getPlugins().stream()
-				.noneMatch(p -> p instanceof XpUpdaterPlugin && pluginManager.isPluginEnabled(p));
+			.getPlugins().stream()
+			.noneMatch(p -> p instanceof XpUpdaterPlugin && pluginManager.isPluginEnabled(p));
 
 		if (always || !xpUpdaterConfig.wiseoldman() || coreUpdaterIsOff)
 		{
@@ -1087,7 +1098,7 @@ public class WomUtilsPlugin extends Plugin
 		if (!event.isSilent())
 		{
 			String message = compareChanges(old, groupMembers);
-			sendResponseToChat(message, SUCCESS);
+			sendResponseToChat(message, getSuccessColor());
 			iconHandler.rebuildSettingsMemberList(!config.showicons(), groupMembers);
 		}
 	}
@@ -1099,7 +1110,7 @@ public class WomUtilsPlugin extends Plugin
 		onGroupUpdate();
 
 		String message = "New player added: " + event.getUsername(); // Correctly capitalized
-		sendResponseToChat(message, SUCCESS);
+		sendResponseToChat(message, getSuccessColor());
 	}
 
 	@Subscribe
@@ -1108,7 +1119,7 @@ public class WomUtilsPlugin extends Plugin
 		womClient.importGroupMembers();
 		onGroupUpdate();
 		String message = "Player removed: " + event.getUsername();
-		sendResponseToChat(message, SUCCESS);
+		sendResponseToChat(message, getSuccessColor());
 	}
 
 	@Subscribe
@@ -1150,9 +1161,9 @@ public class WomUtilsPlugin extends Plugin
 			competitionInfoboxes.add(new CompetitionInfobox(pws, this));
 		}
 		log.debug("Adding infoboxes for {} upcoming and {} ongoing competitions",
-				playerCompetitionsUpcoming.size(), playerCompetitionsOngoing.size());
+			playerCompetitionsUpcoming.size(), playerCompetitionsOngoing.size());
 
-		for (CompetitionInfobox b: competitionInfoboxes)
+		for (CompetitionInfobox b : competitionInfoboxes)
 		{
 			infoBoxManager.addInfoBox(b);
 		}
@@ -1183,7 +1194,7 @@ public class WomUtilsPlugin extends Plugin
 				}
 				delayedActions.add(new DelayedAction(c.durationLeft().minusHours(1), () ->
 					notifier.notify(c.getStatus())));
-				delayedActions.add(new DelayedAction(c.durationLeft().minusMinutes(15),  () ->
+				delayedActions.add(new DelayedAction(c.durationLeft().minusMinutes(15), () ->
 					notifier.notify(c.getStatus())));
 				delayedActions.add(new DelayedAction(c.durationLeft().plusSeconds(1), () ->
 					notifier.notify("Competition: " + c.getTitle() + " has started!")));
@@ -1195,7 +1206,7 @@ public class WomUtilsPlugin extends Plugin
 			Competition c = pws.getCompetition();
 			// Send an update when there are 15 minutes left so that there is at least one datapoint in the end
 			delayedActions.add(new DelayedAction(c.durationLeft().minusMinutes(15), () ->
-					updateMostRecentPlayer(true)));
+				updateMostRecentPlayer(true)));
 			if (!config.sendCompetitionNotification())
 			{
 				continue;
@@ -1292,6 +1303,19 @@ public class WomUtilsPlugin extends Plugin
 		if (config.syncClanButton() && config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode()))
 		{
 			syncButton = new SyncButton(client, clientThread, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
+		}
+	}
+
+	private Color getSuccessColor()
+	{
+		if (client.getVarbitValue(Varbits.TRANSPARENT_CHATBOX) == 0 || !client.isResized())
+		{
+			return new Color(client.getVarpValue(VarPlayer.SETTINGS_OPAQUE_CHAT_CLAN_BROADCAST) - 1);
+
+		}
+		else
+		{
+			return new Color(client.getVarpValue(VarPlayer.SETTINGS_TRANSPARENT_CHAT_CLAN_BROADCAST) - 1);
 		}
 	}
 
