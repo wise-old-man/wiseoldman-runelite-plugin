@@ -1,10 +1,12 @@
 package net.wiseoldman.web;
 
 import com.google.gson.Gson;
+import java.util.Set;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
+import net.wiseoldman.beans.RoleIndex;
 import net.wiseoldman.beans.WomStatus;
 import net.wiseoldman.beans.ParticipantWithCompetition;
 import net.wiseoldman.beans.GroupMemberAddition;
@@ -84,8 +86,8 @@ public class WomClient
 	public WomClient(Gson gson, WomUtilsPlugin plugin)
 	{
 		this.gson = gson.newBuilder()
-				.setDateFormat(DateFormat.FULL, DateFormat.FULL)
-				.create();
+			.setDateFormat(DateFormat.FULL, DateFormat.FULL)
+			.create();
 
 		this.plugin = plugin;
 	}
@@ -99,7 +101,8 @@ public class WomClient
 
 	void sendRequest(Request request)
 	{
-		sendRequest(request, r -> {});
+		sendRequest(request, r -> {
+		});
 	}
 
 	void sendRequest(Request request, Consumer<Response> consumer)
@@ -265,6 +268,7 @@ public class WomClient
 			sendResponseToChat(message, ERROR);
 		}
 	}
+
 	private void playerUpcomingCompetitionsCallback(String username, Response response)
 	{
 		if (response.isSuccessful())
@@ -319,9 +323,9 @@ public class WomClient
 			.build());
 	}
 
-	public void syncClanMembers(ArrayList<Member> clanMembers)
+	public void syncClanMembers(ArrayList<Member> clanMembers, Set<RoleIndex> roleOrders)
 	{
-		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), clanMembers);
+		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), clanMembers, roleOrders);
 		Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
 		sendRequest(request, this::syncClanMembersCallBack);
 	}
@@ -331,15 +335,15 @@ public class WomClient
 		ArrayList<Member> memberToAdd = new ArrayList<>();
 		memberToAdd.add(new Member(username.toLowerCase(), "member"));
 
-		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), memberToAdd);
+		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), memberToAdd, null);
 		Request request = createRequest(payload, "groups", "" + config.groupId(), "members");
 		sendRequest(request, r -> addMemberCallback(r, username));
 	}
 
 	public void removeGroupMember(String username)
 	{
-		GroupMemberRemoval payload = new GroupMemberRemoval(config.verificationCode(), new String[] {username.toLowerCase()});
-		Request request = createRequest(payload, HttpMethod.DELETE,"groups", "" + config.groupId(), "members");
+		GroupMemberRemoval payload = new GroupMemberRemoval(config.verificationCode(), new String[]{username.toLowerCase()});
+		Request request = createRequest(payload, HttpMethod.DELETE, "groups", "" + config.groupId(), "members");
 		sendRequest(request, r -> removeMemberCallback(r, username));
 	}
 
@@ -429,7 +433,7 @@ public class WomClient
 	{
 		CompletableFuture<PlayerInfo> future = new CompletableFuture<>();
 		Request request = createRequest("players", username);
-		sendRequest(request, r-> future.complete(parseResponse(r, PlayerInfo.class, true)), future::completeExceptionally);
+		sendRequest(request, r -> future.complete(parseResponse(r, PlayerInfo.class, true)), future::completeExceptionally);
 		return future;
 	}
 
@@ -437,7 +441,7 @@ public class WomClient
 	{
 		CompletableFuture<PlayerInfo> future = new CompletableFuture<>();
 		Request request = createRequest(new Object(), "players", username);
-		sendRequest(request, r-> future.complete(parseResponse(r, PlayerInfo.class, true)), future::completeExceptionally);
+		sendRequest(request, r -> future.complete(parseResponse(r, PlayerInfo.class, true)), future::completeExceptionally);
 		return future;
 	}
 }
