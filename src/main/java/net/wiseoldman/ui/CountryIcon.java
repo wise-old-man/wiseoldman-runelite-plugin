@@ -180,6 +180,7 @@ public enum CountryIcon
 	NIGERIA("ng", "1f1f3-1f1ec"),
 	NIUE("nu", "1f1f3-1f1fa"),
 	NORFOLK_ISLAND("nf", "1f1f3-1f1eb"),
+	NORTHERN_IRELAND("gb_nir", "1f1ec-1f1e7"),
 	NORTH_KOREA("kp", "1f1f0-1f1f5"),
 	NORTHERN_MARIANA_ISLANDS("mp", "1f1f2-1f1f5"),
 	NORWAY("no", "1f1f3-1f1f4"),
