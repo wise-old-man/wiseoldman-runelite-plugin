@@ -180,6 +180,7 @@ public enum CountryIcon
 	NIGERIA("ng", "1f1f3-1f1ec"),
 	NIUE("nu", "1f1f3-1f1fa"),
 	NORFOLK_ISLAND("nf", "1f1f3-1f1eb"),
+	NORTHERN_IRELAND("gb_nir", "1f1ec-1f1e7"),
 	NORTH_KOREA("kp", "1f1f0-1f1f5"),
 	NORTHERN_MARIANA_ISLANDS("mp", "1f1f2-1f1f5"),
 	NORWAY("no", "1f1f3-1f1f4"),
@@ -220,6 +221,7 @@ public enum CountryIcon
 	SOUTH_SUDAN("ss", "1f1f8-1f1f8"),
 	SPAIN("es", "1f1ea-1f1f8"),
 	SRI_LANKA("lk", "1f1f1-1f1f0"),
+	SCOTLAND("gb_sct", "1f3f4-e0067-e0062-e0073-e0063-e0074-e007f"),
 	ST_BARTHÉLEMY("bl", "1f1e7-1f1f1"),
 	ST_HELENA("sh", "1f1f8-1f1ed"),
 	ST_KITTS_AND_NEVIS("kn", "1f1f0-1f1f3"),
@@ -263,13 +265,13 @@ public enum CountryIcon
 	VATICAN_CITY("va", "1f1fb-1f1e6"),
 	VENEZUELA("ve", "1f1fb-1f1ea"),
 	VIETNAM("vn", "1f1fb-1f1f3"),
+	WALES("gb_wls", "1f3f4-e0067-e0062-e0077-e006c-e0073-e007f"),
 	WALLIS_AND_FUTUNA("wf", "1f1fc-1f1eb"),
 	WESTERN_SAHARA("eh", "1f1ea-1f1ed"),
 	YEMEN("ye", "1f1fe-1f1ea"),
 	ZAMBIA("zm", "1f1ff-1f1f2"),
 	ZIMBABWE("zw", "1f1ff-1f1fc"),
-	DEFAULT("default", "default")
-	;
+	DEFAULT("default", "default");
 	private final String languageCode;
 	private final String codepoint;
 
@@ -295,7 +297,14 @@ public enum CountryIcon
 
 	public static ImageIcon loadSquareImage(String languageCode)
 	{
-		return new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "flags_square/" + ICONS.get(languageCode).codepoint + ".png"));
+		try
+		{
+			return new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "flags_square/" + ICONS.get(languageCode).codepoint + ".png"));
+		}
+		catch (Exception e)
+		{
+			return new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "flags_square/default.png"));
+		}
 	}
 
 	public static CountryIcon getIcon(String countryCode)
