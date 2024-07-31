@@ -42,10 +42,13 @@ public class SyncButton
 
 
 	private final List<ClanRank> roleOrder = Arrays.asList(
-		ClanRank.OWNER, ClanRank.DEPUTY_OWNER, ClanRank.CLAN_RANK_14, ClanRank.CLAN_RANK_13, ClanRank.CLAN_RANK_12,
-		ClanRank.CLAN_RANK_11, ClanRank.ADMINISTRATOR, ClanRank.CLAN_RANK_10, ClanRank.CLAN_RANK_9,
-		ClanRank.CLAN_RANK_8, ClanRank.CLAN_RANK_7, ClanRank.CLAN_RANK_6, ClanRank.CLAN_RANK_5, ClanRank.CLAN_RANK_4,
-		ClanRank.CLAN_RANK_3, ClanRank.CLAN_RANK_2, ClanRank.CLAN_RANK_1
+			ClanRank.OWNER, ClanRank.DEPUTY_OWNER, new ClanRank(124), new ClanRank(120),
+			new ClanRank(115), new ClanRank(110), new ClanRank(105), new ClanRank(104),
+			new ClanRank(103), new ClanRank(102), new ClanRank(101), ClanRank.ADMINISTRATOR,
+			new ClanRank(99), new ClanRank(98), new ClanRank(97), new ClanRank(96),
+			new ClanRank(95), new ClanRank(90), new ClanRank(80), new ClanRank(70),
+			new ClanRank(60), new ClanRank(50), new ClanRank(40), new ClanRank(30),
+			new ClanRank(20), new ClanRank(10), new ClanRank(0)
 	);
 
 	public SyncButton(Client client, ClientThread clientThread, WomClient womClient, ChatboxPanelManager chatboxPanelManager,
