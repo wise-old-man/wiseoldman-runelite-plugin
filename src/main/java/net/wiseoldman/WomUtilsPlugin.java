@@ -18,6 +18,7 @@ import net.runelite.api.WorldType;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
+import net.runelite.client.eventbus.EventBus;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionInfo;
 import net.wiseoldman.beans.NameChangeEntry;
@@ -29,6 +30,7 @@ import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
 import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
 import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
+import net.wiseoldman.features.AutoUpdateSession;
 import net.wiseoldman.panel.NameAutocompleter;
 import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
@@ -44,12 +46,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -259,6 +256,13 @@ public class WomUtilsPlugin extends Plugin
 	@Inject
 	ClientToolbar clientToolbar;
 
+	@Inject
+	private EventBus eventBus;
+
+	private static final Class<?>[] FEATURES = new Class[]{
+			AutoUpdateSession.class
+	};
+
 	private Map<String, String> nameChanges = new HashMap<>();
 	private LinkedBlockingQueue<NameChangeEntry> queue = new LinkedBlockingQueue<>();
 	private Map<String, GroupMembership> groupMembers = new HashMap<>();
@@ -283,8 +287,8 @@ public class WomUtilsPlugin extends Plugin
 	private long lastXp;
 	private boolean visitedLoginScreen = true;
 	private boolean recentlyLoggedIn;
-	private String playerName;
-	private long accountHash;
+	public String playerName;
+	public long accountHash;
 	private boolean namechangesSubmitted = false;
 	private SyncButton syncButton;
 
@@ -304,6 +308,10 @@ public class WomUtilsPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		log.info("Wise Old Man started!");
+
+		for (Class<?> feature : FEATURES) {
+			eventBus.register(injector.getInstance(feature));
+		}
 
 		// This will work, idk why really, but ok
 		womPanel = injector.getInstance(WomPanel.class);
