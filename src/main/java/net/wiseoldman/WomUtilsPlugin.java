@@ -12,23 +12,15 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
-import net.runelite.api.VarbitComposition;
+
 import net.runelite.api.WorldType;
-import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
-import net.wiseoldman.beans.Competition;
-import net.wiseoldman.beans.CompetitionInfo;
-import net.wiseoldman.beans.NameChangeEntry;
-import net.wiseoldman.beans.ParticipantWithStanding;
-import net.wiseoldman.beans.GroupMembership;
-import net.wiseoldman.beans.ParticipantWithCompetition;
-import net.wiseoldman.events.WomGroupMemberAdded;
-import net.wiseoldman.events.WomGroupMemberRemoved;
-import net.wiseoldman.events.WomGroupSynced;
-import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
-import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
+import net.wiseoldman.beans.*;
+import net.wiseoldman.events.*;
 import net.wiseoldman.panel.NameAutocompleter;
 import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
@@ -50,11 +42,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
@@ -264,6 +251,9 @@ public class WomUtilsPlugin extends Plugin
 	private Map<String, GroupMembership> groupMembers = new HashMap<>();
 	private List<ParticipantWithStanding> playerCompetitionsOngoing = new ArrayList<>();
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
+	private List<CompetitionInfo> playerOngoingTeamBasedCompetitions = new ArrayList<>();
+
+	private Map<String, String> playerCompetitionTeamNameMap = new HashMap<>();
 	private List<CompetitionInfobox> competitionInfoboxes = new CopyOnWriteArrayList<>();
 	private List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 	private Map<Integer, CompetitionInfo> competitionInfoMap = new HashMap<>();
@@ -475,6 +465,43 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		womClient.commandLookup(player, command, chatMessage);
+	}
+
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		Map<ChatMessageType, Boolean> teamNameDisplayLocationMap = new HashMap<>();
+		teamNameDisplayLocationMap.put(ChatMessageType.CLAN_CHAT, config.displayTeamNameInClanChats());
+		teamNameDisplayLocationMap.put(ChatMessageType.CLAN_MESSAGE, config.displayTeamNameInClanMessages());
+		teamNameDisplayLocationMap.put(ChatMessageType.PRIVATECHAT, config.displayTeamNameInPrivateMessages());
+
+		if (teamNameDisplayLocationMap.containsKey(event.getType()) && teamNameDisplayLocationMap.get(event.getType()))
+		{
+			interceptAndDisplayTeamNameInMessage(event, event.getMessage());
+		}
+	}
+
+	private void interceptAndDisplayTeamNameInMessage(ChatMessage event, String message) {
+		String sender = event.getName();
+
+		boolean senderNameContainsImageTag = sender.contains("<img");
+
+		if (senderNameContainsImageTag) {
+			String imageTagToTrim = "<img=*>";
+			sender = sender.substring(imageTagToTrim.length());
+		}
+
+		if (playerCompetitionTeamNameMap.containsKey(sender)) {
+			String newMessage = new ChatMessageBuilder()
+					.append("[")
+					.append(playerCompetitionTeamNameMap.get(sender))
+					.append("] ")
+					.append(message)
+					.build();
+
+			event.getMessageNode().setValue(newMessage);
+			client.refreshChat();
+		}
 	}
 
 	@Subscribe
@@ -1134,6 +1161,12 @@ public class WomUtilsPlugin extends Plugin
 			{
 				sendHighlightedMessage(c.getStatus());
 			}
+
+			boolean playerListRequired = config.displayTeamNameInClanChats() || config.displayTeamNameInClanChats() || config.displayTeamNameInPrivateMessages();
+
+			if (c.getType() == CompetitionType.TEAM && playerListRequired) {
+				womClient.fetchCompetitionInfo(c.getId());
+			}
 		}
 		updateInfoboxes();
 		updateScheduledNotifications();
@@ -1146,6 +1179,18 @@ public class WomUtilsPlugin extends Plugin
 		log.debug("Fetched {} upcoming competitions for player {}", event.getCompetitions().length, event.getUsername());
 		updateInfoboxes();
 		updateScheduledNotifications();
+	}
+
+	@Subscribe
+	public void onWomCompetitionInfoFetched(WomCompetitionInfoFetched event) {
+		playerOngoingTeamBasedCompetitions.add(event.getComp());
+		log.debug("Fetch competition info for competition id {}", event.getComp().getId());
+
+		if (playerCompetitionTeamNameMap.isEmpty()) {
+			Arrays.stream(event.getComp().getParticipations()).forEach(participant -> {
+				playerCompetitionTeamNameMap.put(participant.getPlayer().getDisplayName(), participant.getTeamName());
+			});
+		}
 	}
 
 	private void updateInfoboxes()

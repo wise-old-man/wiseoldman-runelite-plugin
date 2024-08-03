@@ -3,24 +3,11 @@ package net.wiseoldman.web;
 import com.google.gson.Gson;
 import java.util.Set;
 import net.wiseoldman.WomUtilsPlugin;
-import net.wiseoldman.beans.GroupInfoWithMemberships;
-import net.wiseoldman.beans.NameChangeEntry;
-import net.wiseoldman.beans.ParticipantWithStanding;
-import net.wiseoldman.beans.RoleIndex;
-import net.wiseoldman.beans.WomStatus;
-import net.wiseoldman.beans.ParticipantWithCompetition;
-import net.wiseoldman.beans.GroupMemberAddition;
-import net.wiseoldman.beans.Member;
-import net.wiseoldman.beans.GroupMemberRemoval;
-import net.wiseoldman.beans.PlayerInfo;
-import net.wiseoldman.beans.WomPlayerUpdate;
-import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
-import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
+import net.wiseoldman.beans.*;
+import net.wiseoldman.events.*;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.WomUtilsConfig;
-import net.wiseoldman.events.WomGroupMemberAdded;
-import net.wiseoldman.events.WomGroupMemberRemoved;
-import net.wiseoldman.events.WomGroupSynced;
+
 import java.awt.Color;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -269,6 +256,19 @@ public class WomClient
 		}
 	}
 
+	private void playerCompetitionInfoCallback(Response response) {
+		if (response.isSuccessful())
+		{
+			CompetitionInfo competitionInfo = parseResponse(response, CompetitionInfo.class);
+			postEvent(new WomCompetitionInfoFetched(competitionInfo));
+		} else
+		{
+			WomStatus data = parseResponse(response, WomStatus.class);
+			String message = "Error: " + data.getMessage();
+			sendResponseToChat(message, ERROR);
+		}
+	}
+
 	private void playerUpcomingCompetitionsCallback(String username, Response response)
 	{
 		if (response.isSuccessful())
@@ -421,6 +421,12 @@ public class WomClient
 	{
 		Request request = createRequest("players", username, "competitions", "standings", "?status=ongoing");
 		sendRequest(request, r -> playerOngoingCompetitionsCallback(username, r));
+	}
+
+	public void fetchCompetitionInfo(int competitionId) {
+		String competitionIdString = ""+competitionId;
+		Request request = createRequest("competitions", competitionIdString);
+		sendRequest(request, this::playerCompetitionInfoCallback);
 	}
 
 	public void updatePlayer(String username, long accountHash)

@@ -33,6 +33,13 @@ public interface WomUtilsConfig extends Config
 	String competitionConfig = "competitionConfig";
 
 	@ConfigSection(
+			name = "Competition Team Names",
+			description = "Team name tag display configurations",
+			position = 4
+	)
+	String teamNamesConfig = "teamNamesConfig";
+
+	@ConfigSection(
 		name = "Event codeword",
 		description = "Event codeword configurations",
 		position = 4
@@ -55,6 +62,8 @@ public interface WomUtilsConfig extends Config
 		section = lookupConfig
 	)
 	default boolean playerLookupOption() { return true; }
+
+
 
 	@ConfigItem(
 		keyName = "menuLookupOption",
@@ -255,6 +264,33 @@ public interface WomUtilsConfig extends Config
 	{
 		return false;
 	}
+
+	@ConfigItem(
+			keyName = "displayTeamTagClanMessages",
+			name = "Clan Messages",
+			description = "Toggles the display of a players competitions team name in clan messages (broadcasts)",
+			position = 1,
+			section = teamNamesConfig
+	)
+	default boolean displayTeamNameInClanMessages() { return false; }
+
+	@ConfigItem(
+			keyName = "displayTeamTagClanChats",
+			name = "Clan Chats",
+			description = "Toggles the display of a players ongoing competitions team name in clan chats",
+			position = 2,//
+			section = teamNamesConfig
+	)
+	default boolean displayTeamNameInClanChats() { return false; }
+
+	@ConfigItem(
+			keyName = "displayTeamTagPrivateMessages",
+			name = "Private Messages",
+			description = "Toggles the display of a players ongoing competitions team name in private messages",
+			position = 3,
+			section = teamNamesConfig
+	)
+	default boolean displayTeamNameInPrivateMessages() { return false; }
 
 	@ConfigItem(
 		keyName = "displayCodeword",
