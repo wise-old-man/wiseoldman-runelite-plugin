@@ -34,7 +34,7 @@ public interface WomUtilsConfig extends Config
 
 	@ConfigSection(
 			name = "Competition Team Names",
-			description = "Team name tag display configurations",
+			description = "Competition team name display configurations",
 			position = 4
 	)
 	String teamNamesConfig = "teamNamesConfig";
@@ -266,7 +266,7 @@ public interface WomUtilsConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "displayTeamTagClanMessages",
+			keyName = "displayTeamNameClanMessages",
 			name = "Clan Messages",
 			description = "Toggles the display of a players competitions team name in clan messages (broadcasts)",
 			position = 1,
@@ -275,16 +275,16 @@ public interface WomUtilsConfig extends Config
 	default boolean displayTeamNameInClanMessages() { return false; }
 
 	@ConfigItem(
-			keyName = "displayTeamTagClanChats",
+			keyName = "displayTeamNameClanChats",
 			name = "Clan Chats",
 			description = "Toggles the display of a players ongoing competitions team name in clan chats",
-			position = 2,//
+			position = 2,
 			section = teamNamesConfig
 	)
 	default boolean displayTeamNameInClanChats() { return false; }
 
 	@ConfigItem(
-			keyName = "displayTeamTagPrivateMessages",
+			keyName = "displayTeamNamePrivateMessages",
 			name = "Private Messages",
 			description = "Toggles the display of a players ongoing competitions team name in private messages",
 			position = 3,
