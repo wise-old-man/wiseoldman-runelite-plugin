@@ -262,7 +262,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean sendCompetitionNotification()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -290,7 +290,7 @@ public interface WomUtilsConfig extends Config
 			position = 3,
 			section = teamNamesConfig
 	)
-	default boolean displayTeamNameInPrivateMessages() { return false; }
+	default boolean displayTeamNameInPrivateMessages() { return true; }
 
 	@ConfigItem(
 		keyName = "displayCodeword",
