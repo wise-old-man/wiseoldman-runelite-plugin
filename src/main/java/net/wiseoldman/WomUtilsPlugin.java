@@ -1188,7 +1188,7 @@ public class WomUtilsPlugin extends Plugin
 			boolean isCompetitionInfoRequired = config.displayTeamNameInClanChats() || config.displayTeamNameInClanMessages() || config.displayTeamNameInPrivateMessages();
 
 			if (c.getType() == CompetitionType.TEAM && isCompetitionInfoRequired) {
-				womClient.fetchCompetitionInfo(c.getId());
+				womClient.fetchCompetitionInfo(Integer.toString(c.getId()));
 			}
 		}
 		updateInfoboxes();

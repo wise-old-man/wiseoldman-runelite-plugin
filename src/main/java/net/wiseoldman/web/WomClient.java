@@ -440,10 +440,9 @@ public class WomClient
 		sendRequest(request, r -> playerOngoingCompetitionsCallback(username, r));
 	}
 
-	public void fetchCompetitionInfo(int competitionId)
+	public void fetchCompetitionInfo(String competitionId)
 	{
-		String competitionIdString = ""+competitionId;
-		Request request = createRequest("competitions", competitionIdString);
+		Request request = createRequest("competitions", competitionId);
 		sendRequest(request, this::playerCompetitionInfoCallback);
 	}
 
