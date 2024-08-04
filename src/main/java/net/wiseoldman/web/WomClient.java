@@ -2,6 +2,7 @@ package net.wiseoldman.web;
 
 import com.google.gson.Gson;
 import java.util.Set;
+
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.*;
 import net.wiseoldman.events.*;
@@ -256,12 +257,14 @@ public class WomClient
 		}
 	}
 
-	private void playerCompetitionInfoCallback(Response response) {
+	private void playerCompetitionInfoCallback(Response response)
+	{
 		if (response.isSuccessful())
 		{
 			CompetitionInfo competitionInfo = parseResponse(response, CompetitionInfo.class);
 			postEvent(new WomCompetitionInfoFetched(competitionInfo));
-		} else
+		}
+		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
 			String message = "Error: " + data.getMessage();
@@ -423,7 +426,8 @@ public class WomClient
 		sendRequest(request, r -> playerOngoingCompetitionsCallback(username, r));
 	}
 
-	public void fetchCompetitionInfo(int competitionId) {
+	public void fetchCompetitionInfo(int competitionId)
+	{
 		String competitionIdString = ""+competitionId;
 		Request request = createRequest("competitions", competitionIdString);
 		sendRequest(request, this::playerCompetitionInfoCallback);

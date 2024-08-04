@@ -262,7 +262,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean sendCompetitionNotification()
 	{
-		return false;
+		return true;
 	}
 
 	@ConfigItem(
@@ -272,7 +272,7 @@ public interface WomUtilsConfig extends Config
 			position = 1,
 			section = teamNamesConfig
 	)
-	default boolean displayTeamNameInClanMessages() { return false; }
+	default boolean displayTeamNameInClanMessages() { return true; }
 
 	@ConfigItem(
 			keyName = "displayTeamNameClanChats",
@@ -281,7 +281,7 @@ public interface WomUtilsConfig extends Config
 			position = 2,
 			section = teamNamesConfig
 	)
-	default boolean displayTeamNameInClanChats() { return false; }
+	default boolean displayTeamNameInClanChats() { return true; }
 
 	@ConfigItem(
 			keyName = "displayTeamNamePrivateMessages",

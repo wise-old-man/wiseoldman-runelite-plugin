@@ -12,21 +12,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
-import net.wiseoldman.beans.Competition;
-import net.wiseoldman.beans.CompetitionInfo;
-import net.wiseoldman.beans.NameChangeEntry;
-import net.wiseoldman.beans.ParticipantWithStanding;
-import net.wiseoldman.beans.GroupMembership;
-import net.wiseoldman.beans.ParticipantWithCompetition;
-import net.wiseoldman.events.WomGroupMemberAdded;
-import net.wiseoldman.events.WomGroupMemberRemoved;
-import net.wiseoldman.events.WomGroupSynced;
-import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
-import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
+import net.wiseoldman.beans.*;
+import net.wiseoldman.events.*;
 import net.wiseoldman.panel.NameAutocompleter;
 import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
@@ -42,12 +35,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -263,7 +250,6 @@ public class WomUtilsPlugin extends Plugin
 	private List<ParticipantWithStanding> playerCompetitionsOngoing = new ArrayList<>();
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
 	private List<CompetitionInfo> playerOngoingTeamBasedCompetitions = new ArrayList<>();
-
 	private Map<String, String> playerCompetitionTeamNameMap = new HashMap<>();
 	private List<CompetitionInfobox> competitionInfoboxes = new CopyOnWriteArrayList<>();
 	private List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
@@ -495,6 +481,10 @@ public class WomUtilsPlugin extends Plugin
 	private void interceptAndDisplayTeamNameInMessage(ChatMessage event, String message) {
 		String sender = event.getName();
 
+		if (event.getType().equals(ChatMessageType.CLAN_MESSAGE) && event.getMessage().contains("received a")) {
+			sender = event.getMessage().split("\\s+")[0];
+		}
+
 		boolean senderNameContainsImageTag = sender.contains("<img");
 
 		if (senderNameContainsImageTag) {
@@ -503,12 +493,8 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		if (playerCompetitionTeamNameMap.containsKey(sender)) {
-			String newMessage = new ChatMessageBuilder()
-					.append("[")
-					.append(playerCompetitionTeamNameMap.get(sender))
-					.append("] ")
-					.append(message)
-					.build();
+
+			String newMessage = "[" + playerCompetitionTeamNameMap.get(sender) + "] " + message;
 
 			event.getMessageNode().setValue(newMessage);
 			client.refreshChat();
@@ -782,6 +768,13 @@ public class WomUtilsPlugin extends Plugin
 		{
 			alwaysIncludedOnSync.clear();
 			alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
+		}
+
+		if (event.getKey().contains("displayTeamName")
+				&& playerCompetitionTeamNameMap.isEmpty()
+				&& Objects.equals(event.getNewValue(), "true"))
+		{
+			womClient.fetchOngoingPlayerCompetitions(client.getLocalPlayer().getName());
 		}
 	}
 
@@ -1173,9 +1166,9 @@ public class WomUtilsPlugin extends Plugin
 				sendHighlightedMessage(c.getStatus());
 			}
 
-			boolean playerListRequired = config.displayTeamNameInClanChats() || config.displayTeamNameInClanChats() || config.displayTeamNameInPrivateMessages();
+			boolean isCompetitionInfoRequired = config.displayTeamNameInClanChats() || config.displayTeamNameInClanMessages() || config.displayTeamNameInPrivateMessages();
 
-			if (c.getType() == CompetitionType.TEAM && playerListRequired) {
+			if (c.getType() == CompetitionType.TEAM && isCompetitionInfoRequired) {
 				womClient.fetchCompetitionInfo(c.getId());
 			}
 		}
