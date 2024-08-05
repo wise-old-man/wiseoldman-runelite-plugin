@@ -8,6 +8,7 @@ public class SnapshotBosses
 {
 	Boss abyssal_sire;
 	Boss alchemical_hydra;
+	Boss araxxor;
 	Boss artio;
 	Boss barrows_chests;
 	Boss bryophyta;
@@ -76,6 +77,8 @@ public class SnapshotBosses
 				return getAbyssal_sire();
 			case ALCHEMICAL_HYDRA:
 				return getAlchemical_hydra();
+			case ARAXXOR:
+				return getAraxxor();
 			case ARTIO:
 				return getArtio();
 			case BARROWS_CHESTS:
