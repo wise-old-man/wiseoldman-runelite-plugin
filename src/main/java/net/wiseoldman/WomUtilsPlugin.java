@@ -1199,9 +1199,12 @@ public class WomUtilsPlugin extends Plugin
 				sendHighlightedMessage(c.getStatus());
 			}
 
-			boolean isCompetitionInfoRequired = config.displayTeamNameInClanChats() || config.displayTeamNameInClanMessages() || config.displayTeamNameInPrivateMessages();
+			boolean isCompetitionInfoRequired = config.displayTeamNameInClanChats() ||
+					config.displayTeamNameInClanMessages() ||
+					config.displayTeamNameInPrivateMessages() ||
+					config.displayTeamNameInPublicChat();
 
-			if (c.getType() == CompetitionType.TEAM && isCompetitionInfoRequired) {
+			if (isCompetitionInfoRequired && c.getType() == CompetitionType.TEAM) {
 				womClient.fetchCompetitionInfo(Integer.toString(c.getId()));
 			}
 		}
