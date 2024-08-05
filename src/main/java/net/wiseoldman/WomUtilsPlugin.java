@@ -514,14 +514,17 @@ public class WomUtilsPlugin extends Plugin
 		sender = Text.removeTags(sender);
 		sender = Text.sanitize(sender);
 		sender = sender.toLowerCase();
-		
+
 		if (playerCompetitionTeamNameMap.containsKey(sender))
 		{
 			String teamNameTag = "[" + playerCompetitionTeamNameMap.get(sender) + "] ";
 
-			if (event.getType().equals(ChatMessageType.CLAN_MESSAGE)) {
+			if (event.getType().equals(ChatMessageType.CLAN_MESSAGE))
+			{
 				event.getMessageNode().setValue(teamNameTag + originalMessage);
-			} else {
+			}
+			else
+			{
 				event.getMessageNode().setName(teamNameTag + event.getName());
 			}
 
