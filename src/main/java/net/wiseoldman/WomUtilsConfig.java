@@ -273,7 +273,7 @@ public interface WomUtilsConfig extends Config
 			position = 1,
 			section = teamNamesConfig
 	)
-	default boolean displayTeamNameInClanMessages() { return true; }
+	default boolean displayTeamNameInClanMessages() { return false; }
 
 	@ConfigItem(
 			keyName = "displayTeamNameClanChats",
@@ -282,7 +282,7 @@ public interface WomUtilsConfig extends Config
 			position = 2,
 			section = teamNamesConfig
 	)
-	default boolean displayTeamNameInClanChats() { return true; }
+	default boolean displayTeamNameInClanChats() { return false; }
 
 	@ConfigItem(
 			keyName = "displayTeamNamePrivateMessages",
@@ -291,7 +291,7 @@ public interface WomUtilsConfig extends Config
 			position = 3,
 			section = teamNamesConfig
 	)
-	default boolean displayTeamNameInPrivateMessages() { return true; }
+	default boolean displayTeamNameInPrivateMessages() { return false; }
 
 	@ConfigItem(
 			keyName = "displayTeamNamePublicChat",
@@ -300,7 +300,7 @@ public interface WomUtilsConfig extends Config
 			position = 4,
 			section = teamNamesConfig
 	)
-	default boolean displayTeamNameInPublicChat() { return true; }
+	default boolean displayTeamNameInPublicChat() { return false; }
 
 	@ConfigItem(
 		keyName = "displayCodeword",

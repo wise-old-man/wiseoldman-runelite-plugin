@@ -500,10 +500,12 @@ public class WomUtilsPlugin extends Plugin
 		}
 	}
 
-	private void interceptAndDisplayTeamNameInMessage(ChatMessage event, String message) {
+	private void interceptAndDisplayTeamNameInMessage(ChatMessage event, String message)
+	{
 		String sender = event.getName();
 
-		if (event.getType().equals(ChatMessageType.CLAN_MESSAGE)) {
+		if (event.getType().equals(ChatMessageType.CLAN_MESSAGE))
+		{
 			sender = parseUsernameFromClanMessage(event.getMessage());
 
 			if (sender == null) return;
@@ -514,7 +516,8 @@ public class WomUtilsPlugin extends Plugin
 		sender = sender.toLowerCase();
 
 
-		if (playerCompetitionTeamNameMap.containsKey(sender)) {
+		if (playerCompetitionTeamNameMap.containsKey(sender))
+		{
 			String newMessage = "[" + playerCompetitionTeamNameMap.get(sender) + "] " + message;
 
 			event.getMessageNode().setValue(newMessage);
@@ -522,12 +525,14 @@ public class WomUtilsPlugin extends Plugin
 		}
 	}
 
-	private String parseUsernameFromClanMessage(String message) {
+	private String parseUsernameFromClanMessage(String message)
+	{
 		String regex = "(.*?)(?=\\s(?:received a|has defeated|has been defeated|has achieved a|has a funny feeling|has reached|has completed))";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(message);
 
-		if (matcher.find()) {
+		if (matcher.find())
+		{
 			return matcher.group(1);
 		}
 
@@ -1204,7 +1209,8 @@ public class WomUtilsPlugin extends Plugin
 					config.displayTeamNameInPrivateMessages() ||
 					config.displayTeamNameInPublicChat();
 
-			if (isCompetitionInfoRequired && c.getType() == CompetitionType.TEAM) {
+			if (isCompetitionInfoRequired && c.getType() == CompetitionType.TEAM)
+			{
 				womClient.fetchCompetitionInfo(Integer.toString(c.getId()));
 			}
 		}
@@ -1222,12 +1228,15 @@ public class WomUtilsPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onWomCompetitionInfoFetched(WomCompetitionInfoFetched event) {
+	public void onWomCompetitionInfoFetched(WomCompetitionInfoFetched event)
+	{
 		playerOngoingTeamBasedCompetitions.add(event.getComp());
 		log.debug("Fetch competition info for competition id {}", event.getComp().getId());
 
-		if (playerCompetitionTeamNameMap.isEmpty()) {
-			Arrays.stream(event.getComp().getParticipations()).forEach(participant -> {
+		if (playerCompetitionTeamNameMap.isEmpty())
+		{
+			Arrays.stream(event.getComp().getParticipations()).forEach(participant ->
+			{
 				String displayName = participant.getPlayer().getDisplayName();
 				displayName = Text.removeTags(displayName);
 				displayName = Text.sanitize(displayName);
