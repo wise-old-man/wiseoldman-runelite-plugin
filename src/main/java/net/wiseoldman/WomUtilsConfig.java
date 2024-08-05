@@ -265,6 +265,7 @@ public interface WomUtilsConfig extends Config
 		return false;
 	}
 
+
 	@ConfigItem(
 			keyName = "displayTeamNameClanMessages",
 			name = "Clan Messages",
@@ -291,6 +292,15 @@ public interface WomUtilsConfig extends Config
 			section = teamNamesConfig
 	)
 	default boolean displayTeamNameInPrivateMessages() { return true; }
+
+	@ConfigItem(
+			keyName = "displayTeamNamePublicChat",
+			name = "Public Chat",
+			description = "Toggles the display of a players ongoing competitions team name in public chat",
+			position = 4,
+			section = teamNamesConfig
+	)
+	default boolean displayTeamNameInPublicChat() { return true; }
 
 	@ConfigItem(
 		keyName = "displayCodeword",

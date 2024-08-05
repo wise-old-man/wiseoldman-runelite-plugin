@@ -272,7 +272,7 @@ public class WomUtilsPlugin extends Plugin
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
 	private List<CompetitionInfo> playerOngoingTeamBasedCompetitions = new ArrayList<>();
 	private Map<String, String> playerCompetitionTeamNameMap = new HashMap<>();
-	private java.util.List<CompetitionInfobox> competitionInfoboxes = new CopyOnWriteArrayList<>();
+	private List<CompetitionInfobox> competitionInfoboxes = new CopyOnWriteArrayList<>();
 	private List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 	private Map<Integer, CompetitionInfo> competitionInfoMap = new HashMap<>();
 	private List<String> ignoredRanks = new ArrayList<>();
@@ -492,6 +492,7 @@ public class WomUtilsPlugin extends Plugin
 		teamNameDisplayLocationMap.put(ChatMessageType.CLAN_CHAT, config.displayTeamNameInClanChats());
 		teamNameDisplayLocationMap.put(ChatMessageType.CLAN_MESSAGE, config.displayTeamNameInClanMessages());
 		teamNameDisplayLocationMap.put(ChatMessageType.PRIVATECHAT, config.displayTeamNameInPrivateMessages());
+		teamNameDisplayLocationMap.put(ChatMessageType.PUBLICCHAT, config.displayTeamNameInPublicChat());
 
 		if (teamNameDisplayLocationMap.containsKey(event.getType()) && teamNameDisplayLocationMap.get(event.getType()))
 		{
@@ -508,13 +509,13 @@ public class WomUtilsPlugin extends Plugin
 			if (sender == null) return;
 		}
 
-		String senderNameNoTags = Text.removeTags(sender);
-		senderNameNoTags = Text.sanitize(senderNameNoTags);
-		senderNameNoTags = senderNameNoTags.toLowerCase();
+		sender = Text.removeTags(sender);
+		sender = Text.sanitize(sender);
+		sender = sender.toLowerCase();
 
 
-		if (playerCompetitionTeamNameMap.containsKey(senderNameNoTags)) {
-			String newMessage = "[" + playerCompetitionTeamNameMap.get(senderNameNoTags) + "] " + message;
+		if (playerCompetitionTeamNameMap.containsKey(sender)) {
+			String newMessage = "[" + playerCompetitionTeamNameMap.get(sender) + "] " + message;
 
 			event.getMessageNode().setValue(newMessage);
 			client.refreshChat();
@@ -522,7 +523,7 @@ public class WomUtilsPlugin extends Plugin
 	}
 
 	private String parseUsernameFromClanMessage(String message) {
-		String regex = "^(\\w+) (received a|has defeated|has been defeated)";
+		String regex = "(.*?)(?=\\s(?:received a|has defeated|has been defeated|has achieved a|has a funny feeling|has reached|has completed))";
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(message);
 
@@ -1225,6 +1226,7 @@ public class WomUtilsPlugin extends Plugin
 		if (playerCompetitionTeamNameMap.isEmpty()) {
 			Arrays.stream(event.getComp().getParticipations()).forEach(participant -> {
 				String displayName = participant.getPlayer().getDisplayName();
+				displayName = Text.removeTags(displayName);
 				displayName = Text.sanitize(displayName);
 				displayName = displayName.toLowerCase();
 
