@@ -18,6 +18,8 @@ public enum Metric
 	AGILITY(HiscoreSkill.AGILITY),
 	@SerializedName("alchemical_hydra")
 	ALCHEMICAL_HYDRA(HiscoreSkill.ALCHEMICAL_HYDRA),
+	@SerializedName("araxxor")
+	ALCHEMICAL_HYDRA(HiscoreSkill.ARAXXOR),
 	@SerializedName("artio")
 	ARTIO(HiscoreSkill.ARTIO),
 	@SerializedName("attack")
