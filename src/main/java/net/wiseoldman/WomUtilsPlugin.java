@@ -506,7 +506,6 @@ public class WomUtilsPlugin extends Plugin
 
 		if (event.getType().equals(ChatMessageType.CLAN_MESSAGE))
 		{
-			interceptAndDisplayTeamNameInClanMessage(event, originalMessage);
 			sender = parseUsernameFromClanMessage(event.getMessage());
 
 			if (sender == null) return;
@@ -515,8 +514,7 @@ public class WomUtilsPlugin extends Plugin
 		sender = Text.removeTags(sender);
 		sender = Text.sanitize(sender);
 		sender = sender.toLowerCase();
-
-
+		
 		if (playerCompetitionTeamNameMap.containsKey(sender))
 		{
 			String teamNameTag = "[" + playerCompetitionTeamNameMap.get(sender) + "] ";
@@ -529,14 +527,6 @@ public class WomUtilsPlugin extends Plugin
 
 			client.refreshChat();
 		}
-	}
-
-	private void interceptAndDisplayTeamNameInClanMessage(ChatMessage event, String originalMessage) {
-		String sender = parseUsernameFromClanMessage(event.getMessage());
-
-		if (sender == null) return;
-
-
 	}
 
 	private String parseUsernameFromClanMessage(String message)
