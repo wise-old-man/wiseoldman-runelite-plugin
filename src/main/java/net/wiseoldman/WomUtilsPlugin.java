@@ -14,6 +14,8 @@ import com.google.inject.Binder;
 import com.google.inject.Provides;
 
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.runelite.api.VarbitComposition;
 import net.runelite.api.WorldType;
@@ -500,24 +502,35 @@ public class WomUtilsPlugin extends Plugin
 	private void interceptAndDisplayTeamNameInMessage(ChatMessage event, String message) {
 		String sender = event.getName();
 
-		if (event.getType().equals(ChatMessageType.CLAN_MESSAGE) && event.getMessage().contains("received a")) {
-			sender = event.getMessage().split("\\s+")[0];
+		if (event.getType().equals(ChatMessageType.CLAN_MESSAGE)) {
+			sender = parseUsernameFromClanMessage(event.getMessage());
+
+			if (sender == null) return;
 		}
 
-		boolean senderNameContainsImageTag = sender.contains("<img");
+		String senderNameNoTags = Text.removeTags(sender);
+		senderNameNoTags = Text.sanitize(senderNameNoTags);
+		senderNameNoTags = senderNameNoTags.toLowerCase();
 
-		if (senderNameContainsImageTag) {
-			String imageTagToTrim = "<img=*>";
-			sender = sender.substring(imageTagToTrim.length());
-		}
 
-		if (playerCompetitionTeamNameMap.containsKey(sender)) {
-
-			String newMessage = "[" + playerCompetitionTeamNameMap.get(sender) + "] " + message;
+		if (playerCompetitionTeamNameMap.containsKey(senderNameNoTags)) {
+			String newMessage = "[" + playerCompetitionTeamNameMap.get(senderNameNoTags) + "] " + message;
 
 			event.getMessageNode().setValue(newMessage);
 			client.refreshChat();
 		}
+	}
+
+	private String parseUsernameFromClanMessage(String message) {
+		String regex = "^(\\w+) (received a|has defeated|has been defeated)";
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(message);
+
+		if (matcher.find()) {
+			return matcher.group(1);
+		}
+
+		return null;
 	}
 
 	@Subscribe
@@ -1211,7 +1224,11 @@ public class WomUtilsPlugin extends Plugin
 
 		if (playerCompetitionTeamNameMap.isEmpty()) {
 			Arrays.stream(event.getComp().getParticipations()).forEach(participant -> {
-				playerCompetitionTeamNameMap.put(participant.getPlayer().getDisplayName(), participant.getTeamName());
+				String displayName = participant.getPlayer().getDisplayName();
+				displayName = Text.sanitize(displayName);
+				displayName = displayName.toLowerCase();
+
+				playerCompetitionTeamNameMap.put(displayName, participant.getTeamName());
 			});
 		}
 	}
