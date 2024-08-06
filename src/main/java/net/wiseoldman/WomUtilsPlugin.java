@@ -769,11 +769,15 @@ public class WomUtilsPlugin extends Plugin
 		}
 	}
 
-	private boolean shouldFetchPlayerCompetitionDetails(String optionString) {
+	private boolean shouldFetchPlayerCompetitionDetails(String optionString)
+	{
 		TeamNameDisplayOptions option;
-		try {
+		try
+		{
 			option = TeamNameDisplayOptions.valueOf(optionString);
-		} catch (IllegalArgumentException e) {
+		}
+		catch (IllegalArgumentException e)
+		{
 			return false;
 		}
 
@@ -910,21 +914,24 @@ public class WomUtilsPlugin extends Plugin
 		return null;
 	}
 
-	private void injectTeamNameIntoStringStack(String senderName) {
+	private void injectTeamNameIntoStringStack(String senderName)
+	{
  		String nameTagPrefix = "[";
 	 	String nameTagSuffix = "]";
 
-		if (senderName != null && !senderName.isEmpty()) {
+		if (senderName != null && !senderName.isEmpty())
+		{
 			senderName = Text.standardize(senderName);
 			String teamNameTag = playerCompetitionTeamNameMap.get(senderName);
 
 			if (teamNameTag == null) return;
 
 			Color clanTagColor = config.teamNameTagColor();
-			if (clanTagColor != null) {
+			if (clanTagColor != null)
+			{
 				teamNameTag = ColorUtil.wrapWithColorTag(teamNameTag, clanTagColor);
 			}
-			
+
 			String existing = client.getStringStack()[client.getStringStackSize() - 1];
 
 			if (!existing.isEmpty()) existing = existing + " ";
