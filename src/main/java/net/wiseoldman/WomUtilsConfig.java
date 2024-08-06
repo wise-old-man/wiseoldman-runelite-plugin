@@ -7,6 +7,7 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
+import net.wiseoldman.beans.TeamNameDisplayOptions;
 
 @ConfigGroup(WomUtilsPlugin.CONFIG_GROUP)
 public interface WomUtilsConfig extends Config
@@ -34,22 +35,22 @@ public interface WomUtilsConfig extends Config
 
 	@ConfigSection(
 			name = "Competition Team Names",
-			description = "Competition team name display configurations",
+			description = "Competition team name configurations",
 			position = 4
 	)
-	String teamNamesConfig = "teamNamesConfig";
+	String competitionTeamNamesConfig = "competitionTeamNamesConfig";
 
 	@ConfigSection(
 		name = "Event codeword",
 		description = "Event codeword configurations",
-		position = 4
+		position = 5
 	)
 	String eventCodeword = "eventCodeword";
 
 	@ConfigSection(
 		name = "Not Synced Ranks",
 		description = "Ignored Ranks for WOM sync",
-		position = 5,
+		position = 6,
 		closedByDefault = true
 	)
 	String ignoredRanks = "ignoredRanks";
@@ -265,42 +266,23 @@ public interface WomUtilsConfig extends Config
 		return false;
 	}
 
-
 	@ConfigItem(
-			keyName = "displayTeamNameClanMessages",
-			name = "Clan Messages",
-			description = "Toggles the display of a players competitions team name in clan messages (broadcasts)",
+			keyName = "displayCompetitionTeamNameTags",
+			name = "Display",
+			description = "Configures the display of competition team names in clan chat",
 			position = 1,
-			section = teamNamesConfig
+			section = competitionTeamNamesConfig
 	)
-	default boolean displayTeamNameInClanMessages() { return false; }
+	default TeamNameDisplayOptions displayCompetitionTeamNameTags() { return TeamNameDisplayOptions.NONE; }
 
 	@ConfigItem(
-			keyName = "displayTeamNameClanChats",
-			name = "Clan Chats",
-			description = "Toggles the display of a players ongoing competitions team name in clan chats",
-			position = 2,
-			section = teamNamesConfig
-	)
-	default boolean displayTeamNameInClanChats() { return false; }
-
-	@ConfigItem(
-			keyName = "displayTeamNamePrivateMessages",
-			name = "Private Messages",
-			description = "Toggles the display of a players ongoing competitions team name in private messages",
-			position = 3,
-			section = teamNamesConfig
-	)
-	default boolean displayTeamNameInPrivateMessages() { return false; }
-
-	@ConfigItem(
-			keyName = "displayTeamNamePublicChat",
-			name = "Public Chat",
-			description = "Toggles the display of a players ongoing competitions team name in public chat",
+			keyName = "teamNameTagColor",
+			name = "Name Tag Color",
+			description = "Change the color of the Competition Team Name tag in the chat box",
 			position = 4,
-			section = teamNamesConfig
+			section = competitionTeamNamesConfig
 	)
-	default boolean displayTeamNameInPublicChat() { return false; }
+	default Color teamNameTagColor() { return Color.BLACK; }
 
 	@ConfigItem(
 		keyName = "displayCodeword",
