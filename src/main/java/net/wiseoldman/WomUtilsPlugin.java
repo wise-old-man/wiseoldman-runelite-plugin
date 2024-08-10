@@ -592,61 +592,57 @@ public class WomUtilsPlugin extends Plugin
 			return;
 		}
 
-		boolean addModifyMember = config.addRemoveMember()
-			&& config.groupId() > 0
-			&& !Strings.isNullOrEmpty(config.verificationCode())
-			&& (groupId == InterfaceID.FRIENDS_CHAT
-			|| groupId == InterfaceID.FRIEND_LIST
-			|| groupId == InterfaceID.CLAN
-			|| groupId == InterfaceID.CLAN_GUEST);
-
-		boolean addMenuLookup = config.menuLookupOption()
-			&& (groupId == InterfaceID.FRIEND_LIST
-			|| groupId == InterfaceID.FRIENDS_CHAT
-			|| groupId == InterfaceID.CLAN
-			|| groupId == InterfaceID.CLAN_GUEST
-			// prevent from adding for Kick option (interferes with the raiding party one)
-			|| groupId == InterfaceID.CHATBOX && !KICK_OPTION.equals(option)
-			|| groupId == InterfaceID.RAIDING_PARTY
-			|| groupId == InterfaceID.PRIVATE_CHAT
-			|| groupId == InterfaceID.IGNORE_LIST);
-
-		int offset = (addModifyMember ? 1 : 0) + (addMenuLookup ? 1 : 0);
-
-		if (offset == 0)
-		{
-			return;
-		}
-
 		String name = Text.toJagexName(Text.removeTags(event.getTarget()));
 
-		if (addModifyMember)
+		if (config.addRemoveMember())
 		{
-			client.createMenuEntry(-offset)
-				.setOption(groupMembers.containsKey(name.toLowerCase()) ? REMOVE_MEMBER : ADD_MEMBER)
-				.setType(MenuAction.RUNELITE)
-				.setTarget(event.getTarget())
-				.onClick(e -> {
-					if (groupMembers.containsKey(name.toLowerCase()))
-					{
-						womClient.removeGroupMember(name);
-					}
-					else
-					{
-						womClient.addGroupMember(name);
-					}
-				});
-			offset--;
+			boolean addModifyMember = config.groupId() > 0
+				&& !Strings.isNullOrEmpty(config.verificationCode())
+				&& (groupId == InterfaceID.FRIENDS_CHAT
+				|| groupId == InterfaceID.FRIEND_LIST
+				|| groupId == InterfaceID.CLAN
+				|| groupId == InterfaceID.CLAN_GUEST);
+
+			if (addModifyMember)
+			{
+				client.createMenuEntry(-2)
+					.setOption(groupMembers.containsKey(name.toLowerCase()) ? REMOVE_MEMBER : ADD_MEMBER)
+					.setType(MenuAction.RUNELITE)
+					.setTarget(event.getTarget())
+					.onClick(e -> {
+						if (groupMembers.containsKey(name.toLowerCase()))
+						{
+							womClient.removeGroupMember(name);
+						}
+						else
+						{
+							womClient.addGroupMember(name);
+						}
+					});
+			}
 		}
 
-		if (addMenuLookup)
+		if (config.menuLookupOption())
 		{
-			client.createMenuEntry(-offset)
-				.setTarget(event.getTarget())
-				.setOption(LOOKUP)
-				.setType(MenuAction.RUNELITE)
-				.setIdentifier(event.getIdentifier())
-				.onClick(e -> lookupPlayer(name));
+			boolean addMenuLookup = (groupId == InterfaceID.FRIEND_LIST
+				|| groupId == InterfaceID.FRIENDS_CHAT
+				|| groupId == InterfaceID.CLAN
+				|| groupId == InterfaceID.CLAN_GUEST
+				// prevent from adding for Kick option (interferes with the raiding party one)
+				|| groupId == InterfaceID.CHATBOX && !KICK_OPTION.equals(option)
+				|| groupId == InterfaceID.RAIDING_PARTY
+				|| groupId == InterfaceID.PRIVATE_CHAT
+				|| groupId == InterfaceID.IGNORE_LIST);
+
+			if (addMenuLookup)
+			{
+				client.createMenuEntry(-2)
+					.setTarget(event.getTarget())
+					.setOption(LOOKUP)
+					.setType(MenuAction.RUNELITE)
+					.setIdentifier(event.getIdentifier())
+					.onClick(e -> lookupPlayer(name));
+			}
 		}
 	}
 
