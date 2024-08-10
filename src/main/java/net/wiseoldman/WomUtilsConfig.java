@@ -7,6 +7,7 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
+import net.wiseoldman.beans.TeamNameDisplayOptions;
 
 @ConfigGroup(WomUtilsPlugin.CONFIG_GROUP)
 public interface WomUtilsConfig extends Config
@@ -33,16 +34,23 @@ public interface WomUtilsConfig extends Config
 	String competitionConfig = "competitionConfig";
 
 	@ConfigSection(
+			name = "Competition Team Names",
+			description = "Competition team name configurations",
+			position = 4
+	)
+	String competitionTeamNamesConfig = "competitionTeamNamesConfig";
+
+	@ConfigSection(
 		name = "Event codeword",
 		description = "Event codeword configurations",
-		position = 4
+		position = 5
 	)
 	String eventCodeword = "eventCodeword";
 
 	@ConfigSection(
 		name = "Not Synced Ranks",
 		description = "Ignored Ranks for WOM sync",
-		position = 5,
+		position = 6,
 		closedByDefault = true
 	)
 	String ignoredRanks = "ignoredRanks";
@@ -55,6 +63,8 @@ public interface WomUtilsConfig extends Config
 		section = lookupConfig
 	)
 	default boolean playerLookupOption() { return true; }
+
+
 
 	@ConfigItem(
 		keyName = "menuLookupOption",
@@ -255,6 +265,24 @@ public interface WomUtilsConfig extends Config
 	{
 		return false;
 	}
+
+	@ConfigItem(
+			keyName = "displayCompetitionTeamNameTags",
+			name = "Display",
+			description = "Configures the display of competition team names in clan chat",
+			position = 1,
+			section = competitionTeamNamesConfig
+	)
+	default TeamNameDisplayOptions displayCompetitionTeamNameTags() { return TeamNameDisplayOptions.NONE; }
+
+	@ConfigItem(
+			keyName = "teamNameTagColor",
+			name = "Name Tag Color",
+			description = "Change the color of the Competition Team Name tag in the chat box",
+			position = 4,
+			section = competitionTeamNamesConfig
+	)
+	default Color teamNameTagColor() { return Color.BLACK; }
 
 	@ConfigItem(
 		keyName = "displayCodeword",

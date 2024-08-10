@@ -12,18 +12,31 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+
+import java.util.Objects;
+import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import net.runelite.api.ChatLineBuffer;
+import net.runelite.api.MessageNode;
 import net.runelite.api.VarbitComposition;
 import net.runelite.api.WorldType;
+import net.runelite.api.clan.ClanChannel;
+import net.runelite.api.clan.ClanChannelMember;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionInfo;
+import net.wiseoldman.beans.CompetitionType;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.beans.GroupMembership;
 import net.wiseoldman.beans.ParticipantWithCompetition;
+import net.wiseoldman.beans.TeamNameDisplayOptions;
+import net.wiseoldman.events.WomCompetitionInfoFetched;
 import net.wiseoldman.events.WomGroupMemberAdded;
 import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
@@ -264,6 +277,8 @@ public class WomUtilsPlugin extends Plugin
 	private Map<String, GroupMembership> groupMembers = new HashMap<>();
 	private List<ParticipantWithStanding> playerCompetitionsOngoing = new ArrayList<>();
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
+	private List<CompetitionInfo> playerOngoingTeamBasedCompetitions = new ArrayList<>();
+	private Map<String, String> playerCompetitionTeamNameMap = new HashMap<>();
 	private List<CompetitionInfobox> competitionInfoboxes = new CopyOnWriteArrayList<>();
 	private List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 	private Map<Integer, CompetitionInfo> competitionInfoMap = new HashMap<>();
@@ -741,6 +756,28 @@ public class WomUtilsPlugin extends Plugin
 			alwaysIncludedOnSync.clear();
 			alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
 		}
+
+		if (event.getKey().equals("displayCompetitionTeamNameTags")
+				&& playerCompetitionTeamNameMap.isEmpty()
+				&& shouldFetchPlayerCompetitionDetails(event.getNewValue()))
+		{
+			womClient.fetchOngoingPlayerCompetitions(client.getLocalPlayer().getName());
+		}
+	}
+
+	private boolean shouldFetchPlayerCompetitionDetails(String optionString)
+	{
+		TeamNameDisplayOptions option;
+		try
+		{
+			option = TeamNameDisplayOptions.valueOf(optionString);
+		}
+		catch (IllegalArgumentException e)
+		{
+			return false;
+		}
+
+		return !option.equals(TeamNameDisplayOptions.NONE);
 	}
 
 	@Subscribe
@@ -813,6 +850,90 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		iconHandler.handleScriptEvent(event, groupMembers);
+
+		boolean displayClanChats = false;
+		boolean displayClanBroadcasts = false;
+
+		if ("chatMessageBuilding".equals(event.getEventName()))
+		{
+			switch (config.displayCompetitionTeamNameTags())
+			{
+				case CLAN_CHATS:
+					displayClanChats = true;
+					break;
+				case CLAN_BROADCASTS:
+					displayClanBroadcasts = true;
+					break;
+				case BOTH:
+					displayClanChats = true;
+					displayClanBroadcasts = true;
+					break;
+				default:
+					break;
+			}
+		}
+
+		if (!config.displayCompetitionTeamNameTags().equals(TeamNameDisplayOptions.NONE) && "chatMessageBuilding".equals(event.getEventName()))
+		{
+			int uid = client.getIntStack()[client.getIntStackSize() - 1];
+			final MessageNode messageNode = client.getMessages().get(uid);
+			assert messageNode != null : "chat message build for unknown message";
+
+
+			String senderName = null;
+			if (messageNode.getType().equals(ChatMessageType.CLAN_CHAT) && displayClanChats)
+			{
+				senderName = messageNode.getName();
+			} else if (messageNode.getType().equals(ChatMessageType.CLAN_MESSAGE) && displayClanBroadcasts)
+			{
+				senderName = parseUsernameFromClanMessage(messageNode.getValue());
+			}
+
+			if (senderName != null && !senderName.isEmpty())
+			{
+				injectTeamNameIntoStringStack(senderName);
+			}
+		}
+	}
+
+	private String parseUsernameFromClanMessage(String message)
+	{
+		String regex = "(.*?)(?=\\s(?:received a|has defeated|has been defeated|has achieved a|has a funny feeling|has reached|has completed|receieved special))";
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(message);
+
+		if (matcher.find())
+		{
+			return matcher.group(1);
+		}
+
+		return null;
+	}
+
+	private void injectTeamNameIntoStringStack(String senderName)
+	{
+ 		String nameTagPrefix = "[";
+	 	String nameTagSuffix = "]";
+
+		if (senderName != null && !senderName.isEmpty())
+		{
+			senderName = Text.standardize(senderName);
+			String teamNameTag = playerCompetitionTeamNameMap.get(senderName);
+
+			if (teamNameTag == null) return;
+
+			Color clanTagColor = config.teamNameTagColor();
+			if (clanTagColor != null)
+			{
+				teamNameTag = ColorUtil.wrapWithColorTag(teamNameTag, clanTagColor);
+			}
+
+			String existing = client.getStringStack()[client.getStringStackSize() - 1];
+
+			if (!existing.isEmpty()) existing = existing + " ";
+
+			client.getStringStack()[client.getStringStackSize() - 1] = existing+nameTagPrefix+teamNameTag+nameTagSuffix;
+		}
 	}
 
 	@Subscribe
@@ -1130,6 +1251,11 @@ public class WomUtilsPlugin extends Plugin
 			{
 				sendHighlightedMessage(c.getStatus());
 			}
+
+			if (!config.displayCompetitionTeamNameTags().equals(TeamNameDisplayOptions.NONE) && c.getType() == CompetitionType.TEAM)
+			{
+				womClient.fetchCompetitionInfo(Integer.toString(c.getId()));
+			}
 		}
 		updateInfoboxes();
 		updateScheduledNotifications();
@@ -1142,6 +1268,24 @@ public class WomUtilsPlugin extends Plugin
 		log.debug("Fetched {} upcoming competitions for player {}", event.getCompetitions().length, event.getUsername());
 		updateInfoboxes();
 		updateScheduledNotifications();
+	}
+
+	@Subscribe
+	public void onWomCompetitionInfoFetched(WomCompetitionInfoFetched event)
+	{
+		playerOngoingTeamBasedCompetitions.add(event.getComp());
+		log.debug("Fetch competition info for competition id {}", event.getComp().getId());
+
+		if (playerCompetitionTeamNameMap.isEmpty())
+		{
+			Arrays.stream(event.getComp().getParticipations()).forEach(participant ->
+			{
+				String displayName = participant.getPlayer().getDisplayName();
+				displayName = Text.standardize(displayName);
+
+				playerCompetitionTeamNameMap.put(displayName, participant.getTeamName());
+			});
+		}
 	}
 
 	private void updateInfoboxes()
