@@ -31,6 +31,7 @@ public class SnapshotBosses
 	Boss giant_mole;
 	Boss grotesque_guardians;
 	Boss hespori;
+	Boss hueycoatl;
 	Boss kalphite_queen;
 	Boss king_black_dragon;
 	Boss kraken;
@@ -122,7 +123,9 @@ public class SnapshotBosses
 			case GROTESQUE_GUARDIANS:
 				return getGrotesque_guardians();
 			case HESPORI:
-				return hespori;
+				return getHespori();
+			case HUEYCOATL:
+				return getHueycoatl();
 			case KALPHITE_QUEEN:
 				return getKalphite_queen();
 			case KING_BLACK_DRAGON:

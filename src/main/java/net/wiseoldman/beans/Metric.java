@@ -112,6 +112,8 @@ public enum Metric
 	HESPORI(HiscoreSkill.HESPORI),
 	@SerializedName("hitpoints")
 	HITPOINTS(HiscoreSkill.HITPOINTS),
+	@SerializedName("hueycoatl")
+	HUEYCOATL(HiscoreSkill.HUEYCOATL),
 	@SerializedName("hunter")
 	HUNTER(HiscoreSkill.HUNTER),
 	@SerializedName("kalphite_queen")

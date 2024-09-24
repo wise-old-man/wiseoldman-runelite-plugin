@@ -23,7 +23,7 @@ dependencies {
 }
 
 group = 'net.wiseoldman'
-version = '1.3.22'
+version = '1.3.23'
 sourceCompatibility = '1.8'
 
 tasks.withType(JavaCompile) {
