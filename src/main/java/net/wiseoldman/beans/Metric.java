@@ -18,6 +18,8 @@ public enum Metric
 	AGILITY(HiscoreSkill.AGILITY),
 	@SerializedName("alchemical_hydra")
 	ALCHEMICAL_HYDRA(HiscoreSkill.ALCHEMICAL_HYDRA),
+	@SerializedName("amoxliatl")
+	AMOXLIATL(HiscoreSkill.AMOXLIATL),
 	@SerializedName("araxxor")
 	ARAXXOR(HiscoreSkill.ARAXXOR),
 	@SerializedName("artio")
@@ -112,8 +114,6 @@ public enum Metric
 	HESPORI(HiscoreSkill.HESPORI),
 	@SerializedName("hitpoints")
 	HITPOINTS(HiscoreSkill.HITPOINTS),
-	@SerializedName("hueycoatl")
-	HUEYCOATL(HiscoreSkill.HUEYCOATL),
 	@SerializedName("hunter")
 	HUNTER(HiscoreSkill.HUNTER),
 	@SerializedName("kalphite_queen")
@@ -186,6 +186,8 @@ public enum Metric
 	THEATRE_OF_BLOOD(HiscoreSkill.THEATRE_OF_BLOOD),
 	@SerializedName("the_corrupted_gauntlet")
 	THE_CORRUPTED_GAUNTLET(HiscoreSkill.THE_CORRUPTED_GAUNTLET),
+	@SerializedName("the_hueycoatl")
+	HUEYCOATL(HiscoreSkill.THE_HUEYCOATL),
 	@SerializedName("the_leviathan")
 	THE_LEVIATHAN(HiscoreSkill.THE_LEVIATHAN),
 	@SerializedName("the_whisperer")
