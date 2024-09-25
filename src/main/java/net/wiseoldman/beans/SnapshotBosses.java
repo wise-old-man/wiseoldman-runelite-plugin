@@ -127,8 +127,8 @@ public class SnapshotBosses
 				return getGrotesque_guardians();
 			case HESPORI:
 				return getHespori();
-			case HUEYCOATL:
-				return getHueycoatl();
+			case THE_HUEYCOATL:
+				return getThe_hueycoatl();
 			case KALPHITE_QUEEN:
 				return getKalphite_queen();
 			case KING_BLACK_DRAGON:
