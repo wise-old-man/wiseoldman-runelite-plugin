@@ -8,6 +8,7 @@ public class SnapshotBosses
 {
 	Boss abyssal_sire;
 	Boss alchemical_hydra;
+	Boss amoxliatl;
 	Boss araxxor;
 	Boss artio;
 	Boss barrows_chests;
@@ -52,6 +53,7 @@ public class SnapshotBosses
 	Boss tempoross;
 	Boss the_gauntlet;
 	Boss the_corrupted_gauntlet;
+	Boss the_hueycoatl;
 	Boss the_leviathan;
 	Boss the_whisperer;
 	Boss theatre_of_blood;
@@ -77,6 +79,8 @@ public class SnapshotBosses
 				return getAbyssal_sire();
 			case ALCHEMICAL_HYDRA:
 				return getAlchemical_hydra();
+			case AMOXLIATL:
+				return getAmoxliatl();
 			case ARAXXOR:
 				return getAraxxor();
 			case ARTIO:
@@ -122,7 +126,9 @@ public class SnapshotBosses
 			case GROTESQUE_GUARDIANS:
 				return getGrotesque_guardians();
 			case HESPORI:
-				return hespori;
+				return getHespori();
+			case THE_HUEYCOATL:
+				return getThe_hueycoatl();
 			case KALPHITE_QUEEN:
 				return getKalphite_queen();
 			case KING_BLACK_DRAGON:
