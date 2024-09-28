@@ -187,7 +187,7 @@ public enum Metric
 	@SerializedName("the_corrupted_gauntlet")
 	THE_CORRUPTED_GAUNTLET(HiscoreSkill.THE_CORRUPTED_GAUNTLET),
 	@SerializedName("the_hueycoatl")
-	HUEYCOATL(HiscoreSkill.THE_HUEYCOATL),
+	THE_HUEYCOATL(HiscoreSkill.THE_HUEYCOATL),
 	@SerializedName("the_leviathan")
 	THE_LEVIATHAN(HiscoreSkill.THE_LEVIATHAN),
 	@SerializedName("the_whisperer")
