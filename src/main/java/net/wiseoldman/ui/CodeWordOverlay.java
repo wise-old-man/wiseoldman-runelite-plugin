@@ -11,7 +11,6 @@ import java.time.format.DateTimeFormatter;
 import javax.inject.Inject;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
-import net.runelite.client.ui.overlay.OverlayPriority;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.components.TitleComponent;
 
@@ -26,18 +25,18 @@ public class CodeWordOverlay extends OverlayPanel
 	{
 		super(plugin);
 		setPosition(OverlayPosition.ABOVE_CHATBOX_RIGHT);
-		setPriority(OverlayPriority.LOW);
+		setPriority(PRIORITY_LOW);
 		this.config = config;
 	}
 
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		if(!config.displayCodeword() || Strings.isNullOrEmpty(config.configuredCodeword()))
+		if (!config.displayCodeword() || Strings.isNullOrEmpty(config.configuredCodeword()))
 		{
 			return null;
 		}
-		if(config.showTimestamp())
+		if (config.showTimestamp())
 		{
 			panelComponent.getChildren().add(LineComponent.builder()
 				.left(config.configuredCodeword())

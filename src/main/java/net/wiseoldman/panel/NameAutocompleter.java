@@ -43,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Friend;
 import net.runelite.api.FriendsChatManager;
+import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.Nameable;
 import net.runelite.api.NameableContainer;
 import net.runelite.api.Player;
@@ -54,7 +55,7 @@ public class NameAutocompleter implements KeyListener
 	/**
 	 * Non-breaking space character.
 	 */
-	private static final String NBSP = Character.toString((char)160);
+	private static final String NBSP = Character.toString((char) 160);
 
 	/**
 	 * Character class for characters that cannot be in an RSN.
@@ -98,7 +99,7 @@ public class NameAutocompleter implements KeyListener
 	@Override
 	public void keyTyped(KeyEvent e)
 	{
-		final JTextComponent input = (JTextComponent)e.getSource();
+		final JTextComponent input = (JTextComponent) e.getSource();
 		final String inputText = input.getText();
 
 		// Only autocomplete if the selection end is at the end of the text.
@@ -153,7 +154,7 @@ public class NameAutocompleter implements KeyListener
 
 	private void newAutocomplete(KeyEvent e)
 	{
-		final JTextComponent input = (JTextComponent)e.getSource();
+		final JTextComponent input = (JTextComponent) e.getSource();
 		final String inputText = input.getText();
 		final String nameStart = inputText.substring(0, input.getSelectionStart()) + e.getKeyChar();
 
@@ -231,8 +232,8 @@ public class NameAutocompleter implements KeyListener
 		// Search cached players if a friend wasn't found
 		if (!autocompleteName.isPresent())
 		{
-			final Player[] cachedPlayers = client.getCachedPlayers();
-			autocompleteName = Arrays.stream(cachedPlayers)
+			final IndexedObjectSet<? extends Player> players = client.getTopLevelWorldView().players();
+			autocompleteName = players.stream()
 				.filter(Objects::nonNull)
 				.map(Player::getName)
 				.filter(n -> pattern.matcher(n).matches())

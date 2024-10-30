@@ -13,9 +13,8 @@ import com.google.gson.JsonParser;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import java.util.stream.Collectors;
-import net.runelite.api.VarbitComposition;
+import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.WorldType;
-import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
 import net.wiseoldman.beans.Competition;
@@ -605,7 +604,7 @@ public class WomUtilsPlugin extends Plugin
 
 			if (addModifyMember)
 			{
-				client.createMenuEntry(-2)
+				client.getMenu().createMenuEntry(-2)
 					.setOption(groupMembers.containsKey(name.toLowerCase()) ? REMOVE_MEMBER : ADD_MEMBER)
 					.setType(MenuAction.RUNELITE)
 					.setTarget(event.getTarget())
@@ -636,7 +635,7 @@ public class WomUtilsPlugin extends Plugin
 
 			if (addMenuLookup)
 			{
-				client.createMenuEntry(-2)
+				client.getMenu().createMenuEntry(-2)
 					.setTarget(event.getTarget())
 					.setOption(LOOKUP)
 					.setType(MenuAction.RUNELITE)
@@ -651,7 +650,9 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (event.getMenuAction() == MenuAction.RUNELITE_PLAYER && event.getMenuOption().equals(LOOKUP))
 		{
-			Player player = client.getCachedPlayers()[event.getId()];
+			IndexedObjectSet<? extends Player> players = client.getTopLevelWorldView().players();
+			Player player = players.byIndex(event.getId());
+
 			if (player == null)
 			{
 				return;
@@ -897,7 +898,7 @@ public class WomUtilsPlugin extends Plugin
 		String standardisedRankTitle = rankTitle.toLowerCase().replaceAll("[-\\s]", "_");
 		boolean rankIsIgnored = ignoredRanks.contains(standardisedRankTitle);
 
-		client.createMenuEntry(-1)
+		client.getMenu().createMenuEntry(-1)
 			.setOption(!rankIsIgnored ? IGNORE_RANK : UNIGNORE_RANK)
 			.setType(MenuAction.RUNELITE)
 			.setTarget(targetRank)
