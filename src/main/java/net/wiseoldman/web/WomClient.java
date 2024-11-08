@@ -213,6 +213,10 @@ public class WomClient
 			GroupInfoWithMemberships data = parseResponse(response, GroupInfoWithMemberships.class);
 			postEvent(new WomGroupSynced(data));
 		}
+		else if (response.code() == 429)
+		{
+			log.error("wom-utils: reached api limits while syncing clan members");
+		}
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
@@ -231,6 +235,10 @@ public class WomClient
 		{
 			postEvent(new WomGroupMemberRemoved(username));
 		}
+		else if (response.code() == 429)
+		{
+			log.error("wom-utils: reached api limits while removing player from group");
+		}
 		else
 		{
 			message = "Error: " + data.getMessage() + (this.plugin.isSeasonal ? leagueError : "");
@@ -245,6 +253,10 @@ public class WomClient
 		if (response.isSuccessful())
 		{
 			postEvent(new WomGroupMemberAdded(username));
+		}
+		else if (response.code() == 429)
+		{
+			log.error("wom-utils: reached api limits while adding player to group");
 		}
 		else
 		{
@@ -261,6 +273,10 @@ public class WomClient
 			ParticipantWithStanding[] comps = parseResponse(response, ParticipantWithStanding[].class);
 			postEvent(new WomOngoingPlayerCompetitionsFetched(username, comps));
 		}
+		else if (response.code() == 429)
+		{
+			log.error("wom-utils: reached api limits while fetching ongoing competitions");
+		}
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
@@ -275,6 +291,10 @@ public class WomClient
 		{
 			ParticipantWithCompetition[] comps = parseResponse(response, ParticipantWithCompetition[].class);
 			postEvent(new WomUpcomingPlayerCompetitionsFetched(username, comps));
+		}
+		else if (response.code() == 429)
+		{
+			log.error("wom-utils: reached api limits while fetching upcoming competitions");
 		}
 		else
 		{
