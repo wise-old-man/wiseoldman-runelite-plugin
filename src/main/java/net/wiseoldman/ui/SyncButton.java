@@ -3,8 +3,10 @@ package net.wiseoldman.ui;
 import com.google.common.util.concurrent.Runnables;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.api.clan.ClanRank;
+import net.runelite.client.eventbus.EventBus;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.RoleIndex;
+import net.wiseoldman.events.WomGroupSynced;
 import net.wiseoldman.web.WomClient;
 import net.wiseoldman.beans.Member;
 import java.util.Arrays;
@@ -39,7 +41,7 @@ public class SyncButton
 	private Widget textWidget;
 
 	private Set<RoleIndex> roleOrders = new HashSet<>();
-
+	private EventBus.Subscriber syncMembersSubscriber = null;
 
 	private final List<ClanRank> roleOrder = Arrays.asList(
 			ClanRank.OWNER, ClanRank.DEPUTY_OWNER, new ClanRank(124), new ClanRank(120),
@@ -127,13 +129,30 @@ public class SyncButton
 
 	private void syncMembers()
 	{
-		syncMembers(true);
+		syncMembers(true, false);
 	}
 
-	private void syncMembers(boolean overwrite)
+	private void syncMembers(boolean overwrite, boolean needsUpdatedGroupMembers)
 	{
 		Map<String, Member> clanMembers = new HashMap<>();
 
+		if (needsUpdatedGroupMembers) {
+			/*
+				Fixes https://github.com/wise-old-man/wiseoldman-runelite-plugin/issues/59
+				by re-downloading all group members and waiting for `plugin.groupMembers` to be updated
+				before automatically re-running this function with the up-to-date information.
+
+				It works, but could use some love.
+			 */
+			syncMembersSubscriber = plugin.eventBus.register(WomGroupSynced.class, (WomGroupSynced event) -> {
+				plugin.eventBus.unregister(syncMembersSubscriber);
+				syncMembers(overwrite, false);
+			}, 0);
+
+			womClient.importGroupMembers();
+			return;
+		}
+		
 		if (!overwrite)
 		{
 			plugin.groupMembers.forEach((k, v) -> clanMembers.put(k, new Member(v.getPlayer().getDisplayName(), v.getRole())));
@@ -185,7 +204,7 @@ public class SyncButton
 					"Any members not in your clan will be removed" +
 						"<br>from your WOM group. Proceed?")
 				.option("1. Yes, overwrite WOM group", () -> clientThread.invoke(() -> syncMembers()))
-				.option("2. No, only add new members", () -> clientThread.invoke(() -> syncMembers(false)))
+				.option("2. No, only add new members", () -> clientThread.invoke(() -> syncMembers(false, true)))
 				.option("3. Cancel", Runnables.doNothing())
 				.build();
 		});
