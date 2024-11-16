@@ -17,6 +17,7 @@ import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
+import net.runelite.client.eventbus.EventBus;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionInfo;
 import net.wiseoldman.beans.NameChangeEntry;
@@ -201,6 +202,9 @@ public class WomUtilsPlugin extends Plugin
 
 	@Inject
 	private Client client;
+
+	@Inject
+	public EventBus eventBus;
 
 	@Inject
 	private WomUtilsConfig config;
