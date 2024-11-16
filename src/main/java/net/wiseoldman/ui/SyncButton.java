@@ -3,7 +3,7 @@ package net.wiseoldman.ui;
 import com.google.common.util.concurrent.Runnables;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.api.clan.ClanRank;
-import net.wiseoldman.beans.GroupMembership;
+import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.RoleIndex;
 import net.wiseoldman.web.WomClient;
 import net.wiseoldman.beans.Member;
@@ -27,13 +27,13 @@ public class SyncButton
 {
 	private final Client client;
 	private final ClientThread clientThread;
+	private final WomUtilsPlugin plugin;
 	private final WomClient womClient;
 	private final ChatboxPanelManager chatboxPanelManager;
 	private final Widget parent;
 
 	private final List<Widget> cornersAndEdges = new ArrayList<>();
 	private final ClanSettings clanSettings;
-	private final Map<String, GroupMembership> groupMembers;
 	private final List<String> ignoredRanks;
 	private final List<String> alwaysIncludedOnSync;
 	private Widget textWidget;
@@ -51,17 +51,17 @@ public class SyncButton
 			new ClanRank(20), new ClanRank(10), new ClanRank(0)
 	);
 
-	public SyncButton(Client client, ClientThread clientThread, WomClient womClient, ChatboxPanelManager chatboxPanelManager,
-	                  int parent, Map<String, GroupMembership> groupMembers, List<String> ignoredRanks,
-	                  List<String> alwaysIncludedOnSync)
+	public SyncButton(Client client, ClientThread clientThread, WomUtilsPlugin plugin, WomClient womClient, ChatboxPanelManager chatboxPanelManager,
+					  int parent, List<String> ignoredRanks,
+					  List<String> alwaysIncludedOnSync)
 	{
 		this.client = client;
 		this.clientThread = clientThread;
+		this.plugin = plugin;
 		this.womClient = womClient;
 		this.chatboxPanelManager = chatboxPanelManager;
 		this.parent = client.getWidget(parent);
 		this.clanSettings = client.getClanSettings();
-		this.groupMembers = groupMembers;
 		this.ignoredRanks = ignoredRanks;
 		this.alwaysIncludedOnSync = alwaysIncludedOnSync;
 
@@ -136,7 +136,7 @@ public class SyncButton
 
 		if (!overwrite)
 		{
-			groupMembers.forEach((k, v) -> clanMembers.put(k, new Member(v.getPlayer().getDisplayName(), v.getRole())));
+			plugin.groupMembers.forEach((k, v) -> clanMembers.put(k, new Member(v.getPlayer().getDisplayName(), v.getRole())));
 		}
 
 		for (ClanMember clanMember : clanSettings.getMembers())
