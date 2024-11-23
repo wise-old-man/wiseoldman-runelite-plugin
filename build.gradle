@@ -29,3 +29,13 @@ sourceCompatibility = '1.8'
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
+
+task createProperties(dependsOn: processResources) {
+	doLast {
+		new File("$buildDir/resources/main/version.ini").text = "pluginVersion=$project.version"
+	}
+}
+
+classes {
+	dependsOn createProperties
+}

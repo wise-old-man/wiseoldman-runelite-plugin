@@ -1,7 +1,10 @@
 package net.wiseoldman.web;
 
 import com.google.gson.Gson;
+
 import java.util.Set;
+
+import net.runelite.client.RuneLiteProperties;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
 import net.wiseoldman.beans.NameChangeEntry;
@@ -29,6 +32,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import javax.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -82,6 +86,8 @@ public class WomClient
 	private final WomUtilsPlugin plugin;
 	private final String leagueError = " You are currently in a League world. Your group configurations might be for the main game.";
 
+	private final String userAgent;
+
 	@Inject
 	public WomClient(Gson gson, WomUtilsPlugin plugin)
 	{
@@ -90,6 +96,12 @@ public class WomClient
 			.create();
 
 		this.plugin = plugin;
+
+		String pluginVersion = WomUtilsPlugin.getPluginVersion();
+		String runeliteVersion = RuneLiteProperties.getVersion();
+
+		userAgent = "WiseOldManRuneLitePlugin/" + pluginVersion + " " +
+			"RuneLite/" + runeliteVersion;
 	}
 
 	public void submitNameChanges(NameChangeEntry[] changes)
@@ -134,7 +146,7 @@ public class WomClient
 		);
 
 		Request.Builder requestBuilder = new Request.Builder()
-			.header("User-Agent", "WiseOldMan RuneLite Plugin")
+			.header("User-Agent", userAgent)
 			.url(url);
 
 		if (httpMethod == HttpMethod.PUT)
@@ -154,7 +166,7 @@ public class WomClient
 	{
 		HttpUrl url = buildUrl(pathSegments);
 		return new Request.Builder()
-			.header("User-Agent", "WiseOldMan RuneLite Plugin")
+			.header("User-Agent", userAgent)
 			.url(url)
 			.build();
 	}

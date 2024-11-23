@@ -43,12 +43,14 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -293,16 +295,30 @@ public class WomUtilsPlugin extends Plugin
 
 	private final Map<Skill, Integer> previousSkillLevels = new EnumMap<>(Skill.class);
 
+	@Getter
+	private static String pluginVersion = "0.0.0";
+
 	static
 	{
 		WORKING_DIR = new File(RuneLite.RUNELITE_DIR, "wom-utils");
 		WORKING_DIR.mkdirs();
+
+		try (InputStream inputStream = WomUtilsPlugin.class.getResourceAsStream("/version.ini"))
+		{
+			Properties props = new Properties();
+			props.load(inputStream);
+			pluginVersion = props.getProperty("pluginVersion");
+		}
+		catch (IOException e)
+		{
+			log.error("Failed to read version.ini", e);
+		}
 	}
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		log.info("Wise Old Man started!");
+		log.info("Wise Old Man started! (v{})", pluginVersion);
 
 		// This will work, idk why really, but ok
 		womPanel = injector.getInstance(WomPanel.class);
