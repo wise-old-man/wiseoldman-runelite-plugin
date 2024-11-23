@@ -318,7 +318,7 @@ public class WomUtilsPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		log.info("Wise Old Man started!");
+		log.info("Wise Old Man started! (v{})", pluginVersion);
 
 		// This will work, idk why really, but ok
 		womPanel = injector.getInstance(WomPanel.class);
