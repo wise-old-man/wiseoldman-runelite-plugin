@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import java.util.stream.Collectors;
@@ -598,12 +599,20 @@ public class WomUtilsPlugin extends Plugin
 		File file = new File(WORKING_DIR, NAME_CHANGES);
 		if (file.exists())
 		{
-			String json = Files.asCharSource(file, Charsets.UTF_8).read();
-			JsonObject jsonObject = jsonParser.parse(json).getAsJsonObject();
-
-			for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet())
+			try
 			{
-				nameChanges.put(entry.getKey(), entry.getValue().getAsString());
+				String json = Files.asCharSource(file, Charsets.UTF_8).read();
+				JsonObject jsonObject = jsonParser.parse(json).getAsJsonObject();
+
+				for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet())
+				{
+					nameChanges.put(entry.getKey(), entry.getValue().getAsString());
+				}
+			}
+			catch (JsonSyntaxException | IllegalStateException e)
+			{
+				nameChanges.clear();
+				log.debug("name-changes.json file was malformed");
 			}
 		}
 	}
