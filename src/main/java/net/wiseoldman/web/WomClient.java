@@ -2,8 +2,6 @@ package net.wiseoldman.web;
 
 import com.google.gson.Gson;
 
-import java.io.InputStream;
-import java.util.Properties;
 import java.util.Set;
 
 import net.runelite.client.RuneLiteProperties;
@@ -100,27 +98,14 @@ public class WomClient
 
 		this.plugin = plugin;
 
-		String pluginVersion = "0.0.0";
+		String pluginVersion = WomUtilsPlugin.getPluginVersion();
 		String runeliteVersion = RuneLiteProperties.getVersion();
-
-		try (InputStream inputStream = WomUtilsPlugin.class.getResourceAsStream("/version.ini"))
-		{
-			Properties props = new Properties();
-			props.load(inputStream);
-			pluginVersion = props.getProperty("pluginVersion");
-		}
-		catch (IOException e)
-		{
-			log.error("Failed to read version.ini", e);
-		}
 
 		userAgentClientHint = "\"WiseOldMan RuneLite Plugin\";v=\"" + pluginVersion + "\", " +
                 "\"RuneLite\";v=\"" + runeliteVersion + "\"";
 
 		userAgent = "WiseOldManRuneLitePlugin/" + pluginVersion + " " +
                 "RuneLite/" + runeliteVersion;
-
-		log.info("userAgentClientHint={} userAgent={}", userAgentClientHint, userAgent);
 	}
 
 	public void submitNameChanges(NameChangeEntry[] changes)
