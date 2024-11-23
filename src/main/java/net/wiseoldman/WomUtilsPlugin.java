@@ -492,6 +492,14 @@ public class WomUtilsPlugin extends Plugin
 		womClient.commandLookup(player, command, chatMessage);
 	}
 
+	private boolean isValidNameChange(String prev, String curr)
+	{
+		return !(Strings.isNullOrEmpty(prev)
+			|| curr.equals(prev)
+			|| prev.startsWith("[#")
+			|| curr.startsWith("[#"));
+	}
+
 	@Subscribe
 	public void onNameableNameChanged(NameableNameChanged nameableNameChanged)
 	{
@@ -500,10 +508,7 @@ public class WomUtilsPlugin extends Plugin
 		String name = nameable.getName();
 		String prev = nameable.getPrevName();
 
-		if (Strings.isNullOrEmpty(prev)
-			|| name.equals(prev)
-			|| prev.startsWith("[#")
-			|| name.startsWith("[#"))
+		if (!isValidNameChange(prev, name))
 		{
 			return;
 		}
@@ -547,6 +552,27 @@ public class WomUtilsPlugin extends Plugin
 
 			return;
 		}
+
+		List<Nameable> friendIgnore = new ArrayList<>();
+		friendIgnore.addAll(Arrays.asList(client.getFriendContainer().getMembers()));
+		friendIgnore.addAll(Arrays.asList(client.getIgnoreContainer().getMembers()));
+
+		// List of current valid name changes in our friends/ignore list.
+		List<NameChangeEntry> validNameChanges = friendIgnore.stream()
+			.filter(nameable -> isValidNameChange(nameable.getPrevName(), nameable.getName()))
+			.map(nameable -> new NameChangeEntry(Text.toJagexName(nameable.getPrevName()), Text.toJagexName(nameable.getName())))
+			.collect(Collectors.toList());
+
+		// Remove a name change from the queue if it is no longer in our friends/ignore list at the time
+		// of submission.
+		queue.removeIf(entry -> {
+			if (!validNameChanges.contains(entry))
+			{
+				nameChanges.remove(entry.getNewName(), entry.getOldName());
+				return true;
+			}
+			return false;
+		});
 
 		womClient.submitNameChanges(queue.toArray(new NameChangeEntry[0]));
 		clientThread.invoke(queue::clear);
