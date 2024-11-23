@@ -101,7 +101,7 @@ public class WomClient
 		String runeliteVersion = RuneLiteProperties.getVersion();
 
 		userAgent = "WiseOldManRuneLitePlugin/" + pluginVersion + " " +
-                "RuneLite/" + runeliteVersion;
+			"RuneLite/" + runeliteVersion;
 	}
 
 	public void submitNameChanges(NameChangeEntry[] changes)
