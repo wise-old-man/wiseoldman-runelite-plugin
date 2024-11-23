@@ -86,7 +86,6 @@ public class WomClient
 	private final WomUtilsPlugin plugin;
 	private final String leagueError = " You are currently in a League world. Your group configurations might be for the main game.";
 
-	private final String userAgentClientHint;
 	private final String userAgent;
 
 	@Inject
@@ -100,9 +99,6 @@ public class WomClient
 
 		String pluginVersion = WomUtilsPlugin.getPluginVersion();
 		String runeliteVersion = RuneLiteProperties.getVersion();
-
-		userAgentClientHint = "\"WiseOldMan RuneLite Plugin\";v=\"" + pluginVersion + "\", " +
-                "\"RuneLite\";v=\"" + runeliteVersion + "\"";
 
 		userAgent = "WiseOldManRuneLitePlugin/" + pluginVersion + " " +
                 "RuneLite/" + runeliteVersion;
@@ -151,7 +147,6 @@ public class WomClient
 
 		Request.Builder requestBuilder = new Request.Builder()
 			.header("User-Agent", userAgent)
-			.header("Sec-CH-UA", userAgentClientHint)
 			.url(url);
 
 		if (httpMethod == HttpMethod.PUT)
@@ -172,7 +167,6 @@ public class WomClient
 		HttpUrl url = buildUrl(pathSegments);
 		return new Request.Builder()
 			.header("User-Agent", userAgent)
-			.header("Sec-CH-UA", userAgentClientHint)
 			.url(url)
 			.build();
 	}
