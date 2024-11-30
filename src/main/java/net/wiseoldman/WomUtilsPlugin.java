@@ -18,6 +18,7 @@ import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
+import net.runelite.client.eventbus.EventBus;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionInfo;
 import net.wiseoldman.beans.NameChangeEntry;
@@ -206,6 +207,9 @@ public class WomUtilsPlugin extends Plugin
 	private Client client;
 
 	@Inject
+	public EventBus eventBus;
+
+	@Inject
 	private WomUtilsConfig config;
 
 	@Inject
@@ -263,7 +267,7 @@ public class WomUtilsPlugin extends Plugin
 
 	private Map<String, String> nameChanges = new HashMap<>();
 	private LinkedBlockingQueue<NameChangeEntry> queue = new LinkedBlockingQueue<>();
-	private Map<String, GroupMembership> groupMembers = new HashMap<>();
+	public Map<String, GroupMembership> groupMembers = new HashMap<>();
 	private List<ParticipantWithStanding> playerCompetitionsOngoing = new ArrayList<>();
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
 	private List<CompetitionInfobox> competitionInfoboxes = new CopyOnWriteArrayList<>();
@@ -1350,7 +1354,7 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (config.syncClanButton() && config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode()))
 		{
-			syncButton = new SyncButton(client, clientThread, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
+			syncButton = new SyncButton(client, clientThread, this, womClient, chatboxPanelManager, w, ignoredRanks, alwaysIncludedOnSync);
 		}
 	}
 
