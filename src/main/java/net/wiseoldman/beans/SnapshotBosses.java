@@ -55,6 +55,7 @@ public class SnapshotBosses
 	Boss the_corrupted_gauntlet;
 	Boss the_hueycoatl;
 	Boss the_leviathan;
+	Boss the_royal_titans;
 	Boss the_whisperer;
 	Boss theatre_of_blood;
 	Boss theatre_of_blood_hard_mode;
@@ -173,6 +174,8 @@ public class SnapshotBosses
 				return getThe_corrupted_gauntlet();
 			case THE_LEVIATHAN:
 				return getThe_leviathan();
+			case THE_ROYAL_TITANS:
+				return getThe_royal_titans();
 			case THE_WHISPERER:
 				return getThe_whisperer();
 			case THEATRE_OF_BLOOD:

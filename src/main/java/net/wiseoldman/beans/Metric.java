@@ -66,6 +66,8 @@ public enum Metric
 	COMMANDER_ZILYANA(HiscoreSkill.COMMANDER_ZILYANA),
 	@SerializedName("colosseum_glory")
 	COLOSSEUM_GLORY(HiscoreSkill.COLOSSEUM_GLORY),
+	@SerializedName("collections_logged")
+	COLLECTIONS_LOGGED(HiscoreSkill.COLLECTIONS_LOGGED),
 	@SerializedName("construction")
 	CONSTRUCTION(HiscoreSkill.CONSTRUCTION),
 	@SerializedName("cooking")
@@ -190,6 +192,8 @@ public enum Metric
 	THE_HUEYCOATL(HiscoreSkill.THE_HUEYCOATL),
 	@SerializedName("the_leviathan")
 	THE_LEVIATHAN(HiscoreSkill.THE_LEVIATHAN),
+	@SerializedName("the_royal_titans")
+	THE_ROYAL_TITANS(HiscoreSkill.THE_ROYAL_TITANS),
 	@SerializedName("the_whisperer")
 	THE_WHISPERER(HiscoreSkill.THE_WHISPERER),
 	@SerializedName("the_gauntlet")
