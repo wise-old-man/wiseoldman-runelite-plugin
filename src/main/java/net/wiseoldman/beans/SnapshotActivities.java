@@ -21,6 +21,7 @@ public class SnapshotActivities
 	Activity soul_wars_zeal;
 	Activity guardians_of_the_rift;
 	Activity colosseum_glory;
+	Activity collections_logged;
 
 	public Activity getActivity(HiscoreSkill skill)
 	{
@@ -56,6 +57,8 @@ public class SnapshotActivities
 				return getGuardians_of_the_rift();
 			case COLOSSEUM_GLORY:
 				return getColosseum_glory();
+			case COLLECTIONS_LOGGED:
+				return getCollections_logged();
 			default:
 				throw new IllegalArgumentException("Invalid hiscore minigame");
 		}
