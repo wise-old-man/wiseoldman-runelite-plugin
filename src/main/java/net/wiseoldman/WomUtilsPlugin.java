@@ -1042,6 +1042,7 @@ public class WomUtilsPlugin extends Plugin
 				// and also submit update request
 				visitedLoginScreen = true;
 				namechangesSubmitted = false;
+				womPanel.resetCompetitionsPanel();
 			case HOPPING:
 				Player local = client.getLocalPlayer();
 				if (local == null)
@@ -1185,6 +1186,7 @@ public class WomUtilsPlugin extends Plugin
 		}
 		updateInfoboxes();
 		updateScheduledNotifications();
+		womPanel.addCompetitionPanels(playerCompetitionsOngoing);
 	}
 
 	@Subscribe

@@ -1,8 +1,11 @@
 package net.wiseoldman.panel;
 
 import com.google.common.base.Strings;
+import java.util.List;
 import net.runelite.api.WorldType;
+import net.runelite.client.ui.components.PluginErrorPanel;
 import net.wiseoldman.WomUtilsConfig;
+import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.beans.PlayerInfo;
 import net.wiseoldman.web.WomClient;
 import lombok.extern.slf4j.Slf4j;
@@ -38,15 +41,20 @@ public class WomPanel extends PluginPanel
     private final SkillingPanel skillingPanel;
     private final BossingPanel bossingPanel;
     private final ActivitiesPanel activitiesPanel;
+	private final JPanel competitionsLayoutPanel;
 
-    private final NameAutocompleter nameAutocompleter;
+	private final MaterialTabGroup topTabGroup;
+
+	private final NameAutocompleter nameAutocompleter;
+	private final MaterialTab lookupTab;
     private final WomClient womClient;
     private final WomUtilsConfig config;
 
-    private final IconTextField searchBar;
+    private IconTextField searchBar;
 
     private final java.util.List<MiscInfoLabel> miscInfoLabels = new ArrayList<>();
     private final java.util.List<JButton> buttons = new ArrayList<>();
+	private final PluginErrorPanel competitionErrorPanel = new PluginErrorPanel();
 
     @Inject
     public WomPanel(Client client, NameAutocompleter nameAutocompleter, WomClient womClient, WomUtilsConfig config,
@@ -76,81 +84,28 @@ public class WomPanel extends PluginPanel
         c.weighty = 0;
         c.insets = new Insets(0, 0, 10, 0);
 
-        searchBar = new IconTextField();
-        searchBar.setIcon(IconTextField.Icon.SEARCH);
-        searchBar.setPreferredSize(new Dimension(PluginPanel.PANEL_WIDTH - 20, 30));
-        searchBar.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        searchBar.setHoverBackgroundColor(ColorScheme.DARK_GRAY_HOVER_COLOR);
-        searchBar.setMinimumSize(new Dimension(0, 30));
-        searchBar.addActionListener(e -> lookup());
-        searchBar.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                if (e.getClickCount() != 2)
-                {
-                    return;
-                }
-                if (client == null)
-                {
-                    return;
-                }
+	    competitionsLayoutPanel = new JPanel();
+		BoxLayout boxLayout = new BoxLayout(competitionsLayoutPanel, BoxLayout.Y_AXIS);
+		competitionsLayoutPanel.setLayout(boxLayout);
 
-                Player localPlayer = client.getLocalPlayer();
+		competitionErrorPanel.setContent("", "Please log in to view competitions.");
+	    competitionsLayoutPanel.add(competitionErrorPanel);
 
-                if (localPlayer != null)
-                {
-                    lookup(localPlayer.getName());
-                }
-            }
-        });
-        searchBar.addClearListener(() ->
-        {
-            searchBar.setIcon(IconTextField.Icon.SEARCH);
-            searchBar.setEditable(true);
-            toggleButtons(false);
-        });
+	    // Holds currently visible tab
+	    JPanel topDisplay = new JPanel();
+	    topTabGroup = new MaterialTabGroup(topDisplay);
+	    lookupTab = new MaterialTab("Lookup", topTabGroup, createLookupPanel());
+	    MaterialTab competitionsTab = new MaterialTab("Competitions", topTabGroup, competitionsLayoutPanel);
 
-        add(searchBar, c);
+	    topTabGroup.setBorder(new EmptyBorder(0, 0, 0, 0));
+	    topTabGroup.addTab(lookupTab);
+	    topTabGroup.addTab(competitionsTab);
+	    topTabGroup.select(competitionsTab);
 
-        c.gridy++;
-
-        add(createButtonsPanel(), c);
-
-        c.gridy++;
-
-
-        JLabel overviewTitle = new JLabel("Overview");
-        overviewTitle.setFont(FontManager.getRunescapeBoldFont());
-        add(overviewTitle, c);
-        c.gridy++;
-
-        add(createOverViewPanel(), c);
-        c.gridy++;
-
-        MiscInfoLabel lastUpdated = new MiscInfoLabel(MiscInfo.LAST_UPDATED);
-        miscInfoLabels.add(lastUpdated);
-        add(lastUpdated, c);
-        c.gridy++;
-
-        // Holds currently visible tab
-        JPanel display = new JPanel();
-        MaterialTabGroup tabGroup = new MaterialTabGroup(display);
-        MaterialTab skillingTab = new MaterialTab("Skills", tabGroup, skillingPanel);
-        MaterialTab bossingTab = new MaterialTab("Bosses", tabGroup, bossingPanel);
-        MaterialTab activitiesTab = new MaterialTab("Activities", tabGroup, activitiesPanel);
-
-        tabGroup.setBorder(new EmptyBorder(10, 0, 0, 0));
-        tabGroup.addTab(skillingTab);
-        tabGroup.addTab(bossingTab);
-        tabGroup.addTab(activitiesTab);
-        tabGroup.select(skillingTab);
-
-        add(tabGroup, c);
-        c.gridy++;
-        add(display, c);
-        c.gridy++;
+		add(topTabGroup, c);
+		c.gridy++;
+		add(topDisplay, c);
+		c.gridy++;
 
         addInputKeyListener(nameAutocompleter);
     }
@@ -178,6 +133,7 @@ public class WomPanel extends PluginPanel
     public void lookup(String username)
     {
         searchBar.setText(username);
+		topTabGroup.select(lookupTab);
         lookup();
     }
 
@@ -309,6 +265,96 @@ public class WomPanel extends PluginPanel
         SwingUtilities.invokeLater(() -> LinkBrowser.browse(url));
     }
 
+	private JPanel createLookupPanel()
+	{
+		JPanel lookupPanel = new JPanel();
+		lookupPanel.setLayout(new GridBagLayout());
+		lookupPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 1;
+		c.weighty = 0;
+		c.insets = new Insets(0, 0, 10, 0);
+
+		searchBar = new IconTextField();
+		searchBar.setIcon(IconTextField.Icon.SEARCH);
+		searchBar.setPreferredSize(new Dimension(PluginPanel.PANEL_WIDTH - 20, 30));
+		searchBar.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		searchBar.setHoverBackgroundColor(ColorScheme.DARK_GRAY_HOVER_COLOR);
+		searchBar.setMinimumSize(new Dimension(0, 30));
+		searchBar.addActionListener(e -> lookup());
+		searchBar.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				if (e.getClickCount() != 2)
+				{
+					return;
+				}
+				if (client == null)
+				{
+					return;
+				}
+
+				Player localPlayer = client.getLocalPlayer();
+
+				if (localPlayer != null)
+				{
+					lookup(localPlayer.getName());
+				}
+			}
+		});
+		searchBar.addClearListener(() ->
+		{
+			searchBar.setIcon(IconTextField.Icon.SEARCH);
+			searchBar.setEditable(true);
+			toggleButtons(false);
+		});
+
+		lookupPanel.add(searchBar, c);
+		c.gridy++;
+
+		lookupPanel.add(createButtonsPanel(), c);
+		c.gridy++;
+
+		JLabel overviewTitle = new JLabel("Overview");
+		overviewTitle.setFont(FontManager.getRunescapeBoldFont());
+		lookupPanel.add(overviewTitle, c);
+		c.gridy++;
+
+		lookupPanel.add(createOverViewPanel(), c);
+		c.gridy++;
+
+		MiscInfoLabel lastUpdated = new MiscInfoLabel(MiscInfo.LAST_UPDATED);
+		miscInfoLabels.add(lastUpdated);
+		lookupPanel.add(lastUpdated, c);
+		c.gridy++;
+
+		// Holds currently visible tab
+		JPanel display = new JPanel();
+		MaterialTabGroup tabGroup = new MaterialTabGroup(display);
+		MaterialTab skillingTab = new MaterialTab("Skills", tabGroup, skillingPanel);
+		MaterialTab bossingTab = new MaterialTab("Bosses", tabGroup, bossingPanel);
+		MaterialTab activitiesTab = new MaterialTab("Activities", tabGroup, activitiesPanel);
+
+		tabGroup.setBorder(new EmptyBorder(10, 0, 0, 0));
+		tabGroup.addTab(skillingTab);
+		tabGroup.addTab(bossingTab);
+		tabGroup.addTab(activitiesTab);
+		tabGroup.select(skillingTab);
+
+		lookupPanel.add(tabGroup, c);
+		c.gridy++;
+		lookupPanel.add(display, c);
+		c.gridy++;
+
+		return lookupPanel;
+	}
+
     private JPanel createButtonsPanel()
     {
         JPanel buttonsPanel = new JPanel();
@@ -365,4 +411,27 @@ public class WomPanel extends PluginPanel
         }
         return miscInfoPanel;
     }
+
+	public void addCompetitionPanels(List<ParticipantWithStanding> competitions)
+	{
+		competitionsLayoutPanel.removeAll();
+
+		if (!competitions.isEmpty())
+		{
+			competitionsLayoutPanel.remove(competitionErrorPanel);
+		}
+
+		for (ParticipantWithStanding c : competitions)
+		{
+			competitionsLayoutPanel.add(new CompetitionInfoPanel(c));
+		}
+
+		competitionsLayoutPanel.revalidate();
+	}
+
+	public void resetCompetitionsPanel() {
+		competitionsLayoutPanel.removeAll();
+		competitionsLayoutPanel.add(competitionErrorPanel);
+		competitionsLayoutPanel.revalidate();
+	}
 }
