@@ -5,7 +5,6 @@ import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionProgress;
 import net.wiseoldman.beans.Metric;
-import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.panel.CompetitionCardPanel;
 import net.wiseoldman.util.Utils;
 import java.awt.Color;

@@ -5,8 +5,6 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
-import net.runelite.client.config.Range;
-import net.runelite.client.config.Units;
 
 @ConfigGroup(WomUtilsPlugin.CONFIG_GROUP)
 public interface WomUtilsConfig extends Config
@@ -46,7 +44,7 @@ public interface WomUtilsConfig extends Config
 		closedByDefault = true
 	)
 	String ignoredRanks = "ignoredRanks";
-	
+
 	@ConfigItem(
 		keyName = "playerLookupOption",
 		name = "Player option",
@@ -54,7 +52,10 @@ public interface WomUtilsConfig extends Config
 		position = 0,
 		section = lookupConfig
 	)
-	default boolean playerLookupOption() { return true; }
+	default boolean playerLookupOption()
+	{
+		return true;
+	}
 
 	@ConfigItem(
 		keyName = "menuLookupOption",
@@ -63,7 +64,10 @@ public interface WomUtilsConfig extends Config
 		position = 1,
 		section = lookupConfig
 	)
-	default boolean menuLookupOption() { return true; }
+	default boolean menuLookupOption()
+	{
+		return true;
+	}
 
 	@ConfigItem(
 		keyName = "virtualLevels",
@@ -72,7 +76,10 @@ public interface WomUtilsConfig extends Config
 		position = 2,
 		section = lookupConfig
 	)
-	default boolean virtualLevels() { return false; }
+	default boolean virtualLevels()
+	{
+		return false;
+	}
 
 	@ConfigItem(
 		keyName = "relativeTime",
@@ -81,7 +88,10 @@ public interface WomUtilsConfig extends Config
 		position = 3,
 		section = lookupConfig
 	)
-	default boolean relativeTime() { return false; }
+	default boolean relativeTime()
+	{
+		return false;
+	}
 
 	@ConfigItem(
 		keyName = "showIcons",
@@ -96,7 +106,7 @@ public interface WomUtilsConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName= "showFlags",
+		keyName = "showFlags",
 		name = "Show flags",
 		description = "Show flags instead of the group icon where possible for your group members, requires icons to be enabled.",
 		position = 1,
@@ -205,46 +215,6 @@ public interface WomUtilsConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "timerOngoing",
-		name = "Timer Ongoing",
-		description = "Displays timers for ongoing competitions",
-		position = 2,
-		section = competitionConfig
-	)
-	default boolean timerOngoing()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "timerUpcoming",
-		name = "Timer Upcoming",
-		description = "Display timers for upcoming competitions",
-		position = 3,
-		section = competitionConfig
-	)
-	default boolean timerUpcoming()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "upcomingMaxDays",
-		name = "Upcoming up to",
-		description = "Don't show info for competitions later than this many days in the future",
-		position = 4,
-		section = competitionConfig
-	)
-	@Range(
-		max = 365
-	)
-	@Units(" days")
-	default int upcomingMaxDays()
-	{
-		return 7;
-	}
-
-	@ConfigItem(
 		keyName = "sendCompetitionNotification",
 		name = "Competition Notifications",
 		description = "Sends notifications at start and end times for competitions",
@@ -327,25 +297,6 @@ public interface WomUtilsConfig extends Config
 	{
 		return "";
 	}
-
-	@ConfigItem(
-		keyName = "hiddenCompetitionIds",
-		name = "",
-		description = "",
-		hidden = true
-	)
-	default String hiddenCompetitionIds()
-	{
-		return "[]";
-	}
-
-	@ConfigItem(
-		keyName = "hiddenCompetitionIds",
-		name = "",
-		description = "",
-		hidden = true
-	)
-	void hiddenCompetitionIds(String value);
 
 	@ConfigItem(
 		keyName = "ignoredRanks",

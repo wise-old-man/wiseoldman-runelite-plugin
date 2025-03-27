@@ -267,13 +267,6 @@ public class WomUtilsPlugin extends Plugin
 	private List<String> ignoredRanks = new ArrayList<>();
 	private List<String> alwaysIncludedOnSync = new ArrayList<>();
 
-	@Getter
-	private boolean showTimerOngoing;
-	@Getter
-	private boolean showTimerUpcoming;
-	@Getter
-	private int upcomingInfoboxesMaxDays;
-
 	private boolean fetchXp;
 	private long lastXp;
 	private boolean visitedLoginScreen = true;
@@ -366,9 +359,6 @@ public class WomUtilsPlugin extends Plugin
 			chatCommandManager.registerCommandAsync(c.getCommand(), this::commandHandler);
 		}
 
-		showTimerOngoing = config.timerOngoing();
-		showTimerUpcoming = config.timerUpcoming();
-		upcomingInfoboxesMaxDays = config.upcomingMaxDays();
 		ignoredRanks = new ArrayList<>(Arrays.asList(gson.fromJson(config.ignoredRanks(), String[].class)));
 
 		String ignoreRanksDisplayText = ignoredRanks.stream()
@@ -779,15 +769,6 @@ public class WomUtilsPlugin extends Plugin
 		if (event.getKey().equals("sendCompetitionNotification"))
 		{
 			updateScheduledNotifications();
-		}
-
-		if (event.getKey().equals("timerOngoing")
-			|| event.getKey().equals("timerUpcoming")
-			|| event.getKey().equals("upcomingMaxDays"))
-		{
-			showTimerOngoing = config.timerOngoing();
-			showTimerUpcoming = config.timerUpcoming();
-			upcomingInfoboxesMaxDays = config.upcomingMaxDays();
 		}
 
 		if (event.getKey().equals("alwaysIncludedOnSync"))
