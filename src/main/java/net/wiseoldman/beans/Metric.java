@@ -230,11 +230,6 @@ public enum Metric
 	@Getter
 	private HiscoreSkill hiscoreSkill;
 
-	public BufferedImage loadImage()
-	{
-		return ImageUtil.loadImageResource(WomUtilsPlugin.class, "metrics/" + name().toLowerCase() + ".png");
-	}
-
 	public BufferedImage loadIcon(HiscoreSkillType type)
 	{
 		final String directory;
