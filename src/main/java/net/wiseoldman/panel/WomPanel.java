@@ -5,6 +5,7 @@ import java.util.List;
 import net.runelite.api.WorldType;
 import net.runelite.client.ui.components.PluginErrorPanel;
 import net.wiseoldman.WomUtilsConfig;
+import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.GroupInfo;
 import net.wiseoldman.beans.ParticipantWithCompetition;
@@ -38,6 +39,9 @@ public class WomPanel extends PluginPanel
 	@Inject
 	private Client client;
 
+	@Inject
+	private WomUtilsPlugin plugin;
+
 	/* The maximum allowed username length in RuneScape accounts */
 	private static final int MAX_USERNAME_LENGTH = 12;
 	private static final String DEFAULT_GROUP_FILTER = "None";
@@ -67,10 +71,11 @@ public class WomPanel extends PluginPanel
 	public boolean active;
 
 	@Inject
-	public WomPanel(Client client, NameAutocompleter nameAutocompleter, WomClient womClient, WomUtilsConfig config,
+	public WomPanel(Client client, WomUtilsPlugin plugin, NameAutocompleter nameAutocompleter, WomClient womClient, WomUtilsConfig config,
 					SkillingPanel skillingPanel, BossingPanel bossingPanel, ActivitiesPanel activitiesPanel)
 	{
 		this.client = client;
+		this.plugin = plugin;
 		this.nameAutocompleter = nameAutocompleter;
 		this.womClient = womClient;
 		this.config = config;
@@ -463,7 +468,7 @@ public class WomPanel extends PluginPanel
 
 		for (ParticipantWithStanding c : competitions)
 		{
-			CompetitionCardPanel competitionPanel = new CompetitionCardPanel(c);
+			CompetitionCardPanel competitionPanel = new CompetitionCardPanel(client, plugin, c);
 			competitionCardPanels.add(competitionPanel);
 			ongoingCompetitions.add(competitionPanel);
 		}
@@ -485,7 +490,7 @@ public class WomPanel extends PluginPanel
 
 		for (ParticipantWithCompetition c : competitions)
 		{
-			CompetitionCardPanel competitionPanel = new CompetitionCardPanel(c);
+			CompetitionCardPanel competitionPanel = new CompetitionCardPanel(client, plugin, c);
 			competitionCardPanels.add(competitionPanel);
 			upcomingCompetitions.add(competitionPanel);
 		}
@@ -502,7 +507,7 @@ public class WomPanel extends PluginPanel
 	{
 		for (CompetitionCardPanel p : competitionCardPanels)
 		{
-			GroupInfo group = p.competition.getGroup();
+			GroupInfo group = p.getCompetition().getGroup();
 			String groupName = group == null ? UNGROUPED_FILTER : group.getName();
 			p.setVisible(groupName.equals(filter) || filter.equals(DEFAULT_GROUP_FILTER));
 		}

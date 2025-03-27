@@ -29,11 +29,11 @@ import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
 import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
 import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
+import net.wiseoldman.panel.CompetitionCardPanel;
 import net.wiseoldman.panel.NameAutocompleter;
 import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
 import net.wiseoldman.ui.CompetitionInfobox;
-import net.wiseoldman.ui.PlaceHolderCompetitionInfobox;
 import net.wiseoldman.ui.SyncButton;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
@@ -52,7 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -99,7 +98,6 @@ import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.events.InfoBoxMenuClicked;
 import net.runelite.client.game.chatbox.ChatboxPanelManager;
 import net.runelite.client.menus.MenuManager;
 import net.runelite.client.menus.WidgetMenuOption;
@@ -144,9 +142,6 @@ public class WomUtilsPlugin extends Plugin
 	private static final String UNIGNORE_RANK = "Unignore rank";
 
 	private static final String KICK_OPTION = "Kick";
-
-	public static final String HIDE_COMPETITION_INFOBOX = "Hide competition";
-	public static final String SHOW_ALL_COMPETITIONS = "Show all competitions";
 
 	private static final ImmutableList<String> AFTER_OPTIONS = ImmutableList.of("Message", "Add ignore", "Remove friend", "Delete", KICK_OPTION);
 
@@ -266,14 +261,12 @@ public class WomUtilsPlugin extends Plugin
 	private Map<String, GroupMembership> groupMembers = new HashMap<>();
 	private List<ParticipantWithStanding> playerCompetitionsOngoing = new ArrayList<>();
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
-	private List<CompetitionInfobox> competitionInfoboxes = new CopyOnWriteArrayList<>();
+	private Map<Integer, CompetitionInfobox> competitionInfoboxes = new HashMap<>();
 	private List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 	private Map<Integer, CompetitionInfo> competitionInfoMap = new HashMap<>();
 	private List<String> ignoredRanks = new ArrayList<>();
 	private List<String> alwaysIncludedOnSync = new ArrayList<>();
 
-	@Getter
-	private List<Integer> hiddenCompetitions = new ArrayList<>();
 	@Getter
 	private boolean showTimerOngoing;
 	@Getter
@@ -291,8 +284,6 @@ public class WomUtilsPlugin extends Plugin
 	private SyncButton syncButton;
 
 	private NavigationButton navButton;
-
-	private PlaceHolderCompetitionInfobox placeHolderCompetitionInfobox;
 
 	private final Map<Skill, Integer> previousSkillLevels = new EnumMap<>(Skill.class);
 
@@ -375,15 +366,9 @@ public class WomUtilsPlugin extends Plugin
 			chatCommandManager.registerCommandAsync(c.getCommand(), this::commandHandler);
 		}
 
-		hiddenCompetitions = new ArrayList<>(Arrays.asList(gson.fromJson(config.hiddenCompetitionIds(), Integer[].class)));
-
 		showTimerOngoing = config.timerOngoing();
 		showTimerUpcoming = config.timerUpcoming();
 		upcomingInfoboxesMaxDays = config.upcomingMaxDays();
-
-		placeHolderCompetitionInfobox = new PlaceHolderCompetitionInfobox(this);
-		infoBoxManager.addInfoBox(placeHolderCompetitionInfobox);
-
 		ignoredRanks = new ArrayList<>(Arrays.asList(gson.fromJson(config.ignoredRanks(), String[].class)));
 
 		String ignoreRanksDisplayText = ignoredRanks.stream()
@@ -435,12 +420,10 @@ public class WomUtilsPlugin extends Plugin
 		cancelNotifications();
 		previousSkillLevels.clear();
 		competitionInfoMap.clear();
-		hiddenCompetitions.clear();
 		ignoredRanks.clear();
 		alwaysIncludedOnSync.clear();
 		levelupThisSession = false;
 		overlayManager.remove(codeWordOverlay);
-		infoBoxManager.removeInfoBox(placeHolderCompetitionInfobox);
 
 		log.info("Wise Old Man stopped!");
 	}
@@ -887,42 +870,6 @@ public class WomUtilsPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onInfoBoxMenuClicked(final InfoBoxMenuClicked event)
-	{
-		if (!(event.getInfoBox() instanceof CompetitionInfobox)
-			&& !(event.getInfoBox() instanceof PlaceHolderCompetitionInfobox))
-		{
-			return;
-		}
-
-		switch (event.getEntry().getOption())
-		{
-			case HIDE_COMPETITION_INFOBOX:
-				hiddenCompetitions.add(((CompetitionInfobox) event.getInfoBox()).getLinkedCompetitionId());
-				config.hiddenCompetitionIds(gson.toJson(hiddenCompetitions));
-				break;
-			case SHOW_ALL_COMPETITIONS:
-				hiddenCompetitions.clear();
-				config.hiddenCompetitionIds(gson.toJson(hiddenCompetitions));
-				break;
-		}
-	}
-
-	public boolean allInfoboxesAreHidden()
-	{
-		return competitionInfoboxes.size() != 0
-			&& competitionInfoboxes.stream().allMatch(ib -> !ib.shouldShow() || ib.isHidden())
-			&& countHiddenInfoboxes() != 0;
-	}
-
-	public int countHiddenInfoboxes()
-	{
-		return (int) competitionInfoboxes.stream()
-			.filter(ib -> ib.shouldShow() && ib.isHidden())
-			.count();
-	}
-
-	@Subscribe
 	public void onMenuOpened(MenuOpened event)
 	{
 		if (event.getMenuEntries().length < 2)
@@ -1209,7 +1156,6 @@ public class WomUtilsPlugin extends Plugin
 				sendHighlightedMessage(c.getStatus());
 			}
 		}
-		updateInfoboxes();
 		updateScheduledNotifications();
 		womPanel.addOngoingCompetitions(playerCompetitionsOngoing);
 		womPanel.addGroupFilters(playerCompetitionsOngoing.stream().map(ParticipantWithStanding::getCompetition).toArray(Competition[]::new));
@@ -1220,31 +1166,28 @@ public class WomUtilsPlugin extends Plugin
 	{
 		playerCompetitionsUpcoming = Arrays.asList(event.getCompetitions());
 		log.debug("Fetched {} upcoming competitions for player {}", event.getCompetitions().length, event.getUsername());
-		updateInfoboxes();
 		updateScheduledNotifications();
 		womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
 		womPanel.addGroupFilters(playerCompetitionsUpcoming.stream().map(ParticipantWithCompetition::getCompetition).toArray(Competition[]::new));
 	}
 
-	private void updateInfoboxes()
+	public void addInfoBox(CompetitionCardPanel p)
 	{
-		clearInfoboxes();
-		for (ParticipantWithCompetition pwc : playerCompetitionsUpcoming)
-		{
-			Competition c = pwc.getCompetition();
-			competitionInfoboxes.add(new CompetitionInfobox(c, this));
-		}
-		for (ParticipantWithStanding pws : playerCompetitionsOngoing)
-		{
-			competitionInfoboxes.add(new CompetitionInfobox(pws, this));
-		}
-		log.debug("Adding infoboxes for {} upcoming and {} ongoing competitions",
-			playerCompetitionsUpcoming.size(), playerCompetitionsOngoing.size());
+		CompetitionInfobox infoBox = new CompetitionInfobox(p, this);
+		competitionInfoboxes.put(p.getCompetition().getId(), infoBox);
+		infoBoxManager.addInfoBox(infoBox);
+	}
 
-		for (CompetitionInfobox b : competitionInfoboxes)
-		{
-			infoBoxManager.addInfoBox(b);
-		}
+	public void removeInfoBox(CompetitionCardPanel p)
+	{
+		int id = p.getCompetition().getId();
+		infoBoxManager.removeIf(e -> e instanceof CompetitionInfobox && ((CompetitionInfobox) e).getCompetition().getId() == id);
+		competitionInfoboxes.remove(id);
+	}
+
+	public boolean hasInfoBox(int id)
+	{
+		return competitionInfoboxes.containsKey(id);
 	}
 
 	private void clearInfoboxes()

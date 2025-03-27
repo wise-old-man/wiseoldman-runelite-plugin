@@ -12,25 +12,35 @@ import java.awt.GridBagLayout;
 import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
+import net.runelite.api.WorldType;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.ColorUtil;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.LinkBrowser;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.Competition;
+import net.wiseoldman.beans.CompetitionProgress;
 import net.wiseoldman.beans.GroupInfo;
 import net.wiseoldman.beans.Metric;
 import net.wiseoldman.beans.ParticipantWithCompetition;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.util.Format;
 import net.wiseoldman.util.Utils;
+import okhttp3.HttpUrl;
 
 
 @Slf4j
@@ -46,6 +56,8 @@ public class CompetitionCardPanel extends JPanel
 	private static final String GREEN = ColorUtil.toHexColor(ColorScheme.PROGRESS_COMPLETE_COLOR);
 
 	private static final String ELLIPSIS = "...";
+	private static final String ADD_STATE = "Add to canvas";
+	private static final String REMOVE_STATE = "Remove from cavnas";
 
 	/* The competition's info box wrapping container */
 	private final JPanel container = new JPanel();
@@ -55,37 +67,49 @@ public class CompetitionCardPanel extends JPanel
 
 	// Holds all the competition information
 	private final JLabel timerLabel = new JLabel();
-	//	private final JLabel statusLabel = new JLabel();
 	private final JLabel groupLabel = new JLabel();
 	private final JLabel logoutReminderLabel =
 		new JLabel("<html><body style='color:#FF0000; text-align:center;'>The competition has started. " +
 			"Please relog to start tracking your gains.</body></html>", SwingConstants.CENTER);
 	private final JLabel statusDotLabel = new JLabel("●");
 
-	Competition competition;
-	private String groupName;
-	private boolean truncated;
-	String fetchedStatus;
+	private final JMenuItem canvasItem = new JMenuItem(ADD_STATE);
 
 	private final FontMetrics fm = getFontMetrics(FontManager.getRunescapeSmallFont());
 
+	private final Client client;
+	private final WomUtilsPlugin plugin;
+	@Getter
+	private final Competition competition;
+	private String groupName;
+	private boolean truncated;
+	private String fetchedStatus;
+	@Getter
+	private final CompetitionProgress progress;
+	@Getter
+	private final int rank;
 
-	CompetitionCardPanel(ParticipantWithStanding p)
+
+	CompetitionCardPanel(Client client, WomUtilsPlugin plugin, ParticipantWithStanding p)
 	{
-		competition = p.getCompetition();
+		this.client = client;
+		this.competition = p.getCompetition();
+		this.plugin = plugin;
+		this.progress = p.getProgress();
+		this.rank = p.getRank();
 
 		Metric metric = p.getCompetition().getMetric();
 
 		setupPanel(competition.getTitle(), metric, competition.getGroup());
 
-		double gained = p.getProgress().getGained();
+		double gained = progress.getGained();
 		JLabel gainedLabel = new JLabel(String.format(INFO_LABEL_TEMPLATE, LIGHT_GRAY, "Gained", "", gained > 0 ? GREEN : WHITE,
 			(gained > 0 ? "+" : "") + Format.formatNumber(gained)));
 		gainedLabel.setFont(FontManager.getRunescapeSmallFont());
-		gainedLabel.setToolTipText(String.format("%,.1f", p.getProgress().getGained()));
+//		gainedLabel.setToolTipText(String.format("%,.1f", p.getProgress().getGained()));
 		gainedLabel.setPreferredSize(new Dimension(53, gainedLabel.getPreferredSize().height));
 
-		JLabel rankLabel = new JLabel(String.format(INFO_LABEL_TEMPLATE, LIGHT_GRAY, "Rank", "", WHITE, Utils.ordinalOf(p.getRank())));
+		JLabel rankLabel = new JLabel(String.format(INFO_LABEL_TEMPLATE, LIGHT_GRAY, "Rank", "", WHITE, Utils.ordinalOf(rank)));
 		rankLabel.setFont(FontManager.getRunescapeSmallFont());
 
 		infoPanel.add(gainedLabel);
@@ -97,9 +121,13 @@ public class CompetitionCardPanel extends JPanel
 		add(container);
 	}
 
-	CompetitionCardPanel(ParticipantWithCompetition p)
+	CompetitionCardPanel(Client client, WomUtilsPlugin plugin, ParticipantWithCompetition p)
 	{
-		competition = p.getCompetition();
+		this.client = client;
+		this.competition = p.getCompetition();
+		this.plugin = plugin;
+		this.progress = null;
+		this.rank = -1;
 
 		Metric metric = p.getCompetition().getMetric();
 		Competition competition = p.getCompetition();
@@ -141,6 +169,54 @@ public class CompetitionCardPanel extends JPanel
 		logoutReminderLabel.setForeground(ColorScheme.PROGRESS_ERROR_COLOR);
 		logoutReminderLabel.setVisible(false);
 		container.add(logoutReminderLabel, BorderLayout.SOUTH);
+		addPopupMenu();
+	}
+
+	private void addPopupMenu()
+	{
+		final JMenuItem openCompetitionPage = new JMenuItem("Open competition page");
+		openCompetitionPage.addActionListener(e -> LinkBrowser.browse(competitionPageUrl(String.valueOf(competition.getId()))));
+
+
+		final JPopupMenu popupMenu = new JPopupMenu();
+		popupMenu.setBorder(new EmptyBorder(5, 5, 5, 5));
+		popupMenu.add(openCompetitionPage);
+		popupMenu.add(canvasItem);
+		popupMenu.addPopupMenuListener(new PopupMenuListener()
+		{
+			@Override
+			public void popupMenuWillBecomeVisible(PopupMenuEvent e)
+			{
+				canvasItem.setText(plugin.hasInfoBox(competition.getId()) ? REMOVE_STATE : ADD_STATE);
+			}
+
+			@Override
+			public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
+			{
+
+			}
+
+			@Override
+			public void popupMenuCanceled(PopupMenuEvent e)
+			{
+
+			}
+		});
+
+
+		canvasItem.addActionListener(e ->
+		{
+			if (canvasItem.getText().equals(REMOVE_STATE))
+			{
+				plugin.removeInfoBox(this);
+			}
+			else
+			{
+				plugin.addInfoBox(this);
+			}
+		});
+
+		container.setComponentPopupMenu(popupMenu);
 	}
 
 	private String[] getCountdown()
@@ -190,11 +266,11 @@ public class CompetitionCardPanel extends JPanel
 
 		GridBagConstraints iconConstraints = new GridBagConstraints();
 
-		headerPanel.add(iconPanel(metric), iconConstraints);
+		headerPanel.add(createIconPanel(metric), iconConstraints);
 		headerPanel.add(createTitlePanel(title, group), titleConstraints);
 	}
 
-	private JPanel iconPanel(Metric metric)
+	private JPanel createIconPanel(Metric metric)
 	{
 		JPanel fixedIconPanel = new JPanel(new BorderLayout());
 		fixedIconPanel.setPreferredSize(new Dimension(41, 40));
@@ -233,7 +309,7 @@ public class CompetitionCardPanel extends JPanel
 
 		metricIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		metricIconLabel.setVerticalAlignment(SwingConstants.CENTER);
-		metricIconLabel.setToolTipText(metric.getName());
+//		metricIconLabel.setToolTipText(metric.getName());
 
 		fixedIconPanel.add(metricIconLabel, BorderLayout.CENTER);
 
@@ -263,7 +339,7 @@ public class CompetitionCardPanel extends JPanel
 		JLabel titleLabel = new JLabel(title);
 		titleLabel.setFont(FontManager.getRunescapeFont());
 		titleLabel.setForeground(Color.white);
-		titleLabel.setToolTipText(title);
+//		titleLabel.setToolTipText(title);
 		titlePanel.add(titleLabel, BorderLayout.NORTH);
 		titlePanel.setBorder(new EmptyBorder(8, 0, 8, 0));
 
@@ -275,7 +351,6 @@ public class CompetitionCardPanel extends JPanel
 			groupLabel.setFont(FontManager.getRunescapeSmallFont());
 			titlePanel.add(groupLabel, BorderLayout.SOUTH);
 		}
-
 
 		return titlePanel;
 	}
@@ -301,9 +376,21 @@ public class CompetitionCardPanel extends JPanel
 		String truncatedGroupName = groupName.substring(0, charactersToDisplay) + ELLIPSIS;
 		groupLabel.setText(String.format(HOSTED_BY_TEMPLATE, LIGHT_GRAY, "Hosted by ",
 			ColorUtil.toHexColor(ColorScheme.GRAND_EXCHANGE_LIMIT), truncatedGroupName));
-		groupLabel.setToolTipText(groupName);
+//		groupLabel.setToolTipText(groupName);
 
 		truncated = true;
+	}
+
+	private String competitionPageUrl(String id)
+	{
+
+		return new HttpUrl.Builder()
+			.scheme("https")
+			.host(client.getWorldType().contains(WorldType.SEASONAL) ? "league.wiseoldman.net" : "wiseoldman.net")
+			.addPathSegment("competitions")
+			.addPathSegment(id)
+			.build()
+			.toString();
 	}
 
 	@Override
