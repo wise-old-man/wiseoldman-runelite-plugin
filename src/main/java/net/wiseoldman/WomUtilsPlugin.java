@@ -421,22 +421,14 @@ public class WomUtilsPlugin extends Plugin
 	private void addGroupBrowseOptions()
 	{
 		addGroupMenuOptions(WIDGET_BROWSE_MENU_OPTIONS, ev -> {
-//			openGroupInBrowser();
-			// TODO: REMOVE THESE! They are only hare so I don't have re-fetch the competitions to test visual changes to the side panel!
-			womPanel.resetCompetitionsPanel();
-			womPanel.addOngoingCompetitions(playerCompetitionsOngoing);
-			womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
+			openGroupInBrowser();
 		});
 	}
 
 	private void addGroupImportOptions()
 	{
 		addGroupMenuOptions(WIDGET_IMPORT_MENU_OPTIONS, ev -> {
-//			womClient.importGroupMembers();
-			// TODO: REMOVE THESE! They are only hare so I don't have re-fetch the competitions to test visual changes to the side panel!
-			womPanel.resetCompetitionsPanel();
-			womPanel.addOngoingCompetitions(playerCompetitionsOngoing);
-			womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
+			womClient.importGroupMembers();
 		});
 	}
 
