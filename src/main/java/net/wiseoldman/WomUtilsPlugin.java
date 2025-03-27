@@ -357,6 +357,17 @@ public class WomUtilsPlugin extends Plugin
 			// Set this to true here so when the plugin is enabled after the player has logged in
 			// the player name is set correctly for fetching competitions in onGameTick.
 			recentlyLoggedIn = true;
+
+			clientThread.invokeLater(() -> {
+				Player local = client.getLocalPlayer();
+				if (local != null)
+				{
+					womClient.fetchOngoingPlayerCompetitions(client.getLocalPlayer().getName());
+					womClient.fetchUpcomingPlayerCompetitions(client.getLocalPlayer().getName());
+					return true;
+				}
+				return false;
+			});
 		}
 
 		for (WomCommand c : WomCommand.values())
@@ -437,14 +448,22 @@ public class WomUtilsPlugin extends Plugin
 	private void addGroupBrowseOptions()
 	{
 		addGroupMenuOptions(WIDGET_BROWSE_MENU_OPTIONS, ev -> {
-			openGroupInBrowser();
+//			openGroupInBrowser();
+			// TODO: REMOVE THESE! They are only hare so I don't have re-fetch the competitions to test visual changes to the side panel!
+			womPanel.resetCompetitionsPanel();
+			womPanel.addOngoingCompetitions(playerCompetitionsOngoing);
+			womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
 		});
 	}
 
 	private void addGroupImportOptions()
 	{
 		addGroupMenuOptions(WIDGET_IMPORT_MENU_OPTIONS, ev -> {
-			womClient.importGroupMembers();
+//			womClient.importGroupMembers();
+			// TODO: REMOVE THESE! They are only hare so I don't have re-fetch the competitions to test visual changes to the side panel!
+			womPanel.resetCompetitionsPanel();
+			womPanel.addOngoingCompetitions(playerCompetitionsOngoing);
+			womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
 		});
 	}
 
@@ -1043,6 +1062,7 @@ public class WomUtilsPlugin extends Plugin
 				visitedLoginScreen = true;
 				namechangesSubmitted = false;
 				womPanel.resetCompetitionsPanel();
+				womPanel.resetGroupFilter();
 			case HOPPING:
 				Player local = client.getLocalPlayer();
 				if (local == null)
@@ -1081,6 +1101,11 @@ public class WomUtilsPlugin extends Plugin
 			womClient.fetchUpcomingPlayerCompetitions(playerName);
 			recentlyLoggedIn = false;
 			visitedLoginScreen = false;
+		}
+
+		if (womPanel.active)
+		{
+			womPanel.updateCompetitionCountdown();
 		}
 	}
 
@@ -1186,7 +1211,8 @@ public class WomUtilsPlugin extends Plugin
 		}
 		updateInfoboxes();
 		updateScheduledNotifications();
-		womPanel.addCompetitionPanels(playerCompetitionsOngoing);
+		womPanel.addOngoingCompetitions(playerCompetitionsOngoing);
+		womPanel.addGroupFilters(playerCompetitionsOngoing.stream().map(ParticipantWithStanding::getCompetition).toArray(Competition[]::new));
 	}
 
 	@Subscribe
@@ -1196,6 +1222,8 @@ public class WomUtilsPlugin extends Plugin
 		log.debug("Fetched {} upcoming competitions for player {}", event.getCompetitions().length, event.getUsername());
 		updateInfoboxes();
 		updateScheduledNotifications();
+		womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
+		womPanel.addGroupFilters(playerCompetitionsUpcoming.stream().map(ParticipantWithCompetition::getCompetition).toArray(Competition[]::new));
 	}
 
 	private void updateInfoboxes()
