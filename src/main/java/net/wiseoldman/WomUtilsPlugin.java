@@ -19,7 +19,6 @@ import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
 import net.wiseoldman.beans.Competition;
-import net.wiseoldman.beans.CompetitionInfo;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.beans.GroupMembership;
@@ -263,7 +262,6 @@ public class WomUtilsPlugin extends Plugin
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
 	private Map<Integer, CompetitionInfobox> competitionInfoboxes = new HashMap<>();
 	private List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
-	private Map<Integer, CompetitionInfo> competitionInfoMap = new HashMap<>();
 	private List<String> ignoredRanks = new ArrayList<>();
 	private List<String> alwaysIncludedOnSync = new ArrayList<>();
 
@@ -409,12 +407,10 @@ public class WomUtilsPlugin extends Plugin
 		clearInfoboxes();
 		cancelNotifications();
 		previousSkillLevels.clear();
-		competitionInfoMap.clear();
 		ignoredRanks.clear();
 		alwaysIncludedOnSync.clear();
 		levelupThisSession = false;
 		overlayManager.remove(codeWordOverlay);
-
 		log.info("Wise Old Man stopped!");
 	}
 
