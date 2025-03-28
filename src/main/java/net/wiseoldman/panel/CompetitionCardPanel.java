@@ -57,7 +57,7 @@ public class CompetitionCardPanel extends JPanel
 
 	private static final String ELLIPSIS = "...";
 	private static final String ADD_STATE = "Add to canvas";
-	private static final String REMOVE_STATE = "Remove from cavnas";
+	private static final String REMOVE_STATE = "Remove from canvas";
 
 	/* The competition's info box wrapping container */
 	private final JPanel container = new JPanel();
