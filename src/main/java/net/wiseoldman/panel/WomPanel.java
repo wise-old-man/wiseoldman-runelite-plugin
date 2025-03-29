@@ -44,8 +44,7 @@ public class WomPanel extends PluginPanel
 
 	/* The maximum allowed username length in RuneScape accounts */
 	private static final int MAX_USERNAME_LENGTH = 12;
-	private static final String DEFAULT_GROUP_FILTER = "None";
-	private static final String UNGROUPED_FILTER = "Ungrouped";
+	private static final String DEFAULT_GROUP_FILTER = "All";
 
 	private final SkillingPanel skillingPanel;
 	private final BossingPanel bossingPanel;
@@ -112,9 +111,10 @@ public class WomPanel extends PluginPanel
 		upComingCompetitionsPanel = new JPanel();
 		upComingCompetitionsPanel.setLayout(new BoxLayout(upComingCompetitionsPanel, BoxLayout.Y_AXIS));
 
-		JLabel groupFilterLabel = new JLabel("Filter by group");
+		JLabel groupFilterLabel = new JLabel("<html><body><p text-align:left;'>Filter by group</p</body></html>");
 		groupFilterLabel.setFont(FontManager.getRunescapeSmallFont());
 		groupFilterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		groupFilterLabel.setBorder(new EmptyBorder(0, -1, 5, 0));
 
 		groupFilter.setFont(FontManager.getRunescapeSmallFont());
 		groupFilter.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -508,8 +508,7 @@ public class WomPanel extends PluginPanel
 		for (CompetitionCardPanel p : competitionCardPanels)
 		{
 			GroupInfo group = p.getCompetition().getGroup();
-			String groupName = group == null ? UNGROUPED_FILTER : group.getName();
-			p.setVisible(groupName.equals(filter) || filter.equals(DEFAULT_GROUP_FILTER));
+			p.setVisible(filter.equals(DEFAULT_GROUP_FILTER) || (group != null && group.getName().equals(filter)));
 		}
 	}
 
@@ -518,10 +517,9 @@ public class WomPanel extends PluginPanel
 		for (Competition c : competitions)
 		{
 			GroupInfo group = c.getGroup();
-			String optionToAdd = group == null ? UNGROUPED_FILTER : group.getName();
-			if (!filterContainsItem(optionToAdd))
+			if (group != null && !filterContainsItem(group.getName()))
 			{
-				groupFilter.addItem(optionToAdd);
+				groupFilter.addItem(group.getName());
 			}
 		}
 		if (!groupFilter.isEnabled())
