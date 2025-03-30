@@ -52,6 +52,7 @@ public class WomPanel extends PluginPanel
 	private final PluginErrorPanel competitionsErrorPanel;
 	private final JPanel ongoingCompetitionsPanel;
 	private final JPanel upComingCompetitionsPanel;
+	private final JPanel groupFilterPanel = new JPanel();
 	private final JComboBox<String> groupFilter = new JComboBox<>(new String[]{DEFAULT_GROUP_FILTER});
 
 	private final MaterialTabGroup topTabGroup;
@@ -68,6 +69,7 @@ public class WomPanel extends PluginPanel
 	private final List<CompetitionCardPanel> competitionCardPanels = new ArrayList<>();
 
 	public boolean active;
+	boolean nonGroupCompetitions = false;
 
 	@Inject
 	public WomPanel(Client client, WomUtilsPlugin plugin, NameAutocompleter nameAutocompleter, WomClient womClient, WomUtilsConfig config,
@@ -119,14 +121,17 @@ public class WomPanel extends PluginPanel
 		groupFilter.setFont(FontManager.getRunescapeSmallFont());
 		groupFilter.setAlignmentX(Component.CENTER_ALIGNMENT);
 		groupFilter.setSelectedItem(DEFAULT_GROUP_FILTER);
-		groupFilter.setEnabled(false);
 		groupFilter.addActionListener(e -> {
 			String selectedFilter = (String) groupFilter.getSelectedItem();
 			filterCompetitions(selectedFilter);
 		});
 
-		competitionsPanel.add(groupFilterLabel);
-		competitionsPanel.add(groupFilter);
+		groupFilterPanel.setLayout(new BoxLayout(groupFilterPanel, BoxLayout.Y_AXIS));
+		groupFilterPanel.add(groupFilterLabel);
+		groupFilterPanel.add(groupFilter);
+		groupFilterPanel.setVisible(false);
+
+		competitionsPanel.add(groupFilterPanel);
 		competitionsPanel.add(competitionsErrorPanel);
 		competitionsPanel.add(ongoingCompetitionsPanel);
 		competitionsPanel.add(upComingCompetitionsPanel);
@@ -521,12 +526,17 @@ public class WomPanel extends PluginPanel
 			{
 				groupFilter.addItem(group.getName());
 			}
+
+			nonGroupCompetitions = nonGroupCompetitions || group == null;
+
 		}
-		if (!groupFilter.isEnabled())
+
+		// > 2 because of the default "All" option always being included.
+		int itemCount = groupFilter.getItemCount();
+		if (itemCount > 2 || (itemCount == 2 && nonGroupCompetitions))
 		{
-			groupFilter.setEnabled(true);
+			groupFilterPanel.setVisible(true);
 		}
-		groupFilter.revalidate();
 	}
 
 	public void resetGroupFilter()
@@ -534,8 +544,8 @@ public class WomPanel extends PluginPanel
 		groupFilter.removeAllItems();
 		groupFilter.addItem(DEFAULT_GROUP_FILTER);
 		groupFilter.setSelectedItem(DEFAULT_GROUP_FILTER);
-		groupFilter.setEnabled(false);
 		groupFilter.revalidate();
+		groupFilterPanel.setVisible(false);
 	}
 
 	public void resetCompetitionsPanel()
