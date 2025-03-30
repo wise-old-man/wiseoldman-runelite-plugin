@@ -32,7 +32,7 @@ import net.wiseoldman.panel.CompetitionCardPanel;
 import net.wiseoldman.panel.NameAutocompleter;
 import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
-import net.wiseoldman.ui.CompetitionInfobox;
+import net.wiseoldman.ui.CompetitionInfoBox;
 import net.wiseoldman.ui.SyncButton;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
@@ -260,7 +260,7 @@ public class WomUtilsPlugin extends Plugin
 	private Map<String, GroupMembership> groupMembers = new HashMap<>();
 	private List<ParticipantWithStanding> playerCompetitionsOngoing = new ArrayList<>();
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
-	private Map<Integer, CompetitionInfobox> competitionInfoboxes = new HashMap<>();
+	private Map<Integer, CompetitionInfoBox> competitionInfoBoxes = new HashMap<>();
 	private List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 	private List<String> ignoredRanks = new ArrayList<>();
 	private List<String> alwaysIncludedOnSync = new ArrayList<>();
@@ -404,7 +404,7 @@ public class WomUtilsPlugin extends Plugin
 		}
 		clientToolbar.removeNavigation(navButton);
 		womPanel.shutdown();
-		clearInfoboxes();
+		clearInfoBoxes();
 		cancelNotifications();
 		previousSkillLevels.clear();
 		ignoredRanks.clear();
@@ -1142,27 +1142,27 @@ public class WomUtilsPlugin extends Plugin
 
 	public void addInfoBox(CompetitionCardPanel p)
 	{
-		CompetitionInfobox infoBox = new CompetitionInfobox(p, this);
-		competitionInfoboxes.put(p.getCompetition().getId(), infoBox);
+		CompetitionInfoBox infoBox = new CompetitionInfoBox(p, this);
+		competitionInfoBoxes.put(p.getCompetition().getId(), infoBox);
 		infoBoxManager.addInfoBox(infoBox);
 	}
 
 	public void removeInfoBox(CompetitionCardPanel p)
 	{
 		int id = p.getCompetition().getId();
-		infoBoxManager.removeIf(e -> e instanceof CompetitionInfobox && ((CompetitionInfobox) e).getCompetition().getId() == id);
-		competitionInfoboxes.remove(id);
+		infoBoxManager.removeIf(e -> e instanceof CompetitionInfoBox && ((CompetitionInfoBox) e).getCompetition().getId() == id);
+		competitionInfoBoxes.remove(id);
 	}
 
 	public boolean hasInfoBox(int id)
 	{
-		return competitionInfoboxes.containsKey(id);
+		return competitionInfoBoxes.containsKey(id);
 	}
 
-	private void clearInfoboxes()
+	private void clearInfoBoxes()
 	{
-		infoBoxManager.removeIf(CompetitionInfobox.class::isInstance);
-		competitionInfoboxes.clear();
+		infoBoxManager.removeIf(CompetitionInfoBox.class::isInstance);
+		competitionInfoBoxes.clear();
 	}
 
 	private void updateScheduledNotifications()

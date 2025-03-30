@@ -15,7 +15,7 @@ import net.runelite.client.ui.overlay.infobox.InfoBox;
 import net.runelite.client.util.ColorUtil;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
-public class CompetitionInfobox extends InfoBox
+public class CompetitionInfoBox extends InfoBox
 {
 	@Getter
 	final Competition competition;
@@ -25,7 +25,7 @@ public class CompetitionInfobox extends InfoBox
 
 	private static final Color ACTIVE_COLOR = new Color(0x51f542);
 
-	public CompetitionInfobox(CompetitionCardPanel p, WomUtilsPlugin plugin)
+	public CompetitionInfoBox(CompetitionCardPanel p, WomUtilsPlugin plugin)
 	{
 		super(p.getCompetition().getMetric().loadIcon(p.getCompetition().getMetric().getType()), plugin);
 		this.competition = p.getCompetition();
