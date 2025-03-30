@@ -54,7 +54,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean playerLookupOption()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -66,7 +66,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean menuLookupOption()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -102,7 +102,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean showicons()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -114,7 +114,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean showFlags()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -126,7 +126,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean importGroup()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -138,7 +138,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean browseGroup()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -150,7 +150,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean addRemoveMember()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -211,7 +211,7 @@ public interface WomUtilsConfig extends Config
 	)
 	default boolean competitionLoginMessage()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
