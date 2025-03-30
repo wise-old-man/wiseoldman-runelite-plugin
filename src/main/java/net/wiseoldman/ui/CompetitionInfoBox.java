@@ -1,23 +1,23 @@
 package net.wiseoldman.ui;
 
+import lombok.Getter;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionProgress;
 import net.wiseoldman.beans.Metric;
-import net.wiseoldman.beans.ParticipantWithStanding;
+import net.wiseoldman.panel.CompetitionCardPanel;
 import net.wiseoldman.util.Utils;
 import java.awt.Color;
 import java.text.DecimalFormat;
 import java.time.Duration;
-import net.runelite.api.MenuAction;
 import net.runelite.client.hiscore.HiscoreSkillType;
-import net.runelite.client.ui.overlay.OverlayMenuEntry;
 import net.runelite.client.ui.overlay.infobox.InfoBox;
 import net.runelite.client.util.ColorUtil;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
-public class CompetitionInfobox extends InfoBox
+public class CompetitionInfoBox extends InfoBox
 {
+	@Getter
 	final Competition competition;
 	final WomUtilsPlugin plugin;
 	final int rank;
@@ -25,28 +25,13 @@ public class CompetitionInfobox extends InfoBox
 
 	private static final Color ACTIVE_COLOR = new Color(0x51f542);
 
-	public CompetitionInfobox(Competition competition, WomUtilsPlugin plugin)
+	public CompetitionInfoBox(CompetitionCardPanel p, WomUtilsPlugin plugin)
 	{
-		super(competition.getMetric().loadImage(), plugin);
-		this.competition = competition;
-		this.rank = -1;
-		this.progress = null;
+		super(p.getCompetition().getMetric().loadIcon(p.getCompetition().getMetric().getType()), plugin);
+		this.competition = p.getCompetition();
+		this.rank = p.getRank();
+		this.progress = p.getProgress();
 		this.plugin = plugin;
-
-		this.getMenuEntries().add(new OverlayMenuEntry(MenuAction.RUNELITE_INFOBOX, WomUtilsPlugin.SHOW_ALL_COMPETITIONS, "Wise Old Man"));
-		this.getMenuEntries().add(new OverlayMenuEntry(MenuAction.RUNELITE_INFOBOX, WomUtilsPlugin.HIDE_COMPETITION_INFOBOX, competition.getTitle()));
-	}
-
-	public CompetitionInfobox(ParticipantWithStanding pws, WomUtilsPlugin plugin)
-	{
-		super(pws.getCompetition().getMetric().loadImage(), plugin);
-		this.competition = pws.getCompetition();
-		this.rank = pws.getRank();
-		this.progress = pws.getProgress();
-		this.plugin = plugin;
-
-		this.getMenuEntries().add(new OverlayMenuEntry(MenuAction.RUNELITE_INFOBOX, WomUtilsPlugin.SHOW_ALL_COMPETITIONS, "Wise Old Man"));
-		this.getMenuEntries().add(new OverlayMenuEntry(MenuAction.RUNELITE_INFOBOX, WomUtilsPlugin.HIDE_COMPETITION_INFOBOX, competition.getTitle()));
 	}
 
 	@Override
@@ -145,31 +130,8 @@ public class CompetitionInfobox extends InfoBox
 	}
 
 	@Override
-	public boolean render()
-	{
-		return shouldShow() && !isHidden();
-	}
-
-	@Override
 	public boolean cull()
 	{
 		return competition.hasEnded();
-	}
-
-	public boolean shouldShow()
-	{
-		return plugin.isShowTimerOngoing() && competition.isActive()
-			|| plugin.isShowTimerUpcoming() && !competition.hasStarted()
-					&& competition.durationLeft().toDays() <= plugin.getUpcomingInfoboxesMaxDays();
-	}
-
-	public boolean isHidden()
-	{
-		return plugin.getHiddenCompetitions().contains(competition.getId());
-	}
-
-	public int getLinkedCompetitionId()
-	{
-		return competition.getId();
 	}
 }

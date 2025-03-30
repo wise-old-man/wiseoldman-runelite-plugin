@@ -20,7 +20,7 @@ public class Competition
 	Date createdAt;
 	Date updatedAt;
 	GroupInfo group;
-	int particiantCount;
+	int participantCount;
 
 	public boolean isActive()
 	{
@@ -55,7 +55,11 @@ public class Competition
 
 	private String durationLeftPretty()
 	{
-		return DurationFormatUtils.formatDurationWords(durationLeft().toMillis(), true, true);
+		return DurationFormatUtils.formatDurationWords(durationLeft().toMillis(), true, true)
+			.replaceAll(" days?", "d")
+			.replaceAll(" hours?", "h")
+			.replaceAll(" minutes?", "m")
+			.replaceAll(" seconds?", "s");
 	}
 
 	public String getStatus()

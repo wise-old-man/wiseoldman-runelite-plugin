@@ -230,9 +230,28 @@ public enum Metric
 	@Getter
 	private HiscoreSkill hiscoreSkill;
 
-	public BufferedImage loadImage()
+	public BufferedImage loadIcon(HiscoreSkillType type)
 	{
-		return ImageUtil.loadImageResource(WomUtilsPlugin.class, "metrics/" + name().toLowerCase() + ".png");
+		final String directory;
+		// Computed metrics: EHP and EHB
+		if (type == null)
+		{
+			directory = "";
+		}
+		else if (type == HiscoreSkillType.BOSS)
+		{
+			directory = "bosses/";
+		}
+		else if (type == HiscoreSkillType.ACTIVITY)
+		{
+			directory = "activities/";
+		}
+		else
+		{
+			directory = "/skill_icons_small/";
+		}
+
+		return ImageUtil.loadImageResource(WomUtilsPlugin.class, directory + name().toLowerCase() + ".png");
 	}
 
 	public String getName()
