@@ -75,9 +75,6 @@ public class WomClient
 	@Inject
 	private ClientThread clientThread;
 
-	@Inject
-	private EventBus eventBus;
-
 	private static final Color SUCCESS = new Color(170, 255, 40);
 	private static final Color ERROR = new Color(204, 66, 66);
 
@@ -440,7 +437,7 @@ public class WomClient
 	private void postEvent(Object event)
 	{
 		// Handle callbacks on the client thread
-		clientThread.invokeLater(() -> eventBus.post(event));
+		clientThread.invokeLater(() -> plugin.eventBus.post(event));
 	}
 
 	public void fetchUpcomingPlayerCompetitions(String username)
