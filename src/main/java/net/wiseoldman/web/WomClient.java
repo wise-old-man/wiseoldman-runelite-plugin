@@ -18,6 +18,7 @@ import net.wiseoldman.beans.GroupMemberRemoval;
 import net.wiseoldman.beans.PlayerInfo;
 import net.wiseoldman.beans.WomPlayerUpdate;
 import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
+import net.wiseoldman.events.WomRequestFailed;
 import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.WomUtilsConfig;
@@ -280,10 +281,12 @@ public class WomClient
 
 	private void playerOngoingCompetitionsCallback(String username, Response response)
 	{
+		boolean showRetry = true;
 		if (response.isSuccessful())
 		{
 			ParticipantWithStanding[] comps = parseResponse(response, ParticipantWithStanding[].class);
 			postEvent(new WomOngoingPlayerCompetitionsFetched(username, comps));
+			showRetry = false;
 		}
 		else if (response.code() == 429)
 		{
@@ -295,14 +298,21 @@ public class WomClient
 			String message = "Error: " + data.getMessage();
 			sendResponseToChat(message, ERROR);
 		}
+
+		if (showRetry)
+		{
+			eventBus.post(new WomRequestFailed(username, WomRequestType.COMPETITIONS_ONGOING));
+		}
 	}
 
 	private void playerUpcomingCompetitionsCallback(String username, Response response)
 	{
+		boolean showRetry = true;
 		if (response.isSuccessful())
 		{
 			ParticipantWithCompetition[] comps = parseResponse(response, ParticipantWithCompetition[].class);
 			postEvent(new WomUpcomingPlayerCompetitionsFetched(username, comps));
+			showRetry = false;
 		}
 		else if (response.code() == 429)
 		{
@@ -313,6 +323,11 @@ public class WomClient
 			WomStatus data = parseResponse(response, WomStatus.class);
 			String message = "Error: " + data.getMessage();
 			sendResponseToChat(message, ERROR);
+		}
+
+		if (showRetry)
+		{
+			eventBus.post(new WomRequestFailed(username, WomRequestType.COMPETITIONS_UPCOMING));
 		}
 	}
 

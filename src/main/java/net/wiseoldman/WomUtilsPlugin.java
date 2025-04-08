@@ -27,6 +27,7 @@ import net.wiseoldman.events.WomGroupMemberAdded;
 import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
 import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
+import net.wiseoldman.events.WomRequestFailed;
 import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
 import net.wiseoldman.panel.CompetitionCardPanel;
 import net.wiseoldman.panel.NameAutocompleter;
@@ -36,6 +37,7 @@ import net.wiseoldman.ui.CompetitionInfoBox;
 import net.wiseoldman.ui.SyncButton;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
+import net.wiseoldman.web.WomRequestType;
 import net.wiseoldman.web.WomClient;
 import net.wiseoldman.web.WomCommand;
 import java.awt.Color;
@@ -1138,6 +1140,15 @@ public class WomUtilsPlugin extends Plugin
 		updateScheduledNotifications();
 		womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
 		womPanel.addGroupFilters(playerCompetitionsUpcoming.stream().map(ParticipantWithCompetition::getCompetition).toArray(Competition[]::new));
+	}
+
+	@Subscribe
+	public void onWomRequestFailed(WomRequestFailed event)
+	{
+		if (event.getType() == WomRequestType.COMPETITIONS_ONGOING || event.getType() == WomRequestType.COMPETITIONS_UPCOMING)
+		{
+			womPanel.displayCompetitionFetchError(event.getType(), event.getUsername());
+		}
 	}
 
 	public void addInfoBox(CompetitionCardPanel p)
