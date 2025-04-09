@@ -2,6 +2,8 @@ package net.wiseoldman.panel;
 
 import com.google.common.base.Strings;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import net.runelite.api.WorldType;
 import net.runelite.client.ui.components.PluginErrorPanel;
 import net.wiseoldman.WomUtilsConfig;
@@ -474,11 +476,20 @@ public class WomPanel extends PluginPanel
 		JPanel ongoingCompetitions = new JPanel();
 		ongoingCompetitions.setLayout(new BoxLayout(ongoingCompetitions, BoxLayout.Y_AXIS));
 
+		// Remove any competition from canvas list that are no longer in the newly fetched competitions list
+		Set<Integer> currentOngoing = competitions.stream().map(ParticipantWithStanding::getCompetitionId).collect(Collectors.toSet());
+		plugin.clearOldCanvasCompetitions(currentOngoing, true);
+
 		for (ParticipantWithStanding c : competitions)
 		{
 			CompetitionCardPanel competitionPanel = new CompetitionCardPanel(client, plugin, c);
 			competitionCardPanels.add(competitionPanel);
 			ongoingCompetitions.add(competitionPanel);
+
+			if (plugin.competitionsOnCanvas.stream().anyMatch(cc -> cc.getId() == c.getCompetitionId()))
+			{
+				plugin.addInfoBox(competitionPanel);
+			}
 		}
 
 		if (competitionsErrorPanel.isVisible() && !competitionCardPanels.isEmpty())
@@ -496,12 +507,22 @@ public class WomPanel extends PluginPanel
 		JPanel upcomingCompetitions = new JPanel();
 		upcomingCompetitions.setLayout(new BoxLayout(upcomingCompetitions, BoxLayout.Y_AXIS));
 
+		// Remove any competition from canvas list that are no longer in the newly fetched competitions list
+		Set<Integer> currentUpcoming = competitions.stream().map(ParticipantWithCompetition::getCompetitionId).collect(Collectors.toSet());
+		plugin.clearOldCanvasCompetitions(currentUpcoming, false);
+
 		for (ParticipantWithCompetition c : competitions)
 		{
 			CompetitionCardPanel competitionPanel = new CompetitionCardPanel(client, plugin, c);
 			competitionCardPanels.add(competitionPanel);
 			upcomingCompetitions.add(competitionPanel);
+
+			if (plugin.competitionsOnCanvas.stream().anyMatch(cc -> cc.getId() == c.getCompetitionId()))
+			{
+				plugin.addInfoBox(competitionPanel);
+			}
 		}
+
 
 		if (competitionsErrorPanel.isVisible() && !competitionCardPanels.isEmpty())
 		{

@@ -324,4 +324,23 @@ public interface WomUtilsConfig extends Config
 		hidden = true
 	)
 	void ignoreRanksDisplay(String value);
+
+	@ConfigItem(
+		keyName = "competitionsOnCanvas",
+		name = "",
+		description = "",
+		hidden = true
+	)
+	default String competitionsOnCanvas()
+	{
+		return "[]";
+	}
+
+	@ConfigItem(
+		keyName = "competitionsOnCanvas",
+		name = "",
+		description = "",
+		hidden = true
+	)
+	void competitionsOnCanvas(String value);
 }
