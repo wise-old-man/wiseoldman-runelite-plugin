@@ -2,6 +2,8 @@ package net.wiseoldman.panel;
 
 import com.google.common.base.Strings;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import net.runelite.api.WorldType;
 import net.runelite.client.ui.components.PluginErrorPanel;
 import net.wiseoldman.WomUtilsConfig;
@@ -11,6 +13,7 @@ import net.wiseoldman.beans.GroupInfo;
 import net.wiseoldman.beans.ParticipantWithCompetition;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.beans.PlayerInfo;
+import net.wiseoldman.web.WomRequestType;
 import net.wiseoldman.web.WomClient;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -45,6 +48,8 @@ public class WomPanel extends PluginPanel
 	/* The maximum allowed username length in RuneScape accounts */
 	private static final int MAX_USERNAME_LENGTH = 12;
 	private static final String DEFAULT_GROUP_FILTER = "All";
+	private static final String FETCHING_ERROR_TEMPLATE =
+		"<html><body  style='color:#FF0000; text-align:center;'>Failed to load %s competitions</body></html>";
 
 	private final SkillingPanel skillingPanel;
 	private final BossingPanel bossingPanel;
@@ -105,7 +110,7 @@ public class WomPanel extends PluginPanel
 		competitionsPanel.setLayout(new BoxLayout(competitionsPanel, BoxLayout.Y_AXIS));
 
 		competitionsErrorPanel = new PluginErrorPanel();
-		competitionsErrorPanel.setContent("No competitions found", "Please log in to fetch your ongoing and upcoming competitions.");
+		competitionsErrorPanel.setContent("No competitions found", "Please log in to load your ongoing and upcoming competitions.");
 
 		ongoingCompetitionsPanel = new JPanel();
 		ongoingCompetitionsPanel.setLayout(new BoxLayout(ongoingCompetitionsPanel, BoxLayout.Y_AXIS));
@@ -471,11 +476,20 @@ public class WomPanel extends PluginPanel
 		JPanel ongoingCompetitions = new JPanel();
 		ongoingCompetitions.setLayout(new BoxLayout(ongoingCompetitions, BoxLayout.Y_AXIS));
 
+		// Remove any competition from canvas list that are no longer in the newly fetched competitions list
+		Set<Integer> currentOngoing = competitions.stream().map(ParticipantWithStanding::getCompetitionId).collect(Collectors.toSet());
+		plugin.clearOldCanvasCompetitions(currentOngoing, true);
+
 		for (ParticipantWithStanding c : competitions)
 		{
 			CompetitionCardPanel competitionPanel = new CompetitionCardPanel(client, plugin, c);
 			competitionCardPanels.add(competitionPanel);
 			ongoingCompetitions.add(competitionPanel);
+
+			if (plugin.competitionsOnCanvas.stream().anyMatch(cc -> cc.getId() == c.getCompetitionId()))
+			{
+				plugin.addInfoBox(competitionPanel);
+			}
 		}
 
 		if (competitionsErrorPanel.isVisible() && !competitionCardPanels.isEmpty())
@@ -493,12 +507,22 @@ public class WomPanel extends PluginPanel
 		JPanel upcomingCompetitions = new JPanel();
 		upcomingCompetitions.setLayout(new BoxLayout(upcomingCompetitions, BoxLayout.Y_AXIS));
 
+		// Remove any competition from canvas list that are no longer in the newly fetched competitions list
+		Set<Integer> currentUpcoming = competitions.stream().map(ParticipantWithCompetition::getCompetitionId).collect(Collectors.toSet());
+		plugin.clearOldCanvasCompetitions(currentUpcoming, false);
+
 		for (ParticipantWithCompetition c : competitions)
 		{
 			CompetitionCardPanel competitionPanel = new CompetitionCardPanel(client, plugin, c);
 			competitionCardPanels.add(competitionPanel);
 			upcomingCompetitions.add(competitionPanel);
+
+			if (plugin.competitionsOnCanvas.stream().anyMatch(cc -> cc.getId() == c.getCompetitionId()))
+			{
+				plugin.addInfoBox(competitionPanel);
+			}
 		}
+
 
 		if (competitionsErrorPanel.isVisible() && !competitionCardPanels.isEmpty())
 		{
@@ -506,6 +530,41 @@ public class WomPanel extends PluginPanel
 		}
 
 		upComingCompetitionsPanel.add(upcomingCompetitions);
+	}
+
+	public void displayCompetitionFetchError(WomRequestType type, String username)
+	{
+		JPanel retryPanel = new JPanel();
+		retryPanel.setLayout(new BorderLayout());
+		retryPanel.setBorder(new EmptyBorder(20, 0, 20, 0));
+		JLabel errorLabel = new JLabel(String.format(FETCHING_ERROR_TEMPLATE, type.getName()), SwingConstants.CENTER);
+		errorLabel.setFont(FontManager.getRunescapeSmallFont());
+
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		JButton retryButton = new JButton();
+		retryButton.setFont(FontManager.getRunescapeSmallFont());
+		retryButton.setText("Retry");
+		buttonPanel.add(retryButton);
+
+		retryPanel.add(errorLabel, BorderLayout.CENTER);
+		retryPanel.add(buttonPanel, BorderLayout.SOUTH);
+		competitionsErrorPanel.setVisible(false);
+		if (type == WomRequestType.COMPETITIONS_UPCOMING)
+		{
+			upComingCompetitionsPanel.removeAll();
+			retryButton.addActionListener(e ->
+				womClient.fetchUpcomingPlayerCompetitions(username)
+			);
+			upComingCompetitionsPanel.add(retryPanel);
+		}
+		else if (type == WomRequestType.COMPETITIONS_ONGOING)
+		{
+			ongoingCompetitionsPanel.removeAll();
+			retryButton.addActionListener(e ->
+				womClient.fetchOngoingPlayerCompetitions(username)
+			);
+			ongoingCompetitionsPanel.add(retryPanel);
+		}
 	}
 
 	private void filterCompetitions(String filter)

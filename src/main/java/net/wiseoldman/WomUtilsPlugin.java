@@ -13,11 +13,13 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import java.util.Set;
 import java.util.stream.Collectors;
 import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.WorldType;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetUtil;
+import net.wiseoldman.beans.CanvasCompetition;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
@@ -27,6 +29,7 @@ import net.wiseoldman.events.WomGroupMemberAdded;
 import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
 import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
+import net.wiseoldman.events.WomRequestFailed;
 import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
 import net.wiseoldman.panel.CompetitionCardPanel;
 import net.wiseoldman.panel.NameAutocompleter;
@@ -36,6 +39,7 @@ import net.wiseoldman.ui.CompetitionInfoBox;
 import net.wiseoldman.ui.SyncButton;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
+import net.wiseoldman.web.WomRequestType;
 import net.wiseoldman.web.WomClient;
 import net.wiseoldman.web.WomCommand;
 import java.awt.Color;
@@ -261,6 +265,7 @@ public class WomUtilsPlugin extends Plugin
 	private List<ParticipantWithStanding> playerCompetitionsOngoing = new ArrayList<>();
 	private List<ParticipantWithCompetition> playerCompetitionsUpcoming = new ArrayList<>();
 	private Map<Integer, CompetitionInfoBox> competitionInfoBoxes = new HashMap<>();
+	public List<CanvasCompetition> competitionsOnCanvas = new ArrayList<>();
 	private List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 	private List<String> ignoredRanks = new ArrayList<>();
 	private List<String> alwaysIncludedOnSync = new ArrayList<>();
@@ -358,6 +363,8 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		ignoredRanks = new ArrayList<>(Arrays.asList(gson.fromJson(config.ignoredRanks(), String[].class)));
+		competitionsOnCanvas = new ArrayList<>(Arrays.asList(gson.fromJson(config.competitionsOnCanvas(), CanvasCompetition[].class)));
+
 
 		String ignoreRanksDisplayText = ignoredRanks.stream()
 			.map(Object::toString)
@@ -405,6 +412,7 @@ public class WomUtilsPlugin extends Plugin
 		clientToolbar.removeNavigation(navButton);
 		womPanel.shutdown();
 		clearInfoBoxes();
+		competitionsOnCanvas.clear();
 		cancelNotifications();
 		previousSkillLevels.clear();
 		ignoredRanks.clear();
@@ -979,6 +987,7 @@ public class WomUtilsPlugin extends Plugin
 				namechangesSubmitted = false;
 				womPanel.resetCompetitionsPanel();
 				womPanel.resetGroupFilter();
+				clearInfoBoxes();
 			case HOPPING:
 				Player local = client.getLocalPlayer();
 				if (local == null)
@@ -1140,11 +1149,34 @@ public class WomUtilsPlugin extends Plugin
 		womPanel.addGroupFilters(playerCompetitionsUpcoming.stream().map(ParticipantWithCompetition::getCompetition).toArray(Competition[]::new));
 	}
 
+	@Subscribe
+	public void onWomRequestFailed(WomRequestFailed event)
+	{
+		if (event.getType() == WomRequestType.COMPETITIONS_ONGOING || event.getType() == WomRequestType.COMPETITIONS_UPCOMING)
+		{
+			womPanel.displayCompetitionFetchError(event.getType(), event.getUsername());
+		}
+	}
+
 	public void addInfoBox(CompetitionCardPanel p)
 	{
+		int competitionId = p.getCompetition().getId();
+		if (hasInfoBox(competitionId))
+		{
+			return;
+		}
+
 		CompetitionInfoBox infoBox = new CompetitionInfoBox(p, this);
-		competitionInfoBoxes.put(p.getCompetition().getId(), infoBox);
+		competitionInfoBoxes.put(competitionId, infoBox);
 		infoBoxManager.addInfoBox(infoBox);
+
+		if (competitionsOnCanvas.stream().map(CanvasCompetition::getId).collect(Collectors.toSet()).contains(competitionId))
+		{
+			return;
+		}
+
+		competitionsOnCanvas.add(new CanvasCompetition(competitionId, p.getCompetition().isActive()));
+		config.competitionsOnCanvas(gson.toJson(competitionsOnCanvas));
 	}
 
 	public void removeInfoBox(CompetitionCardPanel p)
@@ -1152,6 +1184,15 @@ public class WomUtilsPlugin extends Plugin
 		int id = p.getCompetition().getId();
 		infoBoxManager.removeIf(e -> e instanceof CompetitionInfoBox && ((CompetitionInfoBox) e).getCompetition().getId() == id);
 		competitionInfoBoxes.remove(id);
+
+		competitionsOnCanvas.removeIf(c -> c.getId() == id);
+		config.competitionsOnCanvas(gson.toJson(competitionsOnCanvas));
+	}
+
+	public void clearOldCanvasCompetitions(Set<Integer> competitionIds, boolean ongoing)
+	{
+		competitionsOnCanvas.removeIf(onCanvas -> onCanvas.isOngoing() == ongoing && !competitionIds.contains(onCanvas.getId()));
+		config.competitionsOnCanvas(gson.toJson(competitionsOnCanvas));
 	}
 
 	public boolean hasInfoBox(int id)
