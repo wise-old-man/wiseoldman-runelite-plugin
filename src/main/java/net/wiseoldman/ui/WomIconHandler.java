@@ -1,7 +1,6 @@
 package net.wiseoldman.ui;
 
-import net.runelite.api.widgets.ComponentID;
-import net.runelite.api.widgets.InterfaceID;
+import net.runelite.api.gameval.InterfaceID;
 import net.wiseoldman.WomUtilsConfig;
 
 import java.awt.image.BufferedImage;
@@ -25,9 +24,6 @@ import net.runelite.client.util.Text;
 @Singleton
 public class WomIconHandler
 {
-	// Members list in the clan members settings
-	private static final int CLAN_SETTINGS_MEMBERS_WIDGET = 45416458;
-
 	private final Client client;
 	private final ClientThread clientThread;
 	private final WomUtilsConfig config;
@@ -93,7 +89,7 @@ public class WomIconHandler
 				if (member != null)
 				{
 					String country = member.getPlayer().getCountry() != null &&
-							config.showFlags() ? member.getPlayer().getCountry().toLowerCase() : "default";
+						config.showFlags() ? member.getPlayer().getCountry().toLowerCase() : "default";
 					CountryIcon icon = CountryIcon.getIcon(country);
 					int iconIdx = modIconsStart + icon.ordinal();
 					stringStack[stringStackSize - 1] = rsn + " <img=" + iconIdx + ">";
@@ -143,7 +139,7 @@ public class WomIconHandler
 			if (!disable && member != null)
 			{
 				String country = member.getPlayer().getCountry() != null &&
-						config.showFlags() ? member.getPlayer().getCountry().toLowerCase() : "default";
+					config.showFlags() ? member.getPlayer().getCountry().toLowerCase() : "default";
 				CountryIcon icon = CountryIcon.getIcon(country);
 				int iconIdx = modIconsStart + icon.ordinal();
 				String spacer = name.charAt(name.length() - 1) != ' ' ? " " : ""; // Stupid
@@ -159,7 +155,7 @@ public class WomIconHandler
 
 	public void rebuildSettingsMemberList(boolean disable, Map<String, GroupMembership> groupMembers)
 	{
-		Widget containerWidget = client.getWidget(CLAN_SETTINGS_MEMBERS_WIDGET);
+		Widget containerWidget = client.getWidget(InterfaceID.ClansMembers.NAME);
 		if (containerWidget == null)
 		{
 			return;
@@ -171,7 +167,7 @@ public class WomIconHandler
 			return;
 		}
 
-		for (int i = 1; i < children.length; i+=3)
+		for (int i = 1; i < children.length; i += 3)
 		{
 			String name = Text.removeTags(children[i].getText());
 			String sanitized = Text.toJagexName(name);
@@ -182,7 +178,7 @@ public class WomIconHandler
 				String oldText = children[i].getText();
 
 				String country = member.getPlayer().getCountry() != null
-						&& config.showFlags() ? member.getPlayer().getCountry().toLowerCase() : "default";
+					&& config.showFlags() ? member.getPlayer().getCountry().toLowerCase() : "default";
 				CountryIcon icon = CountryIcon.getIcon(country);
 				int iconIdx = modIconsStart + icon.ordinal();
 				String spacer = name.charAt(name.length() - 1) != ' ' ? " " : ""; // Stupid
@@ -191,7 +187,7 @@ public class WomIconHandler
 
 				if (!oldText.contains("<img"))
 				{
-					Widget rankIcon = children[i+1];
+					Widget rankIcon = children[i + 1];
 					rankIcon.setOriginalX(rankIcon.getOriginalX() - 6);
 					rankIcon.revalidate();
 				}
@@ -203,7 +199,7 @@ public class WomIconHandler
 				{
 					// If the sequence have img in it it's an old and removed member so we have to move
 					// its rank icon back
-					Widget rankIcon = children[i+1];
+					Widget rankIcon = children[i + 1];
 					rankIcon.setOriginalX(rankIcon.getOriginalX() + 6);
 					rankIcon.revalidate();
 				}
@@ -217,9 +213,9 @@ public class WomIconHandler
 		clientThread.invokeLater(() ->
 		{
 			rebuildFriendsList();
-			rebuildMemberList(!showIcons, members, ComponentID.FRIENDS_CHAT_LIST);
-			rebuildMemberList(!showIcons, members, ComponentID.CLAN_MEMBERS);
-			rebuildMemberList(!showIcons, members, ComponentID.CLAN_GUEST_MEMBERS);
+			rebuildMemberList(!showIcons, members, InterfaceID.ChatchannelCurrent.LIST);
+			rebuildMemberList(!showIcons, members, InterfaceID.ClansSidepanel.PLAYERLIST);
+			rebuildMemberList(!showIcons, members, InterfaceID.ClansGuestSidepanel.PLAYERLIST);
 		});
 	}
 
@@ -227,15 +223,15 @@ public class WomIconHandler
 	{
 		client.runScript(
 			ScriptID.FRIENDS_UPDATE,
-			ComponentID.FRIEND_LIST_FULL_CONTAINER,
-			ComponentID.FRIEND_LIST_SORT_BY_NAME_BUTTON,
-			ComponentID.FRIEND_LIST_SORT_BY_LAST_WORLD_CHANGE_BUTTON,
-			ComponentID.FRIEND_LIST_SORT_BY_WORLD_BUTTON,
-			ComponentID.FRIEND_LIST_LEGACY_SORT_BUTTON,
-			ComponentID.FRIEND_LIST_NAMES_CONTAINER,
-			ComponentID.FRIEND_LIST_SCROLL_BAR,
-			ComponentID.FRIEND_LIST_LOADING_TEXT,
-			ComponentID.FRIEND_LIST_PREVIOUS_NAME_HOLDER
+			InterfaceID.Friends.LIST_CONTAINER,
+			InterfaceID.Friends.SORT_NAME,
+			InterfaceID.Friends.SORT_RECENT,
+			InterfaceID.Friends.SORT_WORLD,
+			InterfaceID.Friends.SORT_LEGACY,
+			InterfaceID.Friends.LIST,
+			InterfaceID.Friends.SCROLLBAR,
+			InterfaceID.Friends.LOADING,
+			InterfaceID.Friends.TOOLTIP
 		);
 	}
 }
