@@ -17,7 +17,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.WorldType;
-import net.runelite.api.widgets.InterfaceID;
+import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.VarPlayerID;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.widgets.WidgetUtil;
 import net.wiseoldman.beans.CanvasCompetition;
 import net.wiseoldman.beans.Competition;
@@ -87,9 +89,6 @@ import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.ComponentID;
-import net.runelite.api.VarPlayer;
-import net.runelite.api.Varbits;
 import net.runelite.client.Notifier;
 import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
@@ -148,47 +147,30 @@ public class WomUtilsPlugin extends Plugin
 
 	private static final ImmutableList<String> AFTER_OPTIONS = ImmutableList.of("Message", "Add ignore", "Remove friend", "Delete", KICK_OPTION);
 
-	// 10747941 is the Friend_Chat_TAB in resizable-modern
-	private final int RESIZABLE_VIEWPORT_BOTTOM_LINE_FRIEND_CHAT_TAB_ID = 10747941;
-
 	private final ImmutableList<WidgetMenuOption> WIDGET_IMPORT_MENU_OPTIONS =
 		new ImmutableList.Builder<WidgetMenuOption>()
 			.add(new WidgetMenuOption(IMPORT_MEMBERS,
-				MENU_TARGET, ComponentID.FIXED_VIEWPORT_FRIENDS_CHAT_TAB))
+				MENU_TARGET, InterfaceID.Toplevel.STONE7))
 			.add(new WidgetMenuOption(IMPORT_MEMBERS,
-				MENU_TARGET, ComponentID.RESIZABLE_VIEWPORT_FRIENDS_CHAT_TAB))
+				MENU_TARGET, InterfaceID.ToplevelOsrsStretch.STONE7))
 			.add(new WidgetMenuOption(IMPORT_MEMBERS,
-				MENU_TARGET, RESIZABLE_VIEWPORT_BOTTOM_LINE_FRIEND_CHAT_TAB_ID))
+				MENU_TARGET, InterfaceID.ToplevelPreEoc.STONE7))
 			.build();
 
 	private final ImmutableList<WidgetMenuOption> WIDGET_BROWSE_MENU_OPTIONS =
 		new ImmutableList.Builder<WidgetMenuOption>()
 			.add(new WidgetMenuOption(BROWSE_GROUP,
-				MENU_TARGET, ComponentID.FIXED_VIEWPORT_FRIENDS_CHAT_TAB))
+				MENU_TARGET, InterfaceID.Toplevel.STONE7))
 			.add(new WidgetMenuOption(BROWSE_GROUP,
-				MENU_TARGET, ComponentID.RESIZABLE_VIEWPORT_FRIENDS_CHAT_TAB))
+				MENU_TARGET, InterfaceID.ToplevelOsrsStretch.STONE7))
 			.add(new WidgetMenuOption(BROWSE_GROUP,
-				MENU_TARGET, RESIZABLE_VIEWPORT_BOTTOM_LINE_FRIEND_CHAT_TAB_ID))
+				MENU_TARGET, InterfaceID.ToplevelPreEoc.STONE7))
 			.build();
 
 	private static final int XP_THRESHOLD = 10_000;
 
 	private static final int CLAN_SIDEPANEL_DRAW = 4397;
 	private static final int CLAN_SETTINGS_MEMBERS_DRAW = 4232;
-
-	private static final int CLAN_SETTINGS_INFO_PAGE_WIDGET = 690;
-	private static final int CLAN_SETTINGS_INFO_PAGE_WIDGET_ID = 45219842;
-	private static final int CLAN_SETTINGS_MEMBERS_PAGE_WIDGET = 693;
-	private static final int CLAN_SETTINGS_MEMBERS_PAGE_WIDGET_ID = 45416450;
-
-	// In reality this isn't specifically the ranks widget. It's the left widget that can hold
-	// different things.
-	// TODO make it so these widgets are recolored even if the section is updated. Either a script event or onClientTicket
-
-	private static final int CLAN_OPTIONS_RANKS_WIDGET_LEFT_TITLE = 45416455;
-	private static final int CLAN_OPTIONS_RANKS_WIDGET_LEFT = 45416459;
-	private static final int CLAN_OPTIONS_RANKS_WIDGET_RIGHT_TITLE = 45416456;
-	private static final int CLAN_OPTIONS_RANKS_WIDGET_RIGHT = 45416461;
 
 	private static final Color DEFAULT_CLAN_SETTINGS_TEXT_COLOR = new Color(0xff981f);
 
@@ -625,7 +607,7 @@ public class WomUtilsPlugin extends Plugin
 
 		if (!AFTER_OPTIONS.contains(option)
 			// prevent duplicate menu options in friends list
-			|| (option.equals("Delete") && groupId != InterfaceID.IGNORE_LIST))
+			|| (option.equals("Delete") && groupId != InterfaceID.IGNORE))
 		{
 			return;
 		}
@@ -636,10 +618,10 @@ public class WomUtilsPlugin extends Plugin
 		{
 			boolean addModifyMember = config.groupId() > 0
 				&& !Strings.isNullOrEmpty(config.verificationCode())
-				&& (groupId == InterfaceID.FRIENDS_CHAT
-				|| groupId == InterfaceID.FRIEND_LIST
-				|| groupId == InterfaceID.CLAN
-				|| groupId == InterfaceID.CLAN_GUEST);
+				&& (groupId == InterfaceID.CHATCHANNEL_CURRENT
+				|| groupId == InterfaceID.FRIENDS
+				|| groupId == InterfaceID.CLANS_SIDEPANEL
+				|| groupId == InterfaceID.CLANS_GUEST_SIDEPANEL);
 
 			if (addModifyMember)
 			{
@@ -662,15 +644,15 @@ public class WomUtilsPlugin extends Plugin
 
 		if (config.menuLookupOption())
 		{
-			boolean addMenuLookup = (groupId == InterfaceID.FRIEND_LIST
-				|| groupId == InterfaceID.FRIENDS_CHAT
-				|| groupId == InterfaceID.CLAN
-				|| groupId == InterfaceID.CLAN_GUEST
+			boolean addMenuLookup = (groupId == InterfaceID.FRIENDS
+				|| groupId == InterfaceID.CHATCHANNEL_CURRENT
+				|| groupId == InterfaceID.CLANS_SIDEPANEL
+				|| groupId == InterfaceID.CLANS_GUEST_SIDEPANEL
 				// prevent from adding for Kick option (interferes with the raiding party one)
 				|| groupId == InterfaceID.CHATBOX && !KICK_OPTION.equals(option)
-				|| groupId == InterfaceID.RAIDING_PARTY
-				|| groupId == InterfaceID.PRIVATE_CHAT
-				|| groupId == InterfaceID.IGNORE_LIST);
+				|| groupId == InterfaceID.RAIDS_SIDEPANEL
+				|| groupId == InterfaceID.PM_CHAT
+				|| groupId == InterfaceID.IGNORE);
 
 			if (addMenuLookup)
 			{
@@ -779,12 +761,12 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (event.getScriptId() == ScriptID.FRIENDS_CHAT_CHANNEL_REBUILD)
 		{
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, ComponentID.FRIENDS_CHAT_LIST);
+			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, InterfaceID.ChatchannelCurrent.LIST);
 		}
 		else if (event.getScriptId() == CLAN_SIDEPANEL_DRAW)
 		{
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, ComponentID.CLAN_MEMBERS);
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, ComponentID.CLAN_GUEST_MEMBERS);
+			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, InterfaceID.ClansSidepanel.PLAYERLIST);
+			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, InterfaceID.ClansGuestSidepanel.PLAYERLIST);
 		}
 		else if (event.getScriptId() == CLAN_SETTINGS_MEMBERS_DRAW)
 		{
@@ -795,7 +777,7 @@ public class WomUtilsPlugin extends Plugin
 	@Subscribe
 	public void onWidgetLoaded(WidgetLoaded widgetLoaded)
 	{
-		if (widgetLoaded.getGroupId() != CLAN_SETTINGS_INFO_PAGE_WIDGET && widgetLoaded.getGroupId() != CLAN_SETTINGS_MEMBERS_PAGE_WIDGET)
+		if (widgetLoaded.getGroupId() != InterfaceID.CLANS_INFO && widgetLoaded.getGroupId() != InterfaceID.CLANS_MEMBERS)
 		{
 			return;
 		}
@@ -803,10 +785,10 @@ public class WomUtilsPlugin extends Plugin
 
 		switch (widgetLoaded.getGroupId())
 		{
-			case CLAN_SETTINGS_MEMBERS_PAGE_WIDGET:
+			case InterfaceID.CLANS_MEMBERS:
 				clientThread.invoke(() ->
 				{
-					createSyncButton(CLAN_SETTINGS_MEMBERS_PAGE_WIDGET_ID);
+					createSyncButton(InterfaceID.ClansMembers.FRAME);
 					if (syncButton != null)
 					{
 						syncButton.setEnabled();
@@ -814,10 +796,10 @@ public class WomUtilsPlugin extends Plugin
 					clientThread.invokeLater(this::updateIgnoredRankColors);
 				});
 				break;
-			case CLAN_SETTINGS_INFO_PAGE_WIDGET:
+			case InterfaceID.CLANS_INFO:
 				clientThread.invoke(() ->
 				{
-					createSyncButton(CLAN_SETTINGS_INFO_PAGE_WIDGET_ID);
+					createSyncButton(InterfaceID.ClansInfo.FRAME);
 					if (namechangesSubmitted)
 					{
 						if (syncButton != null)
@@ -855,22 +837,22 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		final MenuEntry entry = event.getMenuEntries()[event.getMenuEntries().length - 1];
-		Widget clanWidgetTitleLeftSide = client.getWidget(CLAN_OPTIONS_RANKS_WIDGET_LEFT_TITLE);
+		Widget clanWidgetTitleLeftSide = client.getWidget(InterfaceID.ClansMembers.HEADER1);
 		boolean leftSideRanks = false;
 		if (clanWidgetTitleLeftSide != null)
 		{
 			if (clanWidgetTitleLeftSide.getDynamicChildren().length == 5)
 			{
-				leftSideRanks = entry.getParam1() == CLAN_OPTIONS_RANKS_WIDGET_LEFT && clanWidgetTitleLeftSide.getDynamicChildren()[4].getText().equals("Rank");
+				leftSideRanks = entry.getParam1() == InterfaceID.ClansMembers.COLUMN1 && clanWidgetTitleLeftSide.getDynamicChildren()[4].getText().equals("Rank");
 			}
 		}
 		boolean rightSideRanks = false;
-		Widget clanWidgetTitleRightSide = client.getWidget(CLAN_OPTIONS_RANKS_WIDGET_RIGHT_TITLE);
+		Widget clanWidgetTitleRightSide = client.getWidget(InterfaceID.ClansMembers.HEADER2);
 		if (clanWidgetTitleRightSide != null)
 		{
 			if (clanWidgetTitleRightSide.getDynamicChildren().length == 5)
 			{
-				rightSideRanks = entry.getParam1() == CLAN_OPTIONS_RANKS_WIDGET_RIGHT && clanWidgetTitleRightSide.getDynamicChildren()[4].getText().equals("Rank");
+				rightSideRanks = entry.getParam1() == InterfaceID.ClansMembers.COLUMN2 && clanWidgetTitleRightSide.getDynamicChildren()[4].getText().equals("Rank");
 			}
 		}
 
@@ -934,8 +916,8 @@ public class WomUtilsPlugin extends Plugin
 
 	private void updateIgnoredRankColors()
 	{
-		updateIgnoredRankColorsByID(CLAN_OPTIONS_RANKS_WIDGET_LEFT);
-		updateIgnoredRankColorsByID(CLAN_OPTIONS_RANKS_WIDGET_RIGHT);
+		updateIgnoredRankColorsByID(InterfaceID.ClansMembers.COLUMN1);
+		updateIgnoredRankColorsByID(InterfaceID.ClansMembers.COLUMN2);
 	}
 
 	private void updateIgnoredRankColorsByID(int widgetID)
@@ -1339,14 +1321,14 @@ public class WomUtilsPlugin extends Plugin
 
 	private Color getSuccessColor()
 	{
-		if (client.getVarbitValue(Varbits.TRANSPARENT_CHATBOX) == 0 || !client.isResized())
+		if (client.getVarbitValue(VarbitID.CHATBOX_TRANSPARENCY) == 0 || !client.isResized())
 		{
-			return new Color(client.getVarpValue(VarPlayer.SETTINGS_OPAQUE_CHAT_CLAN_BROADCAST) - 1);
+			return new Color(client.getVarpValue(VarPlayerID.OPTION_CHAT_COLOUR_CLANBROADCAST_OPAQUE) - 1);
 
 		}
 		else
 		{
-			return new Color(client.getVarpValue(VarPlayer.SETTINGS_TRANSPARENT_CHAT_CLAN_BROADCAST) - 1);
+			return new Color(client.getVarpValue(VarPlayerID.OPTION_CHAT_COLOUR_CLANBROADCAST_TRANSPARENT) - 1);
 		}
 	}
 
