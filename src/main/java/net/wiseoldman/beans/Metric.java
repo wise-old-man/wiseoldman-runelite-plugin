@@ -251,7 +251,8 @@ public enum Metric
 			directory = "/skill_icons_small/";
 		}
 
-		return ImageUtil.loadImageResource(WomUtilsPlugin.class, directory + name().toLowerCase() + ".png");
+		String fileName = name().equalsIgnoreCase("runecrafting") ? "runecraft" : name().toLowerCase();
+		return ImageUtil.loadImageResource(WomUtilsPlugin.class, directory + fileName + ".png");
 	}
 
 	public String getName()
