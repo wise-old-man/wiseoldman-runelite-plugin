@@ -250,8 +250,21 @@ public enum Metric
 		{
 			directory = "/skill_icons_small/";
 		}
+		
+		String fileName;
+		if (name().equalsIgnoreCase("runecrafting"))
+		{
+			fileName = "runecraft";
+		}
+		else if (name().equalsIgnoreCase("guardians_of_the_rift"))
+		{
+			fileName = "rifts_closed";
+		}
+		else
+		{
+			fileName = name().toLowerCase();
+		}
 
-		String fileName = name().equalsIgnoreCase("runecrafting") ? "runecraft" : name().toLowerCase();
 		return ImageUtil.loadImageResource(WomUtilsPlugin.class, directory + fileName + ".png");
 	}
 
