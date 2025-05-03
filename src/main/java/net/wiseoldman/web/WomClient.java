@@ -2,11 +2,15 @@ package net.wiseoldman.web;
 
 import com.google.gson.Gson;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import net.runelite.api.clan.ClanMember;
 import net.runelite.client.RuneLiteProperties;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
+import net.wiseoldman.beans.GroupMembership;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.beans.RoleIndex;
@@ -90,13 +94,14 @@ public class WomClient
 	private final String userAgent;
 
 	@Inject
-	public WomClient(Gson gson, WomUtilsPlugin plugin)
+	public WomClient(Gson gson, WomUtilsPlugin plugin, Client client)
 	{
 		this.gson = gson.newBuilder()
 			.setDateFormat(DateFormat.FULL, DateFormat.FULL)
 			.create();
 
 		this.plugin = plugin;
+		this.client = client;
 
 		String pluginVersion = WomUtilsPlugin.getPluginVersion();
 		String runeliteVersion = RuneLiteProperties.getVersion();
@@ -204,6 +209,15 @@ public class WomClient
 			Request request = createRequest("groups", "" + config.groupId());
 			sendRequest(request, this::importMembersCallback);
 		}
+	}
+
+	public void compareClanLists(Map<String, GroupMembership> groupMembers)
+	{
+		System.out.println("######## COMPARING CLAN LISTS! #########");
+		clientThread.invokeLater(() -> {
+			System.out.println(client.getClanSettings().getMembers().size() + " : " + groupMembers.size());
+		});
+
 	}
 
 	private void importMembersCallback(Response response)
