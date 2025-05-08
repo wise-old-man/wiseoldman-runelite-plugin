@@ -267,6 +267,9 @@ public class WomUtilsPlugin extends Plugin
 
 	private final Map<Skill, Integer> previousSkillLevels = new EnumMap<>(Skill.class);
 
+	private boolean comparedClanMembers = false;
+	private int tickCounter = 0;
+
 	@Getter
 	private static String pluginVersion = "0.0.0";
 
@@ -963,16 +966,13 @@ public class WomUtilsPlugin extends Plugin
 
 				recentlyLoggedIn = true;
 				isSeasonal = client.getWorldType().contains(WorldType.SEASONAL);
-
-				clientThread.invokeLater(() -> {
-					womClient.compareClanLists(groupMembers);
-				});
 				break;
 			case LOGIN_SCREEN:
 				// When a player logs out we want to set these variables
 				// and also submit update request
 				visitedLoginScreen = true;
 				namechangesSubmitted = false;
+				comparedClanMembers = false;
 				womPanel.resetCompetitionsPanel();
 				womPanel.resetGroupFilter();
 				clearInfoBoxes();
@@ -1025,9 +1025,27 @@ public class WomUtilsPlugin extends Plugin
 			womPanel.showNoCompetitionsError();
 		}
 
-		if (womPanel.active)
+		if (client.getGameState() == GameState.LOGGED_IN)
 		{
-			womPanel.updateCompetitionCountdown();
+			tickCounter += 1;
+
+			// Delay comparing the clan members list for a little until clan settings have loaded
+			if (tickCounter >= 5 && !comparedClanMembers)
+			{
+				ClanSettings clanSettings = client.getClanSettings();
+				if (clanSettings != null)
+				{
+					System.out.println(clanSettings.getMembers());
+					comparedClanMembers = true;
+				}
+			}
+		}
+
+		{
+			if (womPanel.active)
+			{
+				womPanel.updateCompetitionCountdown();
+			}
 		}
 	}
 
