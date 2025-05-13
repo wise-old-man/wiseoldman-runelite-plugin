@@ -84,7 +84,7 @@ public class WomClient
 	private EventBus eventBus;
 
 	private static final Color SUCCESS = new Color(170, 255, 40);
-	private static final Color ERROR = new Color(204, 66, 66);
+	public final Color ERROR = new Color(204, 66, 66);
 
 	private static final DecimalFormat NUMBER_FORMAT = new DecimalFormat("#.##");
 
@@ -209,15 +209,6 @@ public class WomClient
 			Request request = createRequest("groups", "" + config.groupId());
 			sendRequest(request, this::importMembersCallback);
 		}
-	}
-
-	public void compareClanLists(Map<String, GroupMembership> groupMembers)
-	{
-		System.out.println("######## COMPARING CLAN LISTS! #########");
-		clientThread.invokeLater(() -> {
-			System.out.println(client.getClanSettings().getMembers().size() + " : " + groupMembers.size());
-		});
-
 	}
 
 	private void importMembersCallback(Response response)

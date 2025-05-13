@@ -13,10 +13,13 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.WorldType;
+import net.runelite.api.clan.ClanMember;
+import net.runelite.api.clan.ClanTitle;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
@@ -178,9 +181,11 @@ public class WomUtilsPlugin extends Plugin
 
 	private boolean levelupThisSession = false;
 
-	private static String MESSAGE_PREFIX = "Wom: ";
+	private static String MESSAGE_PREFIX = "WOM: ";
 
 	public boolean isSeasonal = false;
+
+	private String DEFAULT_ROLE = "member";
 
 	@Inject
 	private Client client;
@@ -307,7 +312,6 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		iconHandler.loadIcons();
-		womClient.importGroupMembers();
 
 		if (config.playerLookupOption())
 		{
@@ -966,6 +970,7 @@ public class WomUtilsPlugin extends Plugin
 
 				recentlyLoggedIn = true;
 				isSeasonal = client.getWorldType().contains(WorldType.SEASONAL);
+				womClient.importGroupMembers();
 				break;
 			case LOGIN_SCREEN:
 				// When a player logs out we want to set these variables
@@ -1027,17 +1032,19 @@ public class WomUtilsPlugin extends Plugin
 
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
-			tickCounter += 1;
-
 			// Delay comparing the clan members list for a little until clan settings have loaded
 			if (tickCounter >= 5 && !comparedClanMembers)
 			{
 				ClanSettings clanSettings = client.getClanSettings();
 				if (clanSettings != null)
 				{
-					System.out.println(clanSettings.getMembers());
+					compareClanMembersList(clanSettings);
 					comparedClanMembers = true;
 				}
+			}
+			else
+			{
+				tickCounter += 1;
 			}
 		}
 
@@ -1046,6 +1053,86 @@ public class WomUtilsPlugin extends Plugin
 			{
 				womPanel.updateCompetitionCountdown();
 			}
+		}
+	}
+
+	private boolean isSameClan(Set<String> clanMemberNames, Set<String> groupMemberNames, double tolerance)
+	{
+		Set<String> onlyInClan = new HashSet<>(clanMemberNames);
+		onlyInClan.removeAll(groupMemberNames);
+
+		Set<String> onlyInGroup = new HashSet<>(groupMemberNames);
+		onlyInClan.removeAll(clanMemberNames);
+
+		int totalDifference = onlyInClan.size() + onlyInGroup.size();
+
+		Set<String> combinedLists = new HashSet<>(clanMemberNames);
+		combinedLists.addAll(groupMemberNames);
+		int totalUniqueNames = combinedLists.size();
+
+		return ((double) totalDifference / totalUniqueNames) <= tolerance;
+	}
+
+	private void compareClanMembersList(ClanSettings clanSettings)
+	{
+		List<ClanMember> clanMembers = clanSettings.getMembers();
+
+		Set<String> clanMemberNames = clanMembers.stream().map(clanMember -> clanMember.getName().toLowerCase()).collect(Collectors.toSet());
+		Set<String> groupMemberNames = groupMembers.keySet();
+
+		Set<String> onlyInClan = new HashSet<>(clanMemberNames);
+		onlyInClan.removeAll(groupMemberNames);
+
+		Set<String> onlyInGroup = new HashSet<>(groupMemberNames);
+		onlyInGroup.removeAll(clanMemberNames);
+
+		boolean outOfSync = false;
+		String outOfSyncMessage = "Your group is out of sync: ";
+		if (!onlyInClan.isEmpty())
+		{
+			outOfSyncMessage += onlyInClan.size() + " player" + (onlyInClan.size() > 1 ? "s" : "") + "joined";
+			outOfSync = true;
+		}
+
+		if (!onlyInClan.isEmpty() && !onlyInGroup.isEmpty())
+		{
+			outOfSyncMessage += " and ";
+		}
+
+		if (!onlyInGroup.isEmpty())
+		{
+			outOfSyncMessage += onlyInGroup.size() + " player" + (onlyInGroup.size() > 1 ? "s" : "") + " left";
+			outOfSync = true;
+		}
+
+		if (onlyInClan.isEmpty() && onlyInGroup.isEmpty())
+		{
+			// check if ranks differ when the member lists are the same
+			int ranksChanged = 0;
+			for (ClanMember cm : clanMembers)
+			{
+				ClanTitle clanTitle = clanSettings.titleForRank(cm.getRank());
+				String groupRole = groupMembers.get(cm.getName().toLowerCase()).getRole();
+
+				// clanTitle=null syncs to default role "member" on WOM.
+				if (clanTitle != null && !clanTitle.getName().toLowerCase().replaceAll(" ", "_").equals(groupRole) || clanTitle == null && !groupRole.equals(DEFAULT_ROLE))
+				{
+					ranksChanged += 1;
+				}
+			}
+
+			if (ranksChanged > 0)
+			{
+				outOfSyncMessage += ranksChanged + " rank" + (ranksChanged > 1 ? "s" : "") + " changed";
+				outOfSync = true;
+			}
+		}
+
+		outOfSyncMessage += ".";
+
+		if (outOfSync)
+		{
+			sendResponseToChat(outOfSyncMessage, womClient.ERROR);
 		}
 	}
 
