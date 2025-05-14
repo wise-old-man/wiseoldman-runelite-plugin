@@ -1106,7 +1106,12 @@ public class WomUtilsPlugin extends Plugin
 	@Subscribe
 	public void onWomOngoingPlayerCompetitionsFetched(WomOngoingPlayerCompetitionsFetched event)
 	{
-		playerCompetitionsOngoing = Arrays.asList(event.getCompetitions());
+		// Filter out competitions with null metrics
+		ParticipantWithStanding[] filteredCompetitions = Arrays.stream(event.getCompetitions())
+				.filter(pws -> pws.getCompetition().getMetric() != null)
+				.toArray(ParticipantWithStanding[]::new);
+
+		playerCompetitionsOngoing = Arrays.asList(filteredCompetitions);
 		log.debug("Fetched {} ongoing competitions for player {}", event.getCompetitions().length, event.getUsername());
 		for (ParticipantWithStanding pws : playerCompetitionsOngoing)
 		{
@@ -1124,7 +1129,12 @@ public class WomUtilsPlugin extends Plugin
 	@Subscribe
 	public void onWomUpcomingPlayerCompetitionsFetched(WomUpcomingPlayerCompetitionsFetched event)
 	{
-		playerCompetitionsUpcoming = Arrays.asList(event.getCompetitions());
+		// Filter out competitions with null metrics
+		ParticipantWithCompetition[] filteredCompetitions = Arrays.stream(event.getCompetitions())
+				.filter(pwc -> pwc.getCompetition().getMetric() != null)
+				.toArray(ParticipantWithCompetition[]::new);
+
+		playerCompetitionsUpcoming = Arrays.asList(filteredCompetitions);
 		log.debug("Fetched {} upcoming competitions for player {}", event.getCompetitions().length, event.getUsername());
 		updateScheduledNotifications();
 		womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
