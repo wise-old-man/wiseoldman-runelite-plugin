@@ -69,6 +69,7 @@ public class SnapshotBosses
 	Boss vetion;
 	Boss vorkath;
 	Boss wintertodt;
+	Boss yama;
 	Boss zalcano;
 	Boss zulrah;
 
@@ -202,6 +203,8 @@ public class SnapshotBosses
 				return getVorkath();
 			case WINTERTODT:
 				return getWintertodt();
+			case YAMA:
+				return getYama();
 			case ZALCANO:
 				return getZalcano();
 			case ZULRAH:
