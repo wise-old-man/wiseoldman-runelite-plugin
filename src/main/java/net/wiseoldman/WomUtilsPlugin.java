@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.runelite.api.IndexedObjectSet;
+import net.runelite.api.VarClientInt;
 import net.runelite.api.WorldType;
 import net.runelite.api.clan.ClanMember;
 import net.runelite.api.clan.ClanTitle;
@@ -42,6 +43,7 @@ import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
 import net.wiseoldman.ui.CompetitionInfoBox;
 import net.wiseoldman.ui.SyncButton;
+import net.wiseoldman.ui.UnsyncedOverlay;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
 import net.wiseoldman.web.WomRequestType;
@@ -241,6 +243,9 @@ public class WomUtilsPlugin extends Plugin
 	@Inject
 	private CodeWordOverlay codeWordOverlay;
 
+	@Inject
+	private UnsyncedOverlay unsyncedOverlay;
+
 	private WomPanel womPanel;
 
 	@Inject
@@ -381,6 +386,7 @@ public class WomUtilsPlugin extends Plugin
 
 		clientToolbar.addNavigation(navButton);
 		overlayManager.add(codeWordOverlay);
+		overlayManager.add(unsyncedOverlay);
 
 		clientThread.invoke(this::saveCurrentLevels);
 	}
@@ -410,6 +416,7 @@ public class WomUtilsPlugin extends Plugin
 		alwaysIncludedOnSync.clear();
 		levelupThisSession = false;
 		overlayManager.remove(codeWordOverlay);
+		overlayManager.remove(unsyncedOverlay);
 		log.info("Wise Old Man stopped!");
 	}
 
@@ -1003,6 +1010,8 @@ public class WomUtilsPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick gameTick)
 	{
+		unsyncedOverlay.setVisible(!unsyncedOverlay.isVisible());
+
 		if (fetchXp)
 		{
 			lastXp = client.getOverallExperience();
