@@ -222,6 +222,8 @@ public enum Metric
 	WINTERTODT(HiscoreSkill.WINTERTODT),
 	@SerializedName("woodcutting")
 	WOODCUTTING(HiscoreSkill.WOODCUTTING),
+	@SerializedName("yama")
+	YAMA(HiscoreSkill.YAMA),
 	@SerializedName("zalcano")
 	ZALCANO(HiscoreSkill.ZALCANO),
 	@SerializedName("zulrah")
@@ -250,7 +252,7 @@ public enum Metric
 		{
 			directory = "/skill_icons_small/";
 		}
-		
+
 		String fileName;
 		if (name().equalsIgnoreCase("runecrafting"))
 		{
