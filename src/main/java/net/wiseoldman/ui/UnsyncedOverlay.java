@@ -30,7 +30,7 @@ public class UnsyncedOverlay extends Overlay
 	private UnsyncedOverlay(Client client)
 	{
 		this.client = client;
-		this.icon = ImageUtil.loadImageResource(WomUtilsPlugin.class, "wom-icon-red.png");
+		this.icon = ImageUtil.loadImageResource(WomUtilsPlugin.class, "wom-icon.png");
 		this.isVisible = false;
 
 		setPosition(OverlayPosition.DYNAMIC);
