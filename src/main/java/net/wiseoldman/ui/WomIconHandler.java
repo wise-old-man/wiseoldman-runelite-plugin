@@ -79,9 +79,9 @@ public class WomIconHandler
 		switch (event.getEventName())
 		{
 			case "friendsChatSetText":
-				String[] stringStack = client.getStringStack();
-				int stringStackSize = client.getStringStackSize();
-				final String rsn = stringStack[stringStackSize - 1];
+				Object[] objectStack = client.getObjectStack();
+				int objectStackSize = client.getObjectStackSize();
+				final String rsn = (String) objectStack[objectStackSize - 1];
 				final String sanitized = Text.toJagexName(Text.removeTags(rsn).toLowerCase());
 				currentLayouting = sanitized;
 				GroupMembership member = groupMembers.get(sanitized);
@@ -92,7 +92,7 @@ public class WomIconHandler
 						config.showFlags() ? member.getPlayer().getCountry().toLowerCase() : "default";
 					CountryIcon icon = CountryIcon.getIcon(country);
 					int iconIdx = modIconsStart + icon.ordinal();
-					stringStack[stringStackSize - 1] = rsn + " <img=" + iconIdx + ">";
+					objectStack[objectStackSize - 1] = rsn + " <img=" + iconIdx + ">";
 				}
 				break;
 			case "friendsChatSetPosition":
