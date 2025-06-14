@@ -262,6 +262,10 @@ public enum Metric
 		{
 			fileName = "rifts_closed";
 		}
+		else if (name().contains("SCROLLS"))
+		{
+			fileName = name().toLowerCase().replace("scrolls", "scroll");
+		}
 		else
 		{
 			fileName = name().toLowerCase();
