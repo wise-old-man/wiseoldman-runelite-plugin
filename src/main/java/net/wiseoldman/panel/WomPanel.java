@@ -55,6 +55,7 @@ public class WomPanel extends PluginPanel
 	private final BossingPanel bossingPanel;
 	private final ActivitiesPanel activitiesPanel;
 	private final PluginErrorPanel competitionsErrorPanel;
+	public final PluginErrorPanel noCompetitionsErrorPanel;
 	private final JPanel ongoingCompetitionsPanel;
 	private final JPanel upComingCompetitionsPanel;
 	private final JPanel groupFilterPanel = new JPanel();
@@ -112,6 +113,10 @@ public class WomPanel extends PluginPanel
 		competitionsErrorPanel = new PluginErrorPanel();
 		competitionsErrorPanel.setContent("No competitions found", "Please log in to load your ongoing and upcoming competitions.");
 
+		noCompetitionsErrorPanel = new PluginErrorPanel();
+		noCompetitionsErrorPanel.setContent("No competitions found", "You are not participating in any competitions.");
+		noCompetitionsErrorPanel.setVisible(false);
+
 		ongoingCompetitionsPanel = new JPanel();
 		ongoingCompetitionsPanel.setLayout(new BoxLayout(ongoingCompetitionsPanel, BoxLayout.Y_AXIS));
 
@@ -138,6 +143,7 @@ public class WomPanel extends PluginPanel
 
 		competitionsPanel.add(groupFilterPanel);
 		competitionsPanel.add(competitionsErrorPanel);
+		competitionsPanel.add(noCompetitionsErrorPanel);
 		competitionsPanel.add(ongoingCompetitionsPanel);
 		competitionsPanel.add(upComingCompetitionsPanel);
 
@@ -148,8 +154,8 @@ public class WomPanel extends PluginPanel
 		MaterialTab competitionsTab = new MaterialTab("Competitions", topTabGroup, competitionsPanel);
 
 		topTabGroup.setBorder(new EmptyBorder(0, 0, 0, 0));
-		topTabGroup.addTab(lookupTab);
 		topTabGroup.addTab(competitionsTab);
+		topTabGroup.addTab(lookupTab);
 		topTabGroup.select(competitionsTab);
 
 		add(topTabGroup, c);
@@ -613,6 +619,7 @@ public class WomPanel extends PluginPanel
 		ongoingCompetitionsPanel.removeAll();
 		upComingCompetitionsPanel.removeAll();
 		competitionsErrorPanel.setVisible(true);
+		noCompetitionsErrorPanel.setVisible(false);
 	}
 
 	public void updateCompetitionCountdown()
@@ -634,5 +641,11 @@ public class WomPanel extends PluginPanel
 		}
 
 		return false;
+	}
+
+	public void showNoCompetitionsError()
+	{
+		competitionsErrorPanel.setVisible(false);
+		noCompetitionsErrorPanel.setVisible(true);
 	}
 }
