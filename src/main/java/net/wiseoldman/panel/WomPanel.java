@@ -492,7 +492,9 @@ public class WomPanel extends PluginPanel
 			competitionCardPanels.add(competitionPanel);
 			ongoingCompetitions.add(competitionPanel);
 
-			if (plugin.competitionsOnCanvas.stream().anyMatch(cc -> cc.getId() == c.getCompetitionId()))
+			if (plugin.competitionsOnCanvas.stream().anyMatch(cc -> cc.getId() == c.getCompetitionId()) ||
+				config.addCompetitionsToCanvas().equals(WomUtilsConfig.CompetitionsToAddToCanvas.ONGOING) ||
+				config.addCompetitionsToCanvas().equals(WomUtilsConfig.CompetitionsToAddToCanvas.BOTH))
 			{
 				plugin.addInfoBox(competitionPanel);
 			}
@@ -523,7 +525,9 @@ public class WomPanel extends PluginPanel
 			competitionCardPanels.add(competitionPanel);
 			upcomingCompetitions.add(competitionPanel);
 
-			if (plugin.competitionsOnCanvas.stream().anyMatch(cc -> cc.getId() == c.getCompetitionId()))
+			if (plugin.competitionsOnCanvas.stream().anyMatch(cc -> cc.getId() == c.getCompetitionId()) ||
+				config.addCompetitionsToCanvas().equals(WomUtilsConfig.CompetitionsToAddToCanvas.UPCOMING) ||
+				config.addCompetitionsToCanvas().equals(WomUtilsConfig.CompetitionsToAddToCanvas.BOTH))
 			{
 				plugin.addInfoBox(competitionPanel);
 			}

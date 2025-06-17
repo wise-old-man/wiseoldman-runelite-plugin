@@ -9,6 +9,15 @@ import net.runelite.client.config.ConfigSection;
 @ConfigGroup(WomUtilsPlugin.CONFIG_GROUP)
 public interface WomUtilsConfig extends Config
 {
+
+	enum CompetitionsToAddToCanvas
+	{
+		NONE,
+		UPCOMING,
+		ONGOING,
+		BOTH
+	}
+
 	@ConfigSection(
 		name = "Group",
 		description = "The group configurations",
@@ -218,12 +227,24 @@ public interface WomUtilsConfig extends Config
 		keyName = "sendCompetitionNotification",
 		name = "Competition Notifications",
 		description = "Sends notifications at start and end times for competitions",
-		position = 5,
+		position = 2,
 		section = competitionConfig
 	)
 	default boolean sendCompetitionNotification()
 	{
 		return false;
+	}
+
+	@ConfigItem(
+		keyName = "addCompetitionsToCanvas",
+		name = "Auto add to canvas",
+		description = "Automatically add competitions to canvas",
+		position = 3,
+		section = competitionConfig
+	)
+	default CompetitionsToAddToCanvas addCompetitionsToCanvas()
+	{
+		return CompetitionsToAddToCanvas.NONE;
 	}
 
 	@ConfigItem(
