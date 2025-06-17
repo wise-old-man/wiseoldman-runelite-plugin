@@ -260,6 +260,8 @@ public class WomUtilsPlugin extends Plugin
 	private long accountHash;
 	private boolean namechangesSubmitted = false;
 	private SyncButton syncButton;
+	public boolean fetchedOngoingCompetitions = false;
+	public boolean fetchedUpcomingCompetitions = false;
 
 	private NavigationButton navButton;
 
@@ -1010,6 +1012,15 @@ public class WomUtilsPlugin extends Plugin
 			visitedLoginScreen = false;
 		}
 
+		if (!womPanel.noCompetitionsErrorPanel.isVisible() &&
+			fetchedUpcomingCompetitions &&
+			fetchedOngoingCompetitions &&
+			playerCompetitionsUpcoming.isEmpty() &&
+			playerCompetitionsOngoing.isEmpty())
+		{
+			womPanel.showNoCompetitionsError();
+		}
+
 		if (womPanel.active)
 		{
 			womPanel.updateCompetitionCountdown();
@@ -1108,8 +1119,8 @@ public class WomUtilsPlugin extends Plugin
 	{
 		// Filter out competitions with null metrics
 		playerCompetitionsOngoing = Arrays.stream(event.getCompetitions())
-				.filter(pws -> pws.getCompetition().getMetric() != null)
-				.collect(Collectors.toList());
+			.filter(pws -> pws.getCompetition().getMetric() != null)
+			.collect(Collectors.toList());
 
 		log.debug("Fetched {} ongoing competitions for player {}", event.getCompetitions().length, event.getUsername());
 		for (ParticipantWithStanding pws : playerCompetitionsOngoing)
@@ -1123,6 +1134,7 @@ public class WomUtilsPlugin extends Plugin
 		updateScheduledNotifications();
 		womPanel.addOngoingCompetitions(playerCompetitionsOngoing);
 		womPanel.addGroupFilters(playerCompetitionsOngoing.stream().map(ParticipantWithStanding::getCompetition).toArray(Competition[]::new));
+		fetchedOngoingCompetitions = true;
 	}
 
 	@Subscribe
@@ -1130,13 +1142,14 @@ public class WomUtilsPlugin extends Plugin
 	{
 		// Filter out competitions with null metrics
 		playerCompetitionsUpcoming = Arrays.stream(event.getCompetitions())
-				.filter(pwc -> pwc.getCompetition().getMetric() != null)
-				.collect(Collectors.toList());
+			.filter(pwc -> pwc.getCompetition().getMetric() != null)
+			.collect(Collectors.toList());
 
 		log.debug("Fetched {} upcoming competitions for player {}", event.getCompetitions().length, event.getUsername());
 		updateScheduledNotifications();
 		womPanel.addUpcomingCompetitions(playerCompetitionsUpcoming);
 		womPanel.addGroupFilters(playerCompetitionsUpcoming.stream().map(ParticipantWithCompetition::getCompetition).toArray(Competition[]::new));
+		fetchedUpcomingCompetitions = true;
 	}
 
 	@Subscribe
