@@ -1050,11 +1050,9 @@ public class WomUtilsPlugin extends Plugin
 			}
 		}
 
+		if (womPanel.active)
 		{
-			if (womPanel.active)
-			{
-				womPanel.updateCompetitionCountdown();
-			}
+			womPanel.updateCompetitionCountdown();
 		}
 	}
 
