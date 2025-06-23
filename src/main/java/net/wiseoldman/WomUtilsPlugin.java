@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.runelite.api.IndexedObjectSet;
-import net.runelite.api.VarClientInt;
 import net.runelite.api.WorldType;
 import net.runelite.api.clan.ClanMember;
 import net.runelite.api.clan.ClanTitle;
@@ -43,7 +42,6 @@ import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
 import net.wiseoldman.ui.CompetitionInfoBox;
 import net.wiseoldman.ui.SyncButton;
-import net.wiseoldman.ui.UnsyncedOverlay;
 import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
 import net.wiseoldman.web.WomRequestType;
@@ -189,6 +187,8 @@ public class WomUtilsPlugin extends Plugin
 
 	private String DEFAULT_ROLE = "member";
 
+	public Double SAME_CLAN_TOLERANCE = 0.5;
+
 	@Inject
 	private Client client;
 
@@ -242,9 +242,6 @@ public class WomUtilsPlugin extends Plugin
 
 	@Inject
 	private CodeWordOverlay codeWordOverlay;
-
-	@Inject
-	private UnsyncedOverlay unsyncedOverlay;
 
 	private WomPanel womPanel;
 
@@ -386,7 +383,6 @@ public class WomUtilsPlugin extends Plugin
 
 		clientToolbar.addNavigation(navButton);
 		overlayManager.add(codeWordOverlay);
-		overlayManager.add(unsyncedOverlay);
 
 		clientThread.invoke(this::saveCurrentLevels);
 	}
@@ -416,7 +412,6 @@ public class WomUtilsPlugin extends Plugin
 		alwaysIncludedOnSync.clear();
 		levelupThisSession = false;
 		overlayManager.remove(codeWordOverlay);
-		overlayManager.remove(unsyncedOverlay);
 		log.info("Wise Old Man stopped!");
 	}
 
@@ -1010,8 +1005,6 @@ public class WomUtilsPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick gameTick)
 	{
-		unsyncedOverlay.setVisible(!unsyncedOverlay.isVisible());
-
 		if (fetchXp)
 		{
 			lastXp = client.getOverallExperience();
@@ -1065,13 +1058,13 @@ public class WomUtilsPlugin extends Plugin
 		}
 	}
 
-	private boolean isSameClan(Set<String> clanMemberNames, Set<String> groupMemberNames, double tolerance)
+	public boolean isSameClan(Set<String> clanMemberNames, Set<String> groupMemberNames, double tolerance)
 	{
 		Set<String> onlyInClan = new HashSet<>(clanMemberNames);
 		onlyInClan.removeAll(groupMemberNames);
 
 		Set<String> onlyInGroup = new HashSet<>(groupMemberNames);
-		onlyInClan.removeAll(clanMemberNames);
+		onlyInGroup.removeAll(clanMemberNames);
 
 		int totalDifference = onlyInClan.size() + onlyInGroup.size();
 
@@ -1088,6 +1081,13 @@ public class WomUtilsPlugin extends Plugin
 
 		Set<String> clanMemberNames = clanMembers.stream().map(clanMember -> clanMember.getName().toLowerCase()).collect(Collectors.toSet());
 		Set<String> groupMemberNames = groupMembers.keySet();
+
+		// Don't send the out of sync chat message so we don't encourage syncing
+		// when it's not the same clan.
+		if (!isSameClan(clanMemberNames, groupMemberNames, SAME_CLAN_TOLERANCE))
+		{
+			return;
+		}
 
 		Set<String> onlyInClan = new HashSet<>(clanMemberNames);
 		onlyInClan.removeAll(groupMemberNames);
@@ -1456,7 +1456,7 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (config.syncClanButton() && config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode()))
 		{
-			syncButton = new SyncButton(client, clientThread, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
+			syncButton = new SyncButton(client, this, clientThread, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
 		}
 	}
 
