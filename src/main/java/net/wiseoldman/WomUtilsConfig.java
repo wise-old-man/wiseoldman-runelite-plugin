@@ -151,18 +151,6 @@ public interface WomUtilsConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "addRemoveMember",
-		name = "Add/Remove Member option",
-		description = "Add options to add & remove players from group, to clan chat and friend list",
-		position = 4,
-		section = groupConfig
-	)
-	default boolean addRemoveMember()
-	{
-		return false;
-	}
-
-	@ConfigItem(
 		keyName = "syncClanButton",
 		name = "Sync Clan button",
 		description = "Add a sync clan button to the clan members list in settings if a group is configured",

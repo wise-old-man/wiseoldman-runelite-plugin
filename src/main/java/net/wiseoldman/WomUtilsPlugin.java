@@ -608,7 +608,7 @@ public class WomUtilsPlugin extends Plugin
 	@Subscribe
 	public void onMenuEntryAdded(MenuEntryAdded event)
 	{
-		if (!config.addRemoveMember() && !config.menuLookupOption())
+		if (!config.menuLookupOption())
 		{
 			return;
 		}
@@ -624,34 +624,6 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		String name = Text.toJagexName(Text.removeTags(event.getTarget()));
-
-		if (config.addRemoveMember())
-		{
-			boolean addModifyMember = config.groupId() > 0
-				&& !Strings.isNullOrEmpty(config.verificationCode())
-				&& (groupId == InterfaceID.CHATCHANNEL_CURRENT
-				|| groupId == InterfaceID.FRIENDS
-				|| groupId == InterfaceID.CLANS_SIDEPANEL
-				|| groupId == InterfaceID.CLANS_GUEST_SIDEPANEL);
-
-			if (addModifyMember)
-			{
-				client.getMenu().createMenuEntry(-2)
-					.setOption(groupMembers.containsKey(name.toLowerCase()) ? REMOVE_MEMBER : ADD_MEMBER)
-					.setType(MenuAction.RUNELITE)
-					.setTarget(event.getTarget())
-					.onClick(e -> {
-						if (groupMembers.containsKey(name.toLowerCase()))
-						{
-							womClient.removeGroupMember(name);
-						}
-						else
-						{
-							womClient.addGroupMember(name);
-						}
-					});
-			}
-		}
 
 		if (config.menuLookupOption())
 		{
