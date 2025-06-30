@@ -1,8 +1,10 @@
 package net.wiseoldman.ui;
 
 import com.google.common.util.concurrent.Runnables;
+import java.util.stream.Collectors;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.api.clan.ClanRank;
+import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupMembership;
 import net.wiseoldman.beans.RoleIndex;
 import net.wiseoldman.web.WomClient;
@@ -26,6 +28,7 @@ import java.util.List;
 public class SyncButton
 {
 	private final Client client;
+	private final WomUtilsPlugin plugin;
 	private final ClientThread clientThread;
 	private final WomClient womClient;
 	private final ChatboxPanelManager chatboxPanelManager;
@@ -39,23 +42,25 @@ public class SyncButton
 	private Widget textWidget;
 
 	private Set<RoleIndex> roleOrders = new HashSet<>();
+	private boolean notSameClanWarning = false;
 
 
 	private final List<ClanRank> roleOrder = Arrays.asList(
-			ClanRank.OWNER, ClanRank.DEPUTY_OWNER, new ClanRank(124), new ClanRank(120),
-			new ClanRank(115), new ClanRank(110), new ClanRank(105), new ClanRank(104),
-			new ClanRank(103), new ClanRank(102), new ClanRank(101), ClanRank.ADMINISTRATOR,
-			new ClanRank(99), new ClanRank(98), new ClanRank(97), new ClanRank(96),
-			new ClanRank(95), new ClanRank(90), new ClanRank(80), new ClanRank(70),
-			new ClanRank(60), new ClanRank(50), new ClanRank(40), new ClanRank(30),
-			new ClanRank(20), new ClanRank(10), new ClanRank(0)
+		ClanRank.OWNER, ClanRank.DEPUTY_OWNER, new ClanRank(124), new ClanRank(120),
+		new ClanRank(115), new ClanRank(110), new ClanRank(105), new ClanRank(104),
+		new ClanRank(103), new ClanRank(102), new ClanRank(101), ClanRank.ADMINISTRATOR,
+		new ClanRank(99), new ClanRank(98), new ClanRank(97), new ClanRank(96),
+		new ClanRank(95), new ClanRank(90), new ClanRank(80), new ClanRank(70),
+		new ClanRank(60), new ClanRank(50), new ClanRank(40), new ClanRank(30),
+		new ClanRank(20), new ClanRank(10), new ClanRank(0)
 	);
 
-	public SyncButton(Client client, ClientThread clientThread, WomClient womClient, ChatboxPanelManager chatboxPanelManager,
-	                  int parent, Map<String, GroupMembership> groupMembers, List<String> ignoredRanks,
-	                  List<String> alwaysIncludedOnSync)
+	public SyncButton(Client client, WomUtilsPlugin plugin, ClientThread clientThread, WomClient womClient,
+					  ChatboxPanelManager chatboxPanelManager, int parent, Map<String, GroupMembership> groupMembers,
+					  List<String> ignoredRanks, List<String> alwaysIncludedOnSync)
 	{
 		this.client = client;
+		this.plugin = plugin;
 		this.clientThread = clientThread;
 		this.womClient = womClient;
 		this.chatboxPanelManager = chatboxPanelManager;
@@ -181,13 +186,33 @@ public class SyncButton
 	{
 		this.textWidget.setText("<col=ffffff>" + "Sync WOM Group" + "</col>");
 		textWidget.setOnOpListener((JavaScriptCallback) e -> {
-			chatboxPanelManager.openTextMenuInput(
-					"Any members not in your clan will be removed" +
-						"<br>from your WOM group. Proceed?")
-				.option("1. Yes, overwrite WOM group", () -> clientThread.invoke(() -> syncMembers()))
-				.option("2. No, only add new members", () -> clientThread.invoke(() -> syncMembers(false)))
-				.option("3. Cancel", Runnables.doNothing())
-				.build();
+			List<ClanMember> currentClanMembers = clanSettings.getMembers();
+			if (!plugin.isSameClan(currentClanMembers.stream().map(clanMember -> clanMember.getName().toLowerCase()).collect(Collectors.toSet()), groupMembers.keySet(), plugin.SAME_CLAN_TOLERANCE))
+
+			{
+				System.out.println("This is not the same clan");
+				chatboxPanelManager.openTextMenuInput(
+						"<br>WARNING!" +
+							"<br>The clan you are trying to sync might not<br>be the same clan previously synced to this group.")
+					.option("<br>1. Cancel", Runnables.doNothing())
+					.option("2. I understand", this::showSyncOptions)
+					.build();
+			}
+			else
+			{
+				showSyncOptions();
+			}
 		});
+	}
+
+	private void showSyncOptions()
+	{
+		chatboxPanelManager.openTextMenuInput(
+				"Any members not in your clan will be removed" +
+					"<br>from your WOM group. Proceed?")
+			.option("1. Yes, overwrite WOM group", () -> clientThread.invoke(() -> syncMembers()))
+			.option("2. No, only add new members", () -> clientThread.invoke(() -> syncMembers(false)))
+			.option("3. Cancel", Runnables.doNothing())
+			.build();
 	}
 }

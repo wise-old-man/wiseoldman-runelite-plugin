@@ -13,10 +13,13 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.runelite.api.IndexedObjectSet;
 import net.runelite.api.WorldType;
+import net.runelite.api.clan.ClanMember;
+import net.runelite.api.clan.ClanTitle;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
@@ -178,9 +181,13 @@ public class WomUtilsPlugin extends Plugin
 
 	private boolean levelupThisSession = false;
 
-	private static String MESSAGE_PREFIX = "Wom: ";
+	private static String MESSAGE_PREFIX = "WOM: ";
 
 	public boolean isSeasonal = false;
+
+	private String DEFAULT_ROLE = "member";
+
+	public Double SAME_CLAN_TOLERANCE = 0.5;
 
 	@Inject
 	private Client client;
@@ -267,6 +274,9 @@ public class WomUtilsPlugin extends Plugin
 
 	private final Map<Skill, Integer> previousSkillLevels = new EnumMap<>(Skill.class);
 
+	private boolean comparedClanMembers = false;
+	private int tickCounter = 0;
+
 	@Getter
 	private static String pluginVersion = "0.0.0";
 
@@ -304,7 +314,6 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		iconHandler.loadIcons();
-		womClient.importGroupMembers();
 
 		if (config.playerLookupOption())
 		{
@@ -963,12 +972,14 @@ public class WomUtilsPlugin extends Plugin
 
 				recentlyLoggedIn = true;
 				isSeasonal = client.getWorldType().contains(WorldType.SEASONAL);
+				womClient.importGroupMembers();
 				break;
 			case LOGIN_SCREEN:
 				// When a player logs out we want to set these variables
 				// and also submit update request
 				visitedLoginScreen = true;
 				namechangesSubmitted = false;
+				comparedClanMembers = false;
 				womPanel.resetCompetitionsPanel();
 				womPanel.resetGroupFilter();
 				clearInfoBoxes();
@@ -1021,9 +1032,114 @@ public class WomUtilsPlugin extends Plugin
 			womPanel.showNoCompetitionsError();
 		}
 
+		if (client.getGameState() == GameState.LOGGED_IN)
+		{
+			// Delay comparing the clan members list for a little until clan settings have loaded
+			if (tickCounter >= 5 && !comparedClanMembers)
+			{
+				ClanSettings clanSettings = client.getClanSettings();
+				if (clanSettings != null)
+				{
+					compareClanMembersList(clanSettings);
+					comparedClanMembers = true;
+				}
+			}
+			else
+			{
+				tickCounter += 1;
+			}
+		}
+
 		if (womPanel.active)
 		{
 			womPanel.updateCompetitionCountdown();
+		}
+	}
+
+	public boolean isSameClan(Set<String> clanMemberNames, Set<String> groupMemberNames, double tolerance)
+	{
+		Set<String> onlyInClan = new HashSet<>(clanMemberNames);
+		onlyInClan.removeAll(groupMemberNames);
+
+		Set<String> onlyInGroup = new HashSet<>(groupMemberNames);
+		onlyInGroup.removeAll(clanMemberNames);
+
+		int totalDifference = onlyInClan.size() + onlyInGroup.size();
+
+		Set<String> combinedLists = new HashSet<>(clanMemberNames);
+		combinedLists.addAll(groupMemberNames);
+		int totalUniqueNames = combinedLists.size();
+
+		return ((double) totalDifference / totalUniqueNames) <= tolerance;
+	}
+
+	private void compareClanMembersList(ClanSettings clanSettings)
+	{
+		List<ClanMember> clanMembers = clanSettings.getMembers();
+
+		Set<String> clanMemberNames = clanMembers.stream().map(clanMember -> clanMember.getName().toLowerCase()).collect(Collectors.toSet());
+		Set<String> groupMemberNames = groupMembers.keySet();
+
+		// Don't send the out of sync chat message so we don't encourage syncing
+		// when it's not the same clan.
+		if (!isSameClan(clanMemberNames, groupMemberNames, SAME_CLAN_TOLERANCE))
+		{
+			return;
+		}
+
+		Set<String> onlyInClan = new HashSet<>(clanMemberNames);
+		onlyInClan.removeAll(groupMemberNames);
+
+		Set<String> onlyInGroup = new HashSet<>(groupMemberNames);
+		onlyInGroup.removeAll(clanMemberNames);
+
+		boolean outOfSync = false;
+		String outOfSyncMessage = "Your group is out of sync: ";
+		if (!onlyInClan.isEmpty())
+		{
+			outOfSyncMessage += onlyInClan.size() + " player" + (onlyInClan.size() > 1 ? "s" : "") + "joined";
+			outOfSync = true;
+		}
+
+		if (!onlyInClan.isEmpty() && !onlyInGroup.isEmpty())
+		{
+			outOfSyncMessage += " and ";
+		}
+
+		if (!onlyInGroup.isEmpty())
+		{
+			outOfSyncMessage += onlyInGroup.size() + " player" + (onlyInGroup.size() > 1 ? "s" : "") + " left";
+			outOfSync = true;
+		}
+
+		if (onlyInClan.isEmpty() && onlyInGroup.isEmpty())
+		{
+			// check if ranks differ when the member lists are the same
+			int ranksChanged = 0;
+			for (ClanMember cm : clanMembers)
+			{
+				ClanTitle clanTitle = clanSettings.titleForRank(cm.getRank());
+				String groupRole = groupMembers.get(cm.getName().toLowerCase()).getRole();
+
+				// clanTitle=null syncs to default role "member" on WOM.
+				if (clanTitle != null && !clanTitle.getName().toLowerCase().replaceAll(" ", "_").equals(groupRole) || clanTitle == null && !groupRole.equals(DEFAULT_ROLE))
+				{
+					ranksChanged += 1;
+				}
+			}
+
+			if (ranksChanged > 0)
+			{
+				outOfSyncMessage += ranksChanged + " rank" + (ranksChanged > 1 ? "s" : "") + " changed";
+				outOfSync = true;
+			}
+		}
+
+		outOfSyncMessage += ".";
+
+		if (outOfSync)
+		{
+			sendResponseToChat(outOfSyncMessage, womClient.ERROR);
 		}
 	}
 
@@ -1087,6 +1203,8 @@ public class WomUtilsPlugin extends Plugin
 			groupMembers.put(member.getPlayer().getUsername(), member);
 		}
 		onGroupUpdate();
+
+		// When clicking the sync button, we show the user the syncing result.
 		if (!event.isSilent())
 		{
 			String message = compareChanges(old, groupMembers);
@@ -1336,7 +1454,7 @@ public class WomUtilsPlugin extends Plugin
 	{
 		if (config.syncClanButton() && config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode()))
 		{
-			syncButton = new SyncButton(client, clientThread, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
+			syncButton = new SyncButton(client, this, clientThread, womClient, chatboxPanelManager, w, groupMembers, ignoredRanks, alwaysIncludedOnSync);
 		}
 	}
 

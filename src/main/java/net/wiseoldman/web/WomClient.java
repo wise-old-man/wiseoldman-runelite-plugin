@@ -2,11 +2,15 @@ package net.wiseoldman.web;
 
 import com.google.gson.Gson;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import net.runelite.api.clan.ClanMember;
 import net.runelite.client.RuneLiteProperties;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
+import net.wiseoldman.beans.GroupMembership;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.beans.RoleIndex;
@@ -80,7 +84,7 @@ public class WomClient
 	private EventBus eventBus;
 
 	private static final Color SUCCESS = new Color(170, 255, 40);
-	private static final Color ERROR = new Color(204, 66, 66);
+	public final Color ERROR = new Color(204, 66, 66);
 
 	private static final DecimalFormat NUMBER_FORMAT = new DecimalFormat("#.##");
 
@@ -90,13 +94,14 @@ public class WomClient
 	private final String userAgent;
 
 	@Inject
-	public WomClient(Gson gson, WomUtilsPlugin plugin)
+	public WomClient(Gson gson, WomUtilsPlugin plugin, Client client)
 	{
 		this.gson = gson.newBuilder()
 			.setDateFormat(DateFormat.FULL, DateFormat.FULL)
 			.create();
 
 		this.plugin = plugin;
+		this.client = client;
 
 		String pluginVersion = WomUtilsPlugin.getPluginVersion();
 		String runeliteVersion = RuneLiteProperties.getVersion();
