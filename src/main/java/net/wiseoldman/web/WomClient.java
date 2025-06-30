@@ -18,16 +18,12 @@ import net.wiseoldman.beans.WomStatus;
 import net.wiseoldman.beans.ParticipantWithCompetition;
 import net.wiseoldman.beans.GroupMemberAddition;
 import net.wiseoldman.beans.Member;
-import net.wiseoldman.beans.GroupMemberRemoval;
 import net.wiseoldman.beans.PlayerInfo;
 import net.wiseoldman.beans.WomPlayerUpdate;
 import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
 import net.wiseoldman.events.WomRequestFailed;
 import net.wiseoldman.events.WomUpcomingPlayerCompetitionsFetched;
-import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.WomUtilsConfig;
-import net.wiseoldman.events.WomGroupMemberAdded;
-import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
 import java.awt.Color;
 import java.io.IOException;
@@ -64,9 +60,6 @@ public class WomClient
 	private OkHttpClient okHttpClient;
 
 	private Gson gson;
-
-	@Inject
-	private WomIconHandler iconHandler;
 
 	@Inject
 	private Client client;
@@ -244,46 +237,6 @@ public class WomClient
 		}
 	}
 
-	private void removeMemberCallback(Response response, String username)
-	{
-		final String message;
-		final WomStatus data = parseResponse(response, WomStatus.class);
-
-		if (response.isSuccessful())
-		{
-			postEvent(new WomGroupMemberRemoved(username));
-		}
-		else if (response.code() == 429)
-		{
-			log.error("wom-utils: reached api limits while removing player from group");
-		}
-		else
-		{
-			message = "Error: " + data.getMessage() + (this.plugin.isSeasonal ? leagueError : "");
-			sendResponseToChat(message, ERROR);
-		}
-	}
-
-	private void addMemberCallback(Response response, String username)
-	{
-		final String message;
-
-		if (response.isSuccessful())
-		{
-			postEvent(new WomGroupMemberAdded(username));
-		}
-		else if (response.code() == 429)
-		{
-			log.error("wom-utils: reached api limits while adding player to group");
-		}
-		else
-		{
-			WomStatus data = parseResponse(response, WomStatus.class);
-			message = "Error: " + data.getMessage() + (this.plugin.isSeasonal ? leagueError : "");
-			sendResponseToChat(message, ERROR);
-		}
-	}
-
 	private void playerOngoingCompetitionsCallback(String username, Response response)
 	{
 		boolean showRetry = true;
@@ -380,23 +333,6 @@ public class WomClient
 		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), clanMembers, roleOrders);
 		Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
 		sendRequest(request, this::syncClanMembersCallBack);
-	}
-
-	public void addGroupMember(String username)
-	{
-		ArrayList<Member> memberToAdd = new ArrayList<>();
-		memberToAdd.add(new Member(username.toLowerCase(), "member"));
-
-		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), memberToAdd, null);
-		Request request = createRequest(payload, "groups", "" + config.groupId(), "members");
-		sendRequest(request, r -> addMemberCallback(r, username));
-	}
-
-	public void removeGroupMember(String username)
-	{
-		GroupMemberRemoval payload = new GroupMemberRemoval(config.verificationCode(), new String[]{username.toLowerCase()});
-		Request request = createRequest(payload, HttpMethod.DELETE, "groups", "" + config.groupId(), "members");
-		sendRequest(request, r -> removeMemberCallback(r, username));
 	}
 
 	public void commandLookup(String username, WomCommand command, ChatMessage chatMessage)
