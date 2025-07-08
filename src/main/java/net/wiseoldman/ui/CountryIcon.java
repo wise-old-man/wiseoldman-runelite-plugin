@@ -2,7 +2,6 @@ package net.wiseoldman.ui;
 
 import com.google.common.collect.ImmutableMap;
 import net.wiseoldman.WomUtilsPlugin;
-import java.awt.image.BufferedImage;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import net.runelite.client.util.ImageUtil;
@@ -290,11 +289,6 @@ public enum CountryIcon
 		ICONS = iconBuilder.build();
 	}
 
-	public BufferedImage loadImage()
-	{
-		return ImageUtil.loadImageResource(WomUtilsPlugin.class, "flags/" + codepoint + ".png");
-	}
-
 	public static ImageIcon loadSquareImage(String languageCode)
 	{
 		try
@@ -305,10 +299,5 @@ public enum CountryIcon
 		{
 			return new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "flags_square/default.png"));
 		}
-	}
-
-	public static CountryIcon getIcon(String countryCode)
-	{
-		return ICONS.getOrDefault(countryCode, DEFAULT);
 	}
 }

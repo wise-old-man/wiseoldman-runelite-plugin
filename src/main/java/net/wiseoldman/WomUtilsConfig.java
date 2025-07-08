@@ -103,34 +103,10 @@ public interface WomUtilsConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "showIcons",
-		name = "Show icons",
-		description = "Show icons in friend list and clan chat for people who are in the WOM group",
-		position = 0,
-		section = groupConfig
-	)
-	default boolean showicons()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "showFlags",
-		name = "Show flags",
-		description = "Show flags instead of the group icon where possible for your group members, requires icons to be enabled.",
-		position = 1,
-		section = groupConfig
-	)
-	default boolean showFlags()
-	{
-		return false;
-	}
-
-	@ConfigItem(
 		keyName = "importGroup",
 		name = "Import Group option",
 		description = "Add Import WOM Group menu option to the clan chat tab",
-		position = 2,
+		position = 1,
 		section = groupConfig
 	)
 	default boolean importGroup()
@@ -142,7 +118,7 @@ public interface WomUtilsConfig extends Config
 		keyName = "browseGroup",
 		name = "Browse Group option",
 		description = "Add Browse WOM Group menu option to the clan chat tab",
-		position = 3,
+		position = 2,
 		section = groupConfig
 	)
 	default boolean browseGroup()
@@ -151,22 +127,10 @@ public interface WomUtilsConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "addRemoveMember",
-		name = "Add/Remove Member option",
-		description = "Add options to add & remove players from group, to clan chat and friend list",
-		position = 4,
-		section = groupConfig
-	)
-	default boolean addRemoveMember()
-	{
-		return false;
-	}
-
-	@ConfigItem(
 		keyName = "syncClanButton",
 		name = "Sync Clan button",
 		description = "Add a sync clan button to the clan members list in settings if a group is configured",
-		position = 5,
+		position = 3,
 		section = groupConfig
 	)
 	default boolean syncClanButton()
@@ -178,7 +142,7 @@ public interface WomUtilsConfig extends Config
 		keyName = "alwaysIncludedOnSync",
 		name = "Always Included",
 		description = "Players that will always be included in the group regardless of clan sync method, comma separated names",
-		position = 6,
+		position = 4,
 		section = groupConfig
 	)
 	default String alwaysIncludedOnSync()
@@ -190,7 +154,7 @@ public interface WomUtilsConfig extends Config
 		keyName = "groupId",
 		name = "Group Id",
 		description = "The group id in WOM",
-		position = 7,
+		position = 5,
 		section = groupConfig
 	)
 	default int groupId()
@@ -203,7 +167,7 @@ public interface WomUtilsConfig extends Config
 		name = "Verification code",
 		description = "Verification code for the WOM group",
 		secret = true,
-		position = 8,
+		position = 6,
 		section = groupConfig
 	)
 	default String verificationCode()

@@ -30,8 +30,6 @@ import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.beans.GroupMembership;
 import net.wiseoldman.beans.ParticipantWithCompetition;
-import net.wiseoldman.events.WomGroupMemberAdded;
-import net.wiseoldman.events.WomGroupMemberRemoved;
 import net.wiseoldman.events.WomGroupSynced;
 import net.wiseoldman.events.WomOngoingPlayerCompetitionsFetched;
 import net.wiseoldman.events.WomRequestFailed;
@@ -42,7 +40,6 @@ import net.wiseoldman.panel.WomPanel;
 import net.wiseoldman.ui.CodeWordOverlay;
 import net.wiseoldman.ui.CompetitionInfoBox;
 import net.wiseoldman.ui.SyncButton;
-import net.wiseoldman.ui.WomIconHandler;
 import net.wiseoldman.util.DelayedAction;
 import net.wiseoldman.web.WomRequestType;
 import net.wiseoldman.web.WomClient;
@@ -76,7 +73,6 @@ import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Nameable;
 import net.runelite.api.Player;
-import net.runelite.api.ScriptID;
 import net.runelite.api.Skill;
 import net.runelite.api.clan.ClanRank;
 import net.runelite.api.clan.ClanSettings;
@@ -87,8 +83,6 @@ import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.NameableNameChanged;
-import net.runelite.api.events.ScriptCallbackEvent;
-import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.widgets.Widget;
@@ -136,9 +130,6 @@ public class WomUtilsPlugin extends Plugin
 	private static final File WORKING_DIR;
 	private static final String NAME_CHANGES = "name-changes.json";
 
-	private static final String ADD_MEMBER = "Add member";
-	private static final String REMOVE_MEMBER = "Remove member";
-
 	private static final String IMPORT_MEMBERS = "Import";
 	private static final String BROWSE_GROUP = "Browse";
 	private static final String MENU_TARGET = "WOM group";
@@ -171,9 +162,6 @@ public class WomUtilsPlugin extends Plugin
 			.build();
 
 	private static final int XP_THRESHOLD = 10_000;
-
-	private static final int CLAN_SIDEPANEL_DRAW = 4397;
-	private static final int CLAN_SETTINGS_MEMBERS_DRAW = 4232;
 
 	private static final Color DEFAULT_CLAN_SETTINGS_TEXT_COLOR = new Color(0xff981f);
 
@@ -212,9 +200,6 @@ public class WomUtilsPlugin extends Plugin
 
 	@Inject
 	private JsonParser jsonParser;
-
-	@Inject
-	private WomIconHandler iconHandler;
 
 	@Inject
 	private ChatCommandManager chatCommandManager;
@@ -313,7 +298,7 @@ public class WomUtilsPlugin extends Plugin
 			log.error("Could not load previous name changes");
 		}
 
-		iconHandler.loadIcons();
+		womClient.importGroupMembers();
 
 		if (config.playerLookupOption())
 		{
@@ -333,7 +318,6 @@ public class WomUtilsPlugin extends Plugin
 
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
-			iconHandler.rebuildLists(groupMembers, config.showicons());
 			// Set this to true here so when the plugin is enabled after the player has logged in
 			// the player name is set correctly for fetching competitions in onGameTick.
 			recentlyLoggedIn = true;
@@ -392,11 +376,6 @@ public class WomUtilsPlugin extends Plugin
 	{
 		removeGroupMenuOptions();
 		menuManager.removePlayerMenuItem(LOOKUP);
-
-		if (client.getGameState() == GameState.LOGGED_IN)
-		{
-			iconHandler.rebuildLists(groupMembers, false);
-		}
 
 		for (WomCommand c : WomCommand.values())
 		{
@@ -608,7 +587,7 @@ public class WomUtilsPlugin extends Plugin
 	@Subscribe
 	public void onMenuEntryAdded(MenuEntryAdded event)
 	{
-		if (!config.addRemoveMember() && !config.menuLookupOption())
+		if (!config.menuLookupOption())
 		{
 			return;
 		}
@@ -624,34 +603,6 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 		String name = Text.toJagexName(Text.removeTags(event.getTarget()));
-
-		if (config.addRemoveMember())
-		{
-			boolean addModifyMember = config.groupId() > 0
-				&& !Strings.isNullOrEmpty(config.verificationCode())
-				&& (groupId == InterfaceID.CHATCHANNEL_CURRENT
-				|| groupId == InterfaceID.FRIENDS
-				|| groupId == InterfaceID.CLANS_SIDEPANEL
-				|| groupId == InterfaceID.CLANS_GUEST_SIDEPANEL);
-
-			if (addModifyMember)
-			{
-				client.getMenu().createMenuEntry(-2)
-					.setOption(groupMembers.containsKey(name.toLowerCase()) ? REMOVE_MEMBER : ADD_MEMBER)
-					.setType(MenuAction.RUNELITE)
-					.setTarget(event.getTarget())
-					.onClick(e -> {
-						if (groupMembers.containsKey(name.toLowerCase()))
-						{
-							womClient.removeGroupMember(name);
-						}
-						else
-						{
-							womClient.addGroupMember(name);
-						}
-					});
-			}
-		}
 
 		if (config.menuLookupOption())
 		{
@@ -749,12 +700,6 @@ public class WomUtilsPlugin extends Plugin
 			}
 		}
 
-		if ((event.getKey().equals("showIcons") || event.getKey().equals("showFlags"))
-			&& client.getGameState() == GameState.LOGGED_IN)
-		{
-			iconHandler.rebuildLists(groupMembers, config.showicons());
-		}
-
 		if (event.getKey().equals("sendCompetitionNotification"))
 		{
 			updateScheduledNotifications();
@@ -764,24 +709,6 @@ public class WomUtilsPlugin extends Plugin
 		{
 			alwaysIncludedOnSync.clear();
 			alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
-		}
-	}
-
-	@Subscribe
-	public void onScriptPostFired(ScriptPostFired event)
-	{
-		if (event.getScriptId() == ScriptID.FRIENDS_CHAT_CHANNEL_REBUILD)
-		{
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, InterfaceID.ChatchannelCurrent.LIST);
-		}
-		else if (event.getScriptId() == CLAN_SIDEPANEL_DRAW)
-		{
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, InterfaceID.ClansSidepanel.PLAYERLIST);
-			iconHandler.rebuildMemberList(!config.showicons(), groupMembers, InterfaceID.ClansGuestSidepanel.PLAYERLIST);
-		}
-		else if (event.getScriptId() == CLAN_SETTINGS_MEMBERS_DRAW)
-		{
-			iconHandler.rebuildSettingsMemberList(!config.showicons(), groupMembers);
 		}
 	}
 
@@ -826,17 +753,6 @@ public class WomUtilsPlugin extends Plugin
 
 				break;
 		}
-	}
-
-	@Subscribe
-	public void onScriptCallbackEvent(ScriptCallbackEvent event)
-	{
-		if (!config.showicons() || !iconHandler.iconsAreLoaded())
-		{
-			return;
-		}
-
-		iconHandler.handleScriptEvent(event, groupMembers);
 	}
 
 	@Subscribe
@@ -1202,34 +1118,12 @@ public class WomUtilsPlugin extends Plugin
 		{
 			groupMembers.put(member.getPlayer().getUsername(), member);
 		}
-		onGroupUpdate();
 
-		// When clicking the sync button, we show the user the syncing result.
 		if (!event.isSilent())
 		{
 			String message = compareChanges(old, groupMembers);
 			sendResponseToChat(message, getSuccessColor());
-			iconHandler.rebuildSettingsMemberList(!config.showicons(), groupMembers);
 		}
-	}
-
-	@Subscribe
-	public void onWomGroupMemberAdded(WomGroupMemberAdded event)
-	{
-		womClient.importGroupMembers();
-		onGroupUpdate();
-
-		String message = "New player added: " + event.getUsername(); // Correctly capitalized
-		sendResponseToChat(message, getSuccessColor());
-	}
-
-	@Subscribe
-	public void onWomGroupMemberRemoved(WomGroupMemberRemoved event)
-	{
-		womClient.importGroupMembers();
-		onGroupUpdate();
-		String message = "Player removed: " + event.getUsername();
-		sendResponseToChat(message, getSuccessColor());
 	}
 
 	@Subscribe
@@ -1392,14 +1286,6 @@ public class WomUtilsPlugin extends Plugin
 		scheduledFutures.clear();
 	}
 
-	private void onGroupUpdate()
-	{
-		if (client.getGameState() == GameState.LOGGED_IN)
-		{
-			iconHandler.rebuildLists(groupMembers, config.showicons());
-		}
-	}
-
 	private String compareChanges(Map<String, GroupMembership> oldMembers, Map<String, GroupMembership> newMembers)
 	{
 		int membersAdded = 0;
@@ -1480,7 +1366,6 @@ public class WomUtilsPlugin extends Plugin
 	@Override
 	public void configure(Binder binder)
 	{
-		binder.bind(WomIconHandler.class);
 		binder.bind(NameAutocompleter.class);
 		binder.bind(WomClient.class);
 		binder.bind(CodeWordOverlay.class);
