@@ -2,15 +2,12 @@ package net.wiseoldman.web;
 
 import com.google.gson.Gson;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Arrays;
 import java.util.Set;
 
-import net.runelite.api.clan.ClanMember;
 import net.runelite.client.RuneLiteProperties;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
-import net.wiseoldman.beans.GroupMembership;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.beans.RoleIndex;
@@ -85,6 +82,9 @@ public class WomClient
 	private final String leagueError = " You are currently in a League world. Your group configurations might be for the main game.";
 
 	private final String userAgent;
+
+	private ArrayList<Member> clanMembers;
+	private Set<RoleIndex> roleOrders;
 
 	@Inject
 	public WomClient(Gson gson, WomUtilsPlugin plugin, Client client)
@@ -228,6 +228,29 @@ public class WomClient
 		{
 			log.error("wom-utils: reached api limits while syncing clan members");
 		}
+		else if (response.code() == 403)
+		{
+			WomStatus data = parseResponse(response, WomStatus.class);
+
+			// This works for now because we only use this for opted out players.
+			if (data.getData() == null)
+			{
+				return;
+			}
+
+			String[] optedOutPlayers = Arrays.stream(data.getData()).map(String::toLowerCase).toArray(String[]::new);
+			boolean didRemove = this.clanMembers.removeIf(member -> Arrays.asList(optedOutPlayers).contains(member.getUsername().toLowerCase()));
+
+			// If no players were removed, don't send request so we don't end up in an endless loop
+			if (!didRemove)
+			{
+				return;
+			}
+
+			GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), this.clanMembers, this.roleOrders);
+			Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
+			sendRequest(request, this::syncClanMembersCallBack);
+		}
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
@@ -330,6 +353,9 @@ public class WomClient
 
 	public void syncClanMembers(ArrayList<Member> clanMembers, Set<RoleIndex> roleOrders)
 	{
+		this.clanMembers = clanMembers;
+		this.roleOrders = roleOrders;
+
 		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), clanMembers, roleOrders);
 		Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
 		sendRequest(request, this::syncClanMembersCallBack);

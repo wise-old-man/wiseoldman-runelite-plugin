@@ -5,5 +5,6 @@ import lombok.Value;
 @Value
 public class WomStatus
 {
-    String message;
+	String message;
+	String[] data;
 }
