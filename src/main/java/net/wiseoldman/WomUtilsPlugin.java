@@ -895,7 +895,6 @@ public class WomUtilsPlugin extends Plugin
 				// and also submit update request
 				visitedLoginScreen = true;
 				namechangesSubmitted = false;
-				comparedClanMembers = false;
 				womPanel.resetCompetitionsPanel();
 				womPanel.resetGroupFilter();
 				clearInfoBoxes();
