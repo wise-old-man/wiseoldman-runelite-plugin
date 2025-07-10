@@ -187,7 +187,7 @@ public class SyncButton
 		this.textWidget.setText("<col=ffffff>" + "Sync WOM Group" + "</col>");
 		textWidget.setOnOpListener((JavaScriptCallback) e -> {
 			List<ClanMember> currentClanMembers = clanSettings.getMembers();
-			if (!plugin.isSameClan(currentClanMembers.stream().map(clanMember -> clanMember.getName().toLowerCase()).collect(Collectors.toSet()), groupMembers.keySet(), plugin.SAME_CLAN_TOLERANCE))
+			if (!plugin.isSameClan(currentClanMembers.stream().map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet()), groupMembers.keySet(), plugin.SAME_CLAN_TOLERANCE))
 
 			{
 				chatboxPanelManager.openTextMenuInput(

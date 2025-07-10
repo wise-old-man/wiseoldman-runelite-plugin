@@ -899,6 +899,10 @@ public class WomUtilsPlugin extends Plugin
 				womPanel.resetCompetitionsPanel();
 				womPanel.resetGroupFilter();
 				clearInfoBoxes();
+
+				// Reset so we can compare on log in
+				tickCounter = 0;
+				comparedClanMembers = false;
 			case HOPPING:
 				Player local = client.getLocalPlayer();
 				if (local == null)
@@ -993,7 +997,7 @@ public class WomUtilsPlugin extends Plugin
 	{
 		List<ClanMember> clanMembers = clanSettings.getMembers();
 
-		Set<String> clanMemberNames = clanMembers.stream().map(clanMember -> clanMember.getName().toLowerCase()).collect(Collectors.toSet());
+		Set<String> clanMemberNames = clanMembers.stream().map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet());
 		Set<String> groupMemberNames = groupMembers.keySet();
 
 		// Don't send the out of sync chat message so we don't encourage syncing
@@ -1035,7 +1039,7 @@ public class WomUtilsPlugin extends Plugin
 			for (ClanMember cm : clanMembers)
 			{
 				ClanTitle clanTitle = clanSettings.titleForRank(cm.getRank());
-				String groupRole = groupMembers.get(cm.getName().toLowerCase()).getRole();
+				String groupRole = groupMembers.get(Text.toJagexName(cm.getName()).toLowerCase()).getRole();
 
 				// clanTitle=null syncs to default role "member" on WOM.
 				if (clanTitle != null && !clanTitle.getName().toLowerCase().replaceAll(" ", "_").equals(groupRole) || clanTitle == null && !groupRole.equals(DEFAULT_ROLE))
