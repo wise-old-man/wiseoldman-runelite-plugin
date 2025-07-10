@@ -190,7 +190,6 @@ public class SyncButton
 			if (!plugin.isSameClan(currentClanMembers.stream().map(clanMember -> clanMember.getName().toLowerCase()).collect(Collectors.toSet()), groupMembers.keySet(), plugin.SAME_CLAN_TOLERANCE))
 
 			{
-				System.out.println("This is not the same clan");
 				chatboxPanelManager.openTextMenuInput(
 						"<br>WARNING!" +
 							"<br>The clan you are trying to sync might not<br>be the same clan previously synced to this group.")
