@@ -977,16 +977,25 @@ public class WomUtilsPlugin extends Plugin
 
 	public boolean isSameClan(Set<String> clanMemberNames, Set<String> groupMemberNames, double tolerance)
 	{
+		Set<String> alwaysIncluded = alwaysIncludedOnSync.stream().map(String::toLowerCase).collect(Collectors.toSet());
+		return isSameClan(clanMemberNames, groupMemberNames, tolerance, alwaysIncluded);
+	}
+
+	private boolean isSameClan(Set<String> clanMemberNames, Set<String> groupMemberNames, double tolerance, Set<String> alwaysIncluded)
+	{
 		Set<String> onlyInClan = new HashSet<>(clanMemberNames);
+		onlyInClan.addAll(alwaysIncluded);
 		onlyInClan.removeAll(groupMemberNames);
 
 		Set<String> onlyInGroup = new HashSet<>(groupMemberNames);
 		onlyInGroup.removeAll(clanMemberNames);
+		onlyInGroup.removeAll(alwaysIncluded);
 
 		int totalDifference = onlyInClan.size() + onlyInGroup.size();
 
 		Set<String> combinedLists = new HashSet<>(clanMemberNames);
 		combinedLists.addAll(groupMemberNames);
+		combinedLists.addAll(alwaysIncluded);
 		int totalUniqueNames = combinedLists.size();
 
 		return ((double) totalDifference / totalUniqueNames) <= tolerance;
@@ -998,19 +1007,22 @@ public class WomUtilsPlugin extends Plugin
 
 		Set<String> clanMemberNames = clanMembers.stream().map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet());
 		Set<String> groupMemberNames = groupMembers.keySet();
+		Set<String> alwaysIncluded = alwaysIncludedOnSync.stream().map(String::toLowerCase).collect(Collectors.toSet());
 
 		// Don't send the out of sync chat message so we don't encourage syncing
 		// when it's not the same clan.
-		if (!isSameClan(clanMemberNames, groupMemberNames, SAME_CLAN_TOLERANCE))
+		if (!isSameClan(clanMemberNames, groupMemberNames, SAME_CLAN_TOLERANCE, alwaysIncluded))
 		{
 			return;
 		}
 
 		Set<String> onlyInClan = new HashSet<>(clanMemberNames);
+		onlyInClan.addAll(alwaysIncluded);
 		onlyInClan.removeAll(groupMemberNames);
 
 		Set<String> onlyInGroup = new HashSet<>(groupMemberNames);
 		onlyInGroup.removeAll(clanMemberNames);
+		onlyInGroup.removeAll(alwaysIncluded);
 
 		boolean outOfSync = false;
 		String outOfSyncMessage = "Your group is out of sync: ";
