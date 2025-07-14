@@ -957,7 +957,7 @@ public class WomUtilsPlugin extends Plugin
 			if (tickCounter >= 5 && !comparedClanMembers)
 			{
 				ClanSettings clanSettings = client.getClanSettings();
-				if (clanSettings != null && config.groupId() > 0)
+				if (clanSettings != null && config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode()))
 				{
 					compareClanMembersList(clanSettings);
 				}
