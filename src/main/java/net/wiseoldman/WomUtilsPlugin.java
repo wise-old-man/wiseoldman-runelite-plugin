@@ -1005,7 +1005,10 @@ public class WomUtilsPlugin extends Plugin
 	{
 		List<ClanMember> clanMembers = clanSettings.getMembers();
 
-		Set<String> clanMemberNames = clanMembers.stream().map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet());
+		Set<String> clanMemberNames = clanMembers.stream().filter(clanMember -> {
+			ClanTitle clanTitle = clanSettings.titleForRank(clanMember.getRank());
+			return clanTitle == null || !ignoredRanks.contains(clanTitle.getName().toLowerCase().replaceAll("[-\\s]", "_"));
+		}).map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet());
 		Set<String> groupMemberNames = groupMembers.keySet();
 		Set<String> alwaysIncluded = alwaysIncludedOnSync.stream().map(String::toLowerCase).collect(Collectors.toSet());
 
