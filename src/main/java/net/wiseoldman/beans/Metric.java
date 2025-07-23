@@ -88,6 +88,8 @@ public enum Metric
 	DEFENCE(HiscoreSkill.DEFENCE),
 	@SerializedName("deranged_archaeologist")
 	DERANGED_ARCHAEOLOGIST(HiscoreSkill.DERANGED_ARCHAEOLOGIST),
+	@SerializedName("doom_of_mokhaiotl")
+	DOOM_OF_MOKHAIOTL(HiscoreSkill.DOOM_OF_MOKHAIOTL),
 	@SerializedName("duke_sucellus")
 	DUKE_SUCELLUS(HiscoreSkill.DUKE_SUCELLUS),
 	@SerializedName("ehb")
