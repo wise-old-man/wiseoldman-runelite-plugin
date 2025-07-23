@@ -27,6 +27,7 @@ public class SnapshotBosses
 	Boss dagannoth_rex;
 	Boss dagannoth_supreme;
 	Boss deranged_archaeologist;
+	Boss doom_of_mokhaiotl;
 	Boss duke_sucellus;
 	Boss general_graardor;
 	Boss giant_mole;
@@ -119,6 +120,8 @@ public class SnapshotBosses
 				return getDagannoth_supreme();
 			case DERANGED_ARCHAEOLOGIST:
 				return getDeranged_archaeologist();
+			case DOOM_OF_MOKHAIOTL:
+				return getDoom_of_mokhaiotl();
 			case DUKE_SUCELLUS:
 				return getDuke_sucellus();
 			case GENERAL_GRAARDOR:
