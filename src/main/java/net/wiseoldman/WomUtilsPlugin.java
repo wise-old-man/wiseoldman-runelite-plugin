@@ -888,7 +888,6 @@ public class WomUtilsPlugin extends Plugin
 
 				recentlyLoggedIn = true;
 				isSeasonal = client.getWorldType().contains(WorldType.SEASONAL);
-				womClient.importGroupMembers();
 				break;
 			case LOGIN_SCREEN:
 				// When a player logs out we want to set these variables
@@ -938,6 +937,7 @@ public class WomUtilsPlugin extends Plugin
 			accountHash = client.getAccountHash();
 			womClient.fetchOngoingPlayerCompetitions(playerName);
 			womClient.fetchUpcomingPlayerCompetitions(playerName);
+			womClient.importGroupMembers();
 			recentlyLoggedIn = false;
 			visitedLoginScreen = false;
 		}
