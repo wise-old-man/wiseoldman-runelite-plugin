@@ -42,8 +42,6 @@ public class SyncButton
 	private Widget textWidget;
 
 	private Set<RoleIndex> roleOrders = new HashSet<>();
-	private boolean notSameClanWarning = false;
-
 
 	private final List<ClanRank> roleOrder = Arrays.asList(
 		ClanRank.OWNER, ClanRank.DEPUTY_OWNER, new ClanRank(124), new ClanRank(120),
@@ -110,7 +108,6 @@ public class SyncButton
 		textWidget.setFontId(FontID.PLAIN_11);
 		textWidget.setTextShadowed(true);
 
-		textWidget.setHasListener(true);
 		textWidget.setAction(0, "Sync WOM Group");
 		textWidget.setOnMouseOverListener((JavaScriptCallback) e -> update(true));
 		textWidget.setOnMouseLeaveListener((JavaScriptCallback) e -> update(false));
@@ -182,29 +179,38 @@ public class SyncButton
 		womClient.syncClanMembers(new ArrayList<>(clanMembers.values()), roleOrders);
 	}
 
-	public void setEnabled()
+	public void setEnabled(boolean isSyncing)
 	{
-		this.textWidget.setText("<col=ffffff>" + "Sync WOM Group" + "</col>");
-		textWidget.setOnOpListener((JavaScriptCallback) e -> {
-			List<ClanMember> currentClanMembers = clanSettings.getMembers();
-			if (!plugin.isSameClan(currentClanMembers.stream().filter(clanMember -> {
-				ClanTitle clanTitle = clanSettings.titleForRank(clanMember.getRank());
-				return clanTitle == null || !ignoredRanks.contains(clanTitle.getName().toLowerCase().replaceAll("[-\\s]", "_"));
-			}).map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet()), groupMembers.keySet(), plugin.SAME_CLAN_TOLERANCE))
+		if (isSyncing)
+		{
+			this.textWidget.setText("<col=9f9f9f>" + "Syncing..." + "</col>");
+			this.textWidget.setHasListener(false);
+		}
+		else
+		{
+			this.textWidget.setText("<col=ffffff>" + "Sync WOM Group" + "</col>");
+			this.textWidget.setHasListener(true);
+			this.textWidget.setOnOpListener((JavaScriptCallback) e -> {
+				List<ClanMember> currentClanMembers = clanSettings.getMembers();
+				if (!plugin.isSameClan(currentClanMembers.stream().filter(clanMember -> {
+					ClanTitle clanTitle = clanSettings.titleForRank(clanMember.getRank());
+					return clanTitle == null || !ignoredRanks.contains(clanTitle.getName().toLowerCase().replaceAll("[-\\s]", "_"));
+				}).map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet()), groupMembers.keySet(), plugin.SAME_CLAN_TOLERANCE))
 
-			{
-				chatboxPanelManager.openTextMenuInput(
-						"<br>WARNING!" +
-							"<br>The clan you are trying to sync might not<br>be the same clan previously synced to this group.")
-					.option("<br>1. Cancel", Runnables.doNothing())
-					.option("2. I understand", this::showSyncOptions)
-					.build();
-			}
-			else
-			{
-				showSyncOptions();
-			}
-		});
+				{
+					chatboxPanelManager.openTextMenuInput(
+							"<br>WARNING!" +
+								"<br>The clan you are trying to sync might not<br>be the same clan previously synced to this group.")
+						.option("<br>1. Cancel", Runnables.doNothing())
+						.option("2. I understand", this::showSyncOptions)
+						.build();
+				}
+				else
+				{
+					showSyncOptions();
+				}
+			});
+		}
 	}
 
 	private void showSyncOptions()

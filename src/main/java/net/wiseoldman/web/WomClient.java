@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import java.util.Arrays;
 import java.util.Set;
 
+import java.util.concurrent.TimeUnit;
 import net.runelite.client.RuneLiteProperties;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
@@ -53,7 +54,6 @@ import okhttp3.Response;
 @Slf4j
 public class WomClient
 {
-	@Inject
 	private OkHttpClient okHttpClient;
 
 	private Gson gson;
@@ -85,9 +85,10 @@ public class WomClient
 
 	private ArrayList<Member> clanMembers;
 	private Set<RoleIndex> roleOrders;
+	public boolean isSyncing = false;
 
 	@Inject
-	public WomClient(Gson gson, WomUtilsPlugin plugin, Client client)
+	public WomClient(Gson gson, WomUtilsPlugin plugin, Client client, OkHttpClient okHttpClient)
 	{
 		this.gson = gson.newBuilder()
 			.setDateFormat(DateFormat.FULL, DateFormat.FULL)
@@ -95,6 +96,12 @@ public class WomClient
 
 		this.plugin = plugin;
 		this.client = client;
+
+		this.okHttpClient = okHttpClient.newBuilder()
+			.connectTimeout(30, TimeUnit.SECONDS)
+			.readTimeout(30, TimeUnit.SECONDS)
+			.writeTimeout(30, TimeUnit.SECONDS)
+			.build();
 
 		String pluginVersion = WomUtilsPlugin.getPluginVersion();
 		String runeliteVersion = RuneLiteProperties.getVersion();
@@ -223,10 +230,12 @@ public class WomClient
 		{
 			GroupInfoWithMemberships data = parseResponse(response, GroupInfoWithMemberships.class);
 			postEvent(new WomGroupSynced(data));
+			this.isSyncing = false;
 		}
 		else if (response.code() == 429)
 		{
 			log.error("wom-utils: reached api limits while syncing clan members");
+			this.isSyncing = false;
 		}
 		else if (response.code() == 403)
 		{
@@ -257,7 +266,9 @@ public class WomClient
 			message = "Error: " + data.getMessage() + (this.plugin.isSeasonal ? leagueError : "");
 
 			sendResponseToChat(message, ERROR);
+			this.isSyncing = false;
 		}
+		plugin.syncButton.setEnabled(this.isSyncing);
 	}
 
 	private void playerOngoingCompetitionsCallback(String username, Response response)
@@ -359,6 +370,8 @@ public class WomClient
 		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), clanMembers, roleOrders);
 		Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
 		sendRequest(request, this::syncClanMembersCallBack);
+		this.isSyncing = true;
+		plugin.syncButton.setEnabled(true);
 	}
 
 	public void commandLookup(String username, WomCommand command, ChatMessage chatMessage)

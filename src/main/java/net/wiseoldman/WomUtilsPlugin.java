@@ -251,7 +251,7 @@ public class WomUtilsPlugin extends Plugin
 	private String playerName;
 	private long accountHash;
 	private boolean namechangesSubmitted = false;
-	private SyncButton syncButton;
+	public SyncButton syncButton;
 	public boolean fetchedOngoingCompetitions = false;
 	public boolean fetchedUpcomingCompetitions = false;
 
@@ -507,7 +507,7 @@ public class WomUtilsPlugin extends Plugin
 		{
 			if (syncButton != null)
 			{
-				syncButton.setEnabled();
+				syncButton.setEnabled(womClient.isSyncing);
 			}
 			namechangesSubmitted = true;
 
@@ -544,7 +544,7 @@ public class WomUtilsPlugin extends Plugin
 
 			if (syncButton != null)
 			{
-				syncButton.setEnabled();
+				syncButton.setEnabled(womClient.isSyncing);
 			}
 			namechangesSubmitted = true;
 		}
@@ -729,7 +729,7 @@ public class WomUtilsPlugin extends Plugin
 					createSyncButton(InterfaceID.ClansMembers.FRAME);
 					if (syncButton != null)
 					{
-						syncButton.setEnabled();
+						syncButton.setEnabled(womClient.isSyncing);
 					}
 					clientThread.invokeLater(this::updateIgnoredRankColors);
 				});
@@ -742,7 +742,7 @@ public class WomUtilsPlugin extends Plugin
 					{
 						if (syncButton != null)
 						{
-							syncButton.setEnabled();
+							syncButton.setEnabled(womClient.isSyncing);
 						}
 					}
 					else
