@@ -2,6 +2,14 @@ package net.wiseoldman.ui;
 
 import com.google.common.util.concurrent.Runnables;
 import java.util.stream.Collectors;
+import net.runelite.api.Client;
+import net.runelite.api.FontID;
+import net.runelite.api.gameval.SpriteID;
+import net.runelite.api.widgets.JavaScriptCallback;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetPositionMode;
+import net.runelite.api.widgets.WidgetTextAlignment;
+import net.runelite.api.widgets.WidgetType;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.api.clan.ClanRank;
 import net.wiseoldman.WomUtilsPlugin;
@@ -14,11 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
-import net.runelite.api.*;
 import net.runelite.api.clan.ClanMember;
 import net.runelite.api.clan.ClanSettings;
 import net.runelite.api.clan.ClanTitle;
-import net.runelite.api.widgets.*;
 import net.runelite.client.game.chatbox.ChatboxPanelManager;
 import net.runelite.client.util.Text;
 
@@ -68,14 +74,14 @@ public class SyncButton
 		this.ignoredRanks = ignoredRanks;
 		this.alwaysIncludedOnSync = alwaysIncludedOnSync;
 
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_METAL_CORNER_TOP_LEFT, 6, 6, 9, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_METAL_CORNER_TOP_RIGHT, 97, 6, 9, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_METAL_CORNER_BOTTOM_LEFT, 6, 20, 9, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_METAL_CORNER_BOTTOM_RIGHT, 97, 20, 9, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_EDGE_LEFT, 6, 15, 9, 5);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_EDGE_TOP, 15, 6, 82, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_EDGE_RIGHT, 97, 15, 9, 5);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_EDGE_BOTTOM, 15, 20, 82, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.TOP_LEFT, 6, 6, 9, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.TOP_RIGHT, 97, 6, 9, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.BOTTOM_LEFT, 6, 20, 9, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.BOTTOM_RIGHT, 97, 20, 9, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.LEFT, 6, 15, 9, 5);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.TOP, 15, 6, 82, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.RIGHT, 97, 15, 9, 5);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.BOTTOM, 15, 20, 82, 9);
 		this.textWidget = this.createWidgetWithText();
 	}
 
