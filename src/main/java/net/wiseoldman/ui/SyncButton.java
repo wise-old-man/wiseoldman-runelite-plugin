@@ -2,6 +2,14 @@ package net.wiseoldman.ui;
 
 import com.google.common.util.concurrent.Runnables;
 import java.util.stream.Collectors;
+import net.runelite.api.Client;
+import net.runelite.api.FontID;
+import net.runelite.api.gameval.SpriteID;
+import net.runelite.api.widgets.JavaScriptCallback;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetPositionMode;
+import net.runelite.api.widgets.WidgetTextAlignment;
+import net.runelite.api.widgets.WidgetType;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.api.clan.ClanRank;
 import net.wiseoldman.WomUtilsPlugin;
@@ -14,11 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
-import net.runelite.api.*;
 import net.runelite.api.clan.ClanMember;
 import net.runelite.api.clan.ClanSettings;
 import net.runelite.api.clan.ClanTitle;
-import net.runelite.api.widgets.*;
 import net.runelite.client.game.chatbox.ChatboxPanelManager;
 import net.runelite.client.util.Text;
 
@@ -42,8 +48,6 @@ public class SyncButton
 	private Widget textWidget;
 
 	private Set<RoleIndex> roleOrders = new HashSet<>();
-	private boolean notSameClanWarning = false;
-
 
 	private final List<ClanRank> roleOrder = Arrays.asList(
 		ClanRank.OWNER, ClanRank.DEPUTY_OWNER, new ClanRank(124), new ClanRank(120),
@@ -70,14 +74,14 @@ public class SyncButton
 		this.ignoredRanks = ignoredRanks;
 		this.alwaysIncludedOnSync = alwaysIncludedOnSync;
 
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_METAL_CORNER_TOP_LEFT, 6, 6, 9, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_METAL_CORNER_TOP_RIGHT, 97, 6, 9, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_METAL_CORNER_BOTTOM_LEFT, 6, 20, 9, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_METAL_CORNER_BOTTOM_RIGHT, 97, 20, 9, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_EDGE_LEFT, 6, 15, 9, 5);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_EDGE_TOP, 15, 6, 82, 9);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_EDGE_RIGHT, 97, 15, 9, 5);
-		this.createWidgetWithSprite(SpriteID.EQUIPMENT_BUTTON_EDGE_BOTTOM, 15, 20, 82, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.TOP_LEFT, 6, 6, 9, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.TOP_RIGHT, 97, 6, 9, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.BOTTOM_LEFT, 6, 20, 9, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.BOTTOM_RIGHT, 97, 20, 9, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.LEFT, 6, 15, 9, 5);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.TOP, 15, 6, 82, 9);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.RIGHT, 97, 15, 9, 5);
+		this.createWidgetWithSprite(SpriteID.V2StoneButton.BOTTOM, 15, 20, 82, 9);
 		this.textWidget = this.createWidgetWithText();
 	}
 
@@ -110,7 +114,6 @@ public class SyncButton
 		textWidget.setFontId(FontID.PLAIN_11);
 		textWidget.setTextShadowed(true);
 
-		textWidget.setHasListener(true);
 		textWidget.setAction(0, "Sync WOM Group");
 		textWidget.setOnMouseOverListener((JavaScriptCallback) e -> update(true));
 		textWidget.setOnMouseLeaveListener((JavaScriptCallback) e -> update(false));
@@ -182,29 +185,38 @@ public class SyncButton
 		womClient.syncClanMembers(new ArrayList<>(clanMembers.values()), roleOrders);
 	}
 
-	public void setEnabled()
+	public void setEnabled(boolean isSyncing)
 	{
-		this.textWidget.setText("<col=ffffff>" + "Sync WOM Group" + "</col>");
-		textWidget.setOnOpListener((JavaScriptCallback) e -> {
-			List<ClanMember> currentClanMembers = clanSettings.getMembers();
-			if (!plugin.isSameClan(currentClanMembers.stream().filter(clanMember -> {
-				ClanTitle clanTitle = clanSettings.titleForRank(clanMember.getRank());
-				return clanTitle == null || !ignoredRanks.contains(clanTitle.getName().toLowerCase().replaceAll("[-\\s]", "_"));
-			}).map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet()), groupMembers.keySet(), plugin.SAME_CLAN_TOLERANCE))
+		if (isSyncing)
+		{
+			this.textWidget.setText("<col=9f9f9f>" + "Syncing..." + "</col>");
+			this.textWidget.setHasListener(false);
+		}
+		else
+		{
+			this.textWidget.setText("<col=ffffff>" + "Sync WOM Group" + "</col>");
+			this.textWidget.setHasListener(true);
+			this.textWidget.setOnOpListener((JavaScriptCallback) e -> {
+				List<ClanMember> currentClanMembers = clanSettings.getMembers();
+				if (!plugin.isSameClan(currentClanMembers.stream().filter(clanMember -> {
+					ClanTitle clanTitle = clanSettings.titleForRank(clanMember.getRank());
+					return clanTitle == null || !ignoredRanks.contains(clanTitle.getName().toLowerCase().replaceAll("[-\\s]", "_"));
+				}).map(clanMember -> Text.toJagexName(clanMember.getName()).toLowerCase()).collect(Collectors.toSet()), groupMembers.keySet(), plugin.SAME_CLAN_TOLERANCE))
 
-			{
-				chatboxPanelManager.openTextMenuInput(
-						"<br>WARNING!" +
-							"<br>The clan you are trying to sync might not<br>be the same clan previously synced to this group.")
-					.option("<br>1. Cancel", Runnables.doNothing())
-					.option("2. I understand", this::showSyncOptions)
-					.build();
-			}
-			else
-			{
-				showSyncOptions();
-			}
-		});
+				{
+					chatboxPanelManager.openTextMenuInput(
+							"<br>WARNING!" +
+								"<br>The clan you are trying to sync might not<br>be the same clan previously synced to this group.")
+						.option("<br>1. Cancel", Runnables.doNothing())
+						.option("2. I understand", this::showSyncOptions)
+						.build();
+				}
+				else
+				{
+					showSyncOptions();
+				}
+			});
+		}
 	}
 
 	private void showSyncOptions()
