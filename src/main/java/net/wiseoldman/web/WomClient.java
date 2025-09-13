@@ -2,6 +2,7 @@ package net.wiseoldman.web;
 
 import com.google.gson.Gson;
 
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -258,7 +259,7 @@ public class WomClient
 
 			GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), this.clanMembers, this.roleOrders);
 			Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
-			sendRequest(request, this::syncClanMembersCallBack);
+			sendRequest(request, this::syncClanMembersCallBack, this::handleSyncClanMembersException);
 		}
 		else
 		{
@@ -269,6 +270,22 @@ public class WomClient
 			this.isSyncing = false;
 		}
 		plugin.syncButton.setEnabled(this.isSyncing);
+	}
+
+	public void handleSyncClanMembersException(Exception e)
+	{
+		this.isSyncing = false;
+		this.plugin.syncButton.setEnabled(false);
+
+		if (e instanceof java.net.SocketTimeoutException)
+		{
+			sendResponseToChat("Failed to sync clan members due to a timeout. Please try again later.", ERROR);
+			log.warn("Sync group members request timed out.");
+		}
+		else
+		{
+			log.warn("An unexpected error occurred during group sync request.", e);
+		}
 	}
 
 	private void playerOngoingCompetitionsCallback(String username, Response response)
@@ -369,7 +386,7 @@ public class WomClient
 
 		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), clanMembers, roleOrders);
 		Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
-		sendRequest(request, this::syncClanMembersCallBack);
+		sendRequest(request, this::syncClanMembersCallBack, this::handleSyncClanMembersException);
 		this.isSyncing = true;
 		plugin.syncButton.setEnabled(true);
 	}
