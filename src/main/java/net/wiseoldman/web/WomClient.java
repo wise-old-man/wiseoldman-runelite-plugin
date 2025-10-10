@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Set;
 
 import java.util.concurrent.TimeUnit;
+import net.runelite.api.WorldType;
 import net.runelite.client.RuneLiteProperties;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
@@ -136,6 +137,11 @@ public class WomClient
 
 	void sendRequest(Request request, Callback callback)
 	{
+		if (this.plugin.worldType.contains(WorldType.TOURNAMENT_WORLD))
+		{
+			return;
+		}
+
 		okHttpClient.newCall(request).enqueue(callback);
 	}
 
@@ -183,7 +189,7 @@ public class WomClient
 		HttpUrl.Builder urlBuilder = new HttpUrl.Builder()
 			.scheme("https")
 			.host("api.wiseoldman.net")
-			.addPathSegment(this.plugin.isSeasonal ? "league" : "v2");
+			.addPathSegment(this.plugin.worldType.contains(WorldType.SEASONAL) ? "league" : "v2");
 
 		for (String pathSegment : pathSegments)
 		{
@@ -264,7 +270,7 @@ public class WomClient
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
-			message = "Error: " + data.getMessage() + (this.plugin.isSeasonal ? leagueError : "");
+			message = "Error: " + data.getMessage() + (this.plugin.worldType.contains(WorldType.SEASONAL) ? leagueError : "");
 
 			sendResponseToChat(message, ERROR);
 			this.isSyncing = false;
