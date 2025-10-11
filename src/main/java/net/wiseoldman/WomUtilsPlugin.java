@@ -13,6 +13,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -171,7 +172,7 @@ public class WomUtilsPlugin extends Plugin
 
 	private static String MESSAGE_PREFIX = "WOM: ";
 
-	public boolean isSeasonal = false;
+	public Set<WorldType> worldType = EnumSet.noneOf(WorldType.class);
 
 	private String DEFAULT_ROLE = "member";
 
@@ -321,6 +322,8 @@ public class WomUtilsPlugin extends Plugin
 			// Set this to true here so when the plugin is enabled after the player has logged in
 			// the player name is set correctly for fetching competitions in onGameTick.
 			recentlyLoggedIn = true;
+
+			worldType = client.getWorldType();
 
 			clientThread.invokeLater(() -> {
 				Player local = client.getLocalPlayer();
@@ -663,7 +666,7 @@ public class WomUtilsPlugin extends Plugin
 	{
 		String url = new HttpUrl.Builder()
 			.scheme("https")
-			.host(isSeasonal ? "league.wiseoldman.net" : "wiseoldman.net")
+			.host(worldType.contains(WorldType.SEASONAL) ? "league.wiseoldman.net" : "wiseoldman.net")
 			.addPathSegment("groups")
 			.addPathSegment("" + config.groupId())
 			.build()
@@ -887,7 +890,7 @@ public class WomUtilsPlugin extends Plugin
 				}
 
 				recentlyLoggedIn = true;
-				isSeasonal = client.getWorldType().contains(WorldType.SEASONAL);
+				worldType = client.getWorldType();
 				break;
 			case LOGIN_SCREEN:
 				// When a player logs out we want to set these variables
