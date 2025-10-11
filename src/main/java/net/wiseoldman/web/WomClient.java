@@ -137,11 +137,6 @@ public class WomClient
 
 	void sendRequest(Request request, Callback callback)
 	{
-		if (this.plugin.worldType.contains(WorldType.TOURNAMENT_WORLD))
-		{
-			return;
-		}
-
 		okHttpClient.newCall(request).enqueue(callback);
 	}
 
@@ -475,6 +470,11 @@ public class WomClient
 
 	public void updatePlayer(String username, long accountHash)
 	{
+		if (this.plugin.worldType.contains(WorldType.TOURNAMENT_WORLD))
+		{
+			return;
+		}
+		
 		Request request = createRequest(new WomPlayerUpdate(accountHash), "players", username);
 		sendRequest(request);
 	}
