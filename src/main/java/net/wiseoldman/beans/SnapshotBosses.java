@@ -48,6 +48,7 @@ public class SnapshotBosses
 	Boss sarachnis;
 	Boss scorpia;
 	Boss scurrius;
+	Boss shellbane_gryphon;
 	Boss skotizo;
 	Boss sol_heredit;
 	Boss spindel;
@@ -164,6 +165,8 @@ public class SnapshotBosses
 				return getScorpia();
 			case SCURRIUS:
 				return getScurrius();
+			case SHELLBANE_GRYPHON:
+				return getShellbane_gryphon();
 			case SKOTIZO:
 				return getSkotizo();
 			case SOL_HEREDIT:

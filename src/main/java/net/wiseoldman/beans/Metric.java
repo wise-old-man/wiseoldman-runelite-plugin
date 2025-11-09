@@ -162,12 +162,16 @@ public enum Metric
 	RANGED(HiscoreSkill.RANGED),
 	@SerializedName("runecrafting")
 	RUNECRAFTING(HiscoreSkill.RUNECRAFT),
+	@SerializedName("sailing")
+	SAILING(HiscoreSkill.SAILING),
 	@SerializedName("sarachnis")
 	SARACHNIS(HiscoreSkill.SARACHNIS),
 	@SerializedName("scorpia")
 	SCORPIA(HiscoreSkill.SCORPIA),
 	@SerializedName("scurrius")
 	SCURRIUS(HiscoreSkill.SCURRIUS),
+	@SerializedName("shellbane_gryphon")
+	SHELLBANE_GRYPHON(HiscoreSkill.SHELLBANE_GRYPHON),
 	@SerializedName("skotizo")
 	SKOTIZO(HiscoreSkill.SKOTIZO),
 	@SerializedName("sol_heredit")
