@@ -1059,7 +1059,7 @@ public class WomUtilsPlugin extends Plugin
 				String groupRole = groupMembers.get(Text.toJagexName(cm.getName()).toLowerCase()).getRole();
 
 				// clanTitle=null syncs to default role "member" on WOM.
-				if (clanTitle != null && !clanTitle.getName().toLowerCase().replaceAll(" ", "_").equals(groupRole) || clanTitle == null && !groupRole.equals(DEFAULT_ROLE))
+				if (clanTitle != null && !clanTitle.getName().toLowerCase().replaceAll("[-\\s]", "_").equals(groupRole) || clanTitle == null && !groupRole.equals(DEFAULT_ROLE))
 				{
 					ranksChanged += 1;
 				}
