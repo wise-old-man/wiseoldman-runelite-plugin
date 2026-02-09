@@ -7,4 +7,5 @@ public class WomStatus
 {
 	String message;
 	String[] data;
+	GroupErrorCode code;
 }

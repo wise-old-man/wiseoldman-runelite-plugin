@@ -2,7 +2,6 @@ package net.wiseoldman.web;
 
 import com.google.gson.Gson;
 
-import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -10,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import net.runelite.api.WorldType;
 import net.runelite.client.RuneLiteProperties;
 import net.wiseoldman.WomUtilsPlugin;
+import net.wiseoldman.beans.GroupErrorCode;
 import net.wiseoldman.beans.GroupInfoWithMemberships;
 import net.wiseoldman.beans.NameChangeEntry;
 import net.wiseoldman.beans.ParticipantWithStanding;
@@ -243,30 +243,32 @@ public class WomClient
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
 
-			// This works for now because we only use this for opted out players.
-			if (data.getData() == null)
+			if (data.getCode() == GroupErrorCode.OPTED_OUT_MEMBERS_FOUND)
 			{
-				return;
+				String[] optedOutPlayers = Arrays.stream(data.getData()).map(String::toLowerCase).toArray(String[]::new);
+				boolean didRemove = this.clanMembers.removeIf(member -> Arrays.asList(optedOutPlayers).contains(member.getUsername().toLowerCase()));
+
+				// If no players were removed, don't send request so we don't end up in an endless loop
+				if (!didRemove)
+				{
+					return;
+				}
+
+				GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), this.clanMembers, this.roleOrders);
+				Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
+				sendRequest(request, this::syncClanMembersCallBack, this::handleSyncClanMembersException);
 			}
-
-			String[] optedOutPlayers = Arrays.stream(data.getData()).map(String::toLowerCase).toArray(String[]::new);
-			boolean didRemove = this.clanMembers.removeIf(member -> Arrays.asList(optedOutPlayers).contains(member.getUsername().toLowerCase()));
-
-			// If no players were removed, don't send request so we don't end up in an endless loop
-			if (!didRemove)
+			else if (data.getCode() == GroupErrorCode.INCORRECT_VERIFICATION_CODE)
 			{
-				return;
+				sendResponseToChat("Incorrect group verification code.", ERROR);
+				this.isSyncing = false;
 			}
-
-			GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), this.clanMembers, this.roleOrders);
-			Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
-			sendRequest(request, this::syncClanMembersCallBack, this::handleSyncClanMembersException);
 		}
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
+			log.error("Unhandled error while syncing wom group {}", data.getCode());
 			message = "Error: " + data.getMessage() + (this.plugin.worldType.contains(WorldType.SEASONAL) ? leagueError : "");
-
 			sendResponseToChat(message, ERROR);
 			this.isSyncing = false;
 		}
@@ -474,7 +476,7 @@ public class WomClient
 		{
 			return;
 		}
-		
+
 		Request request = createRequest(new WomPlayerUpdate(accountHash), "players", username);
 		sendRequest(request);
 	}
