@@ -2,6 +2,7 @@ package net.wiseoldman.web;
 
 import com.google.gson.Gson;
 
+import com.google.gson.JsonSyntaxException;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -221,6 +222,12 @@ public class WomClient
 		}
 
 		GroupInfoWithMemberships groupInfo = parseResponse(response, GroupInfoWithMemberships.class);
+
+		if (groupInfo == null)
+		{
+			return;
+		}
+
 		postEvent(new WomGroupSynced(groupInfo, true));
 	}
 
@@ -231,7 +238,10 @@ public class WomClient
 		if (response.isSuccessful())
 		{
 			GroupInfoWithMemberships data = parseResponse(response, GroupInfoWithMemberships.class);
-			postEvent(new WomGroupSynced(data));
+			if (data != null)
+			{
+				postEvent(new WomGroupSynced(data));
+			}
 			this.isSyncing = false;
 		}
 		else if (response.code() == 429)
@@ -243,7 +253,11 @@ public class WomClient
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
 
-			if (data.getCode() == GroupErrorCode.OPTED_OUT_MEMBERS_FOUND)
+			if (data == null)
+			{
+				this.isSyncing = false;
+			}
+			else if (data.getCode() == GroupErrorCode.OPTED_OUT_MEMBERS_FOUND)
 			{
 				String[] optedOutPlayers = Arrays.stream(data.getData()).map(String::toLowerCase).toArray(String[]::new);
 				boolean didRemove = this.clanMembers.removeIf(member -> Arrays.asList(optedOutPlayers).contains(member.getUsername().toLowerCase()));
@@ -267,9 +281,14 @@ public class WomClient
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
-			log.error("Unhandled error while syncing wom group {}", data.getCode());
-			message = "Error: " + data.getMessage() + (this.plugin.worldType.contains(WorldType.SEASONAL) ? leagueError : "");
-			sendResponseToChat(message, ERROR);
+
+			if (data != null)
+			{
+				log.error("Unhandled error while syncing wom group {}", data.getCode());
+				message = "Error: " + data.getMessage() + (this.plugin.worldType.contains(WorldType.SEASONAL) ? leagueError : "");
+				sendResponseToChat(message, ERROR);
+			}
+
 			this.isSyncing = false;
 		}
 		plugin.syncButton.setEnabled(this.isSyncing);
@@ -297,6 +316,12 @@ public class WomClient
 		if (response.isSuccessful())
 		{
 			ParticipantWithStanding[] comps = parseResponse(response, ParticipantWithStanding[].class);
+
+			if (comps == null)
+			{
+				return;
+			}
+
 			postEvent(new WomOngoingPlayerCompetitionsFetched(username, comps));
 			showRetry = false;
 		}
@@ -307,6 +332,12 @@ public class WomClient
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
+
+			if (data == null)
+			{
+				return;
+			}
+
 			String message = "Error: " + data.getMessage();
 			sendResponseToChat(message, ERROR);
 		}
@@ -323,6 +354,12 @@ public class WomClient
 		if (response.isSuccessful())
 		{
 			ParticipantWithCompetition[] comps = parseResponse(response, ParticipantWithCompetition[].class);
+
+			if (comps == null)
+			{
+				return;
+			}
+
 			postEvent(new WomUpcomingPlayerCompetitionsFetched(username, comps));
 			showRetry = false;
 		}
@@ -333,6 +370,12 @@ public class WomClient
 		else
 		{
 			WomStatus data = parseResponse(response, WomStatus.class);
+
+			if (data == null)
+			{
+				return;
+			}
+
 			String message = "Error: " + data.getMessage();
 			sendResponseToChat(message, ERROR);
 		}
@@ -367,7 +410,16 @@ public class WomClient
 			return null;
 		}
 
-		return gson.fromJson(body, clazz);
+		try
+		{
+			return gson.fromJson(body, clazz);
+		}
+		catch (JsonSyntaxException e)
+		{
+			log.error("API returned a non-json response: {}", body);
+			sendResponseToChat("Error handling server response, please try again in a few minutes.", ERROR);
+			return null;
+		}
 	}
 
 	private void sendResponseToChat(String message, Color color)
@@ -408,6 +460,11 @@ public class WomClient
 		}
 
 		final PlayerInfo info = parseResponse(response, PlayerInfo.class);
+
+		if (info == null)
+		{
+			return;
+		}
 
 		final double time;
 
