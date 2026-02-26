@@ -12,6 +12,7 @@ public class SnapshotBosses
 	Boss araxxor;
 	Boss artio;
 	Boss barrows_chests;
+	Boss brutus;
 	Boss bryophyta;
 	Boss callisto;
 	Boss calvarion;
@@ -91,6 +92,8 @@ public class SnapshotBosses
 				return getArtio();
 			case BARROWS_CHESTS:
 				return getBarrows_chests();
+			case BRUTUS:
+				return getBrutus();
 			case BRYOPHYTA:
 				return getBryophyta();
 			case CALLISTO:
