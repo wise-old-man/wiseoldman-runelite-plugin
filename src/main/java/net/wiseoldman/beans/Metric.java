@@ -32,6 +32,8 @@ public enum Metric
 	BOUNTY_HUNTER_HUNTER(HiscoreSkill.BOUNTY_HUNTER_HUNTER),
 	@SerializedName("bounty_hunter_rogue")
 	BOUNTY_HUNTER_ROGUE(HiscoreSkill.BOUNTY_HUNTER_ROGUE),
+	@SerializedName("brutus")
+	BRUTUS(HiscoreSkill.BRUTUS),
 	@SerializedName("bryophyta")
 	BRYOPHYTA(HiscoreSkill.BRYOPHYTA),
 	@SerializedName("callisto")
