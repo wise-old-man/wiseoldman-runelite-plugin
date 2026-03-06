@@ -22,7 +22,7 @@ public class ActivitiesPanel extends JPanel
 	 * Activities, ordered in the way they should be displayed in the panel
 	 */
 	private static final List<HiscoreSkill> ACTIVITIES = ImmutableList.of(
-		LEAGUE_POINTS, BOUNTY_HUNTER_HUNTER, BOUNTY_HUNTER_ROGUE,
+		BOUNTY_HUNTER_HUNTER, BOUNTY_HUNTER_ROGUE,
 		CLUE_SCROLL_ALL, CLUE_SCROLL_BEGINNER, CLUE_SCROLL_EASY,
 		CLUE_SCROLL_MEDIUM, CLUE_SCROLL_HARD, CLUE_SCROLL_ELITE,
 		CLUE_SCROLL_MASTER, LAST_MAN_STANDING, PVP_ARENA_RANK,
@@ -44,10 +44,7 @@ public class ActivitiesPanel extends JPanel
 		for (int i = 0; i < ACTIVITIES.size(); i++)
 		{
 			HiscoreSkill activity = ACTIVITIES.get(i);
-			TableRow row = new TableRow(
-				activity.name(), activity.getName(), HiscoreSkillType.ACTIVITY,
-				"score", "rank"
-			);
+			TableRow row = getTableRow(activity);
 			row.setBackground(ROW_COLORS[1 - i % 2]);
 
 			tableRows.add(new RowPair(activity, row));
@@ -64,6 +61,13 @@ public class ActivitiesPanel extends JPanel
 
 		Snapshot latestSnapshot = info.getLatestSnapshot();
 
+		if (latestSnapshot.getData().getActivities().getLeague_points() != null)
+		{
+			TableRow leaguePointsRow = getTableRow(LEAGUE_POINTS);
+			tableRows.add(0, new RowPair(LEAGUE_POINTS, leaguePointsRow));
+			add(leaguePointsRow, 1);
+		}
+
 		for (RowPair rp : tableRows)
 		{
 			HiscoreSkill minigame = rp.getSkill();
@@ -75,6 +79,15 @@ public class ActivitiesPanel extends JPanel
 
 	public void reset()
 	{
+		tableRows.removeIf(rp -> {
+			if (rp.getSkill() == LEAGUE_POINTS)
+			{
+				remove(rp.getRow());
+				return true;
+			}
+			return false;
+		});
+
 		for (RowPair rp : tableRows)
 		{
 			TableRow row = rp.getRow();
@@ -86,5 +99,13 @@ public class ActivitiesPanel extends JPanel
 				label.setToolTipText("");
 			}
 		}
+	}
+
+	private TableRow getTableRow(HiscoreSkill activity)
+	{
+		return new TableRow(
+			activity.name(), activity.getName(), HiscoreSkillType.ACTIVITY,
+			"score", "rank"
+		);
 	}
 }
