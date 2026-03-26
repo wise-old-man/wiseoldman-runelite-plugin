@@ -905,15 +905,9 @@ public class WomUtilsPlugin extends Plugin
 				tickCounter = 0;
 				comparedClanMembers = false;
 			case HOPPING:
-				Player local = client.getLocalPlayer();
-				if (local == null)
-				{
-					return;
-				}
-
 				long totalXp = client.getOverallExperience();
 				// Don't submit update unless xp threshold is reached
-				if (Math.abs(totalXp - lastXp) > XP_THRESHOLD || levelupThisSession)
+				if (playerName != null && (Math.abs(totalXp - lastXp) > XP_THRESHOLD || levelupThisSession))
 				{
 					updateMostRecentPlayer();
 					lastXp = totalXp;
