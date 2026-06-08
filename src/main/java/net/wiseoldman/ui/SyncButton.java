@@ -1,6 +1,8 @@
 package net.wiseoldman.ui;
 
 import com.google.common.util.concurrent.Runnables;
+
+import java.time.ZoneOffset;
 import java.util.stream.Collectors;
 import net.runelite.api.Client;
 import net.runelite.api.FontID;
@@ -144,7 +146,7 @@ public class SyncButton
 
 		if (!overwrite)
 		{
-			groupMembers.forEach((k, v) -> clanMembers.put(k, new Member(v.getPlayer().getDisplayName(), v.getRole())));
+			groupMembers.forEach((k, v) -> clanMembers.put(k, new Member(v.getPlayer().getDisplayName(), v.getRole(), null)));
 		}
 
 		for (ClanMember clanMember : clanSettings.getMembers())
@@ -170,7 +172,7 @@ public class SyncButton
 				continue;
 			}
 
-			clanMembers.put(memberName.toLowerCase(), new Member(memberName, role));
+			clanMembers.put(memberName.toLowerCase(), new Member(memberName, role, clanMember.getJoinDate().toString()));
 		}
 
 		for (String name : alwaysIncludedOnSync)
@@ -178,7 +180,7 @@ public class SyncButton
 			String nameLower = name.toLowerCase();
 			if (!clanMembers.containsKey(nameLower))
 			{
-				clanMembers.put(nameLower, new Member(name, "member"));
+				clanMembers.put(nameLower, new Member(name, "member", null));
 			}
 		}
 
