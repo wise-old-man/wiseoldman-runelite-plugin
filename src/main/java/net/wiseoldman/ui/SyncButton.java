@@ -2,7 +2,6 @@ package net.wiseoldman.ui;
 
 import com.google.common.util.concurrent.Runnables;
 
-import java.time.ZoneOffset;
 import java.util.stream.Collectors;
 import net.runelite.api.Client;
 import net.runelite.api.FontID;
