@@ -357,7 +357,7 @@ public class WomUtilsPlugin extends Plugin
 		}
 
 
-		alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
+		alwaysIncludedOnSync.addAll(SPLITTER.splitToList(Strings.nullToEmpty(config.alwaysIncludedOnSync())));
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "wom-icon.png");
 
@@ -711,7 +711,7 @@ public class WomUtilsPlugin extends Plugin
 		if (event.getKey().equals("alwaysIncludedOnSync"))
 		{
 			alwaysIncludedOnSync.clear();
-			alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
+			alwaysIncludedOnSync.addAll(SPLITTER.splitToList(Strings.nullToEmpty(config.alwaysIncludedOnSync())));
 		}
 	}
 
