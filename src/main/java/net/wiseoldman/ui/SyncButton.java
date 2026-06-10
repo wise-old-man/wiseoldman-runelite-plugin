@@ -145,7 +145,7 @@ public class SyncButton
 
 		if (!overwrite)
 		{
-			groupMembers.forEach((k, v) -> clanMembers.put(k, new Member(v.getPlayer().getDisplayName(), v.getRole(), null)));
+			groupMembers.forEach((k, v) -> clanMembers.put(k.toLowerCase(), new Member(v.getPlayer().getDisplayName(), v.getRole(), null)));
 		}
 
 		for (ClanMember clanMember : clanSettings.getMembers())
