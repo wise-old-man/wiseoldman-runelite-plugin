@@ -7,5 +7,5 @@ public class Member
 {
     String username;
     String role;
-    String joinedAt;
+    String clientSyncJoinedAt;
 }
