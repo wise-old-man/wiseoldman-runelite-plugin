@@ -262,6 +262,7 @@ public class WomUtilsPlugin extends Plugin
 
 	private boolean comparedClanMembers = false;
 	private int tickCounter = 0;
+    private boolean hasLoggedInThisSession = false;
 
 	@Getter
 	private static String pluginVersion = "0.0.0";
@@ -377,6 +378,11 @@ public class WomUtilsPlugin extends Plugin
 	@Override
 	protected void shutDown() throws Exception
 	{
+        if (playerName != null && hasLoggedInThisSession)
+        {
+            updateMostRecentPlayer(true);
+        }
+
 		removeGroupMenuOptions();
 		menuManager.removePlayerMenuItem(LOOKUP);
 
@@ -937,6 +943,12 @@ public class WomUtilsPlugin extends Plugin
 			womClient.importGroupMembers();
 			recentlyLoggedIn = false;
 			visitedLoginScreen = false;
+
+            if (!hasLoggedInThisSession)
+            {
+                updateMostRecentPlayer(true);
+                hasLoggedInThisSession = true;
+            }
 		}
 
 		if (!womPanel.noCompetitionsErrorPanel.isVisible() &&
