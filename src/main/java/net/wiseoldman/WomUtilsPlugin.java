@@ -262,6 +262,7 @@ public class WomUtilsPlugin extends Plugin
 
 	private boolean comparedClanMembers = false;
 	private int tickCounter = 0;
+	private boolean hasLoggedInThisSession = false;
 
 	@Getter
 	private static String pluginVersion = "0.0.0";
@@ -928,15 +929,25 @@ public class WomUtilsPlugin extends Plugin
 
 		Player local = client.getLocalPlayer();
 
-		if (visitedLoginScreen && recentlyLoggedIn && local != null)
+		if (local != null)
 		{
 			playerName = local.getName();
-			accountHash = client.getAccountHash();
-			womClient.fetchOngoingPlayerCompetitions(playerName);
-			womClient.fetchUpcomingPlayerCompetitions(playerName);
-			womClient.importGroupMembers();
-			recentlyLoggedIn = false;
-			visitedLoginScreen = false;
+
+			if (!hasLoggedInThisSession && client.getGameState() == GameState.LOGGED_IN)
+			{
+				updateMostRecentPlayer(true);
+				hasLoggedInThisSession = true;
+			}
+
+			if (visitedLoginScreen && recentlyLoggedIn)
+			{
+				accountHash = client.getAccountHash();
+				womClient.fetchOngoingPlayerCompetitions(playerName);
+				womClient.fetchUpcomingPlayerCompetitions(playerName);
+				womClient.importGroupMembers();
+				recentlyLoggedIn = false;
+				visitedLoginScreen = false;
+			}
 		}
 
 		if (!womPanel.noCompetitionsErrorPanel.isVisible() &&
