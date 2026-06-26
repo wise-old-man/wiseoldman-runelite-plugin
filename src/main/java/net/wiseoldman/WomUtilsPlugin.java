@@ -25,6 +25,8 @@ import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.widgets.WidgetUtil;
+import net.runelite.client.externalplugins.ExternalPluginManager;
+import net.runelite.client.externalplugins.PluginHubManifest;
 import net.wiseoldman.beans.CanvasCompetition;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.NameChangeEntry;
@@ -272,16 +274,7 @@ public class WomUtilsPlugin extends Plugin
 		WORKING_DIR = new File(RuneLite.RUNELITE_DIR, "wom-utils");
 		WORKING_DIR.mkdirs();
 
-		try (InputStream inputStream = WomUtilsPlugin.class.getResourceAsStream("/version.ini"))
-		{
-			Properties props = new Properties();
-			props.load(inputStream);
-			pluginVersion = props.getProperty("pluginVersion");
-		}
-		catch (IOException e)
-		{
-			log.error("Failed to read version.ini", e);
-		}
+		pluginVersion = getPluginVersion();
 	}
 
 	@Override
@@ -1381,6 +1374,18 @@ public class WomUtilsPlugin extends Plugin
 		{
 			return new Color(client.getVarpValue(VarPlayerID.OPTION_CHAT_COLOUR_CLANBROADCAST_TRANSPARENT) - 1);
 		}
+	}
+
+	public static String getPluginVersion()
+	{
+		PluginHubManifest.DisplayData displayData = ExternalPluginManager.getDisplayData(WomUtilsPlugin.class);
+
+		if (displayData != null && displayData.getVersion() != null)
+		{
+			return displayData.getVersion();
+		}
+
+		return "DEV";
 	}
 
 	@Provides
