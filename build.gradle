@@ -69,13 +69,3 @@ tasks.register('shadowJar', Jar) {
 	archiveClassifier.set('shadow')
 	archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
 }
-tasks.register('createProperties'){dependsOn processResources
-	doLast {
-		def versionFile = new File("${layout.buildDirectory.asFile.get()}/resources/main/version.ini")
-		versionFile.text = "pluginVersion=$project.version"
-	}
-}
-
-classes {
-	dependsOn createProperties
-}
