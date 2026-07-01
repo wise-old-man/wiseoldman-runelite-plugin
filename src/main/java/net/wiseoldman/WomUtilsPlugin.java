@@ -265,8 +265,6 @@ public class WomUtilsPlugin extends Plugin
 	private boolean comparedClanMembers = false;
 	private int tickCounter = 0;
 	private boolean hasLoggedInThisSession = false;
-
-	@Getter
 	private static String pluginVersion = "0.0.0";
 
 	static

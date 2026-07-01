@@ -15,19 +15,7 @@ public class Utils
 	private static final Icon FRESH_START_ICON = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "fresh_start.png"));
 	private static final Icon REGULAR_ICON = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "regular.png"));
 
-    public static int getMinimumKc(HiscoreSkill boss)
-    {
-        switch (boss)
-        {
-            case MIMIC:
-            case TZKAL_ZUK:
-                return 1;
-            default:
-                return 5;
-        }
-    }
-
-    public static Icon getIcon(PlayerType type)
+	public static Icon getIcon(PlayerType type)
 	{
 		switch (type)
 		{
@@ -44,9 +32,11 @@ public class Utils
 		}
 	}
 
-	public static String ordinalOf(int i) {
-		String[] suffixes = new String[] { "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th" };
-		switch (i % 100) {
+	public static String ordinalOf(int i)
+	{
+		String[] suffixes = new String[]{"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"};
+		switch (i % 100)
+		{
 			case 11:
 			case 12:
 			case 13:
