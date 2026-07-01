@@ -40,6 +40,7 @@ public class SnapshotBosses
 	Boss kreearra;
 	Boss kril_tsutsaroth;
 	Boss lunar_chests;
+	Boss maggot_king;
 	Boss mimic;
 	Boss nex;
 	Boss nightmare;
@@ -150,6 +151,8 @@ public class SnapshotBosses
 				return getKril_tsutsaroth();
 			case LUNAR_CHESTS:
 				return getLunar_chests();
+			case MAGGOT_KING:
+				return getMaggot_king();
 			case MIMIC:
 				return getMimic();
 			case NEX:
