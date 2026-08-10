@@ -28,6 +28,7 @@ import net.wiseoldman.WomUtilsConfig;
 import net.wiseoldman.events.WomGroupSynced;
 import java.awt.Color;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -402,7 +403,7 @@ public class WomClient
 		String body;
 		try
 		{
-			body = r.body().string();
+			body = new String(r.body().bytes(), StandardCharsets.UTF_8);
 		}
 		catch (IOException e)
 		{
