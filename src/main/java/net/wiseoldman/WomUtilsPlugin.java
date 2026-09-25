@@ -52,14 +52,12 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -67,7 +65,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -104,10 +101,8 @@ import net.runelite.client.game.chatbox.ChatboxPanelManager;
 import net.runelite.client.menus.MenuManager;
 import net.runelite.client.menus.WidgetMenuOption;
 import net.runelite.client.plugins.Plugin;
-import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginManager;
-import net.runelite.client.plugins.xpupdater.XpUpdaterConfig;
 import net.runelite.client.plugins.xpupdater.XpUpdaterPlugin;
 import net.runelite.client.task.Schedule;
 import net.runelite.client.ui.ClientToolbar;
@@ -121,7 +116,6 @@ import net.runelite.client.util.Text;
 import okhttp3.HttpUrl;
 
 @Slf4j
-@PluginDependency(XpUpdaterPlugin.class)
 @PluginDescriptor(
 	name = "Wise Old Man",
 	tags = {"wom", "utils", "group", "xp"},
@@ -211,7 +205,7 @@ public class WomUtilsPlugin extends Plugin
 	private WomClient womClient;
 
 	@Inject
-	private XpUpdaterConfig xpUpdaterConfig;
+	private ConfigManager configManager;
 
 	@Inject
 	private PluginManager pluginManager;
@@ -307,7 +301,6 @@ public class WomUtilsPlugin extends Plugin
 		{
 			addGroupBrowseOptions();
 		}
-
 
 		if (client.getGameState() == GameState.LOGGED_IN)
 		{
@@ -1108,7 +1101,9 @@ public class WomUtilsPlugin extends Plugin
 			.getPlugins().stream()
 			.noneMatch(p -> p instanceof XpUpdaterPlugin && pluginManager.isPluginEnabled(p));
 
-		if (always || !xpUpdaterConfig.wiseoldman() || coreUpdaterIsOff)
+		boolean coreUpdaterWomOption = configManager.getConfiguration("xpupdater", "wiseoldman", boolean.class);
+
+		if (always || !coreUpdaterWomOption || coreUpdaterIsOff)
 		{
 			log.debug("Submitting update for {}", playerName);
 			// Send update requests even if the user has forgotten to enable player updates in the core plugin
