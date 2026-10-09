@@ -139,10 +139,22 @@ public interface WomUtilsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "autoSyncClan",
+		name = "Auto Sync Clan",
+		description = "Automatically sync the in-game clan to the configured WOM group after login when differences are detected. This can add, remove, and update group members.",
+		position = 4,
+		section = groupConfig
+	)
+	default boolean autoSyncClan()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "alwaysIncludedOnSync",
 		name = "Always Included",
 		description = "Players that will always be included in the group regardless of clan sync method, comma separated names",
-		position = 4,
+		position = 5,
 		section = groupConfig
 	)
 	default String alwaysIncludedOnSync()
@@ -154,7 +166,7 @@ public interface WomUtilsConfig extends Config
 		keyName = "groupId",
 		name = "Group Id",
 		description = "The group id in WOM",
-		position = 5,
+		position = 6,
 		section = groupConfig
 	)
 	default int groupId()
@@ -167,7 +179,7 @@ public interface WomUtilsConfig extends Config
 		name = "Verification code",
 		description = "Verification code for the WOM group",
 		secret = true,
-		position = 6,
+		position = 7,
 		section = groupConfig
 	)
 	default String verificationCode()
