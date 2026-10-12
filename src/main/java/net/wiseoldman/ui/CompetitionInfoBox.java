@@ -1,10 +1,16 @@
 package net.wiseoldman.ui;
 
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionProgress;
 import net.wiseoldman.beans.Metric;
+import net.wiseoldman.beans.CompetitionMetric;
 import net.wiseoldman.panel.CompetitionCardPanel;
 import net.wiseoldman.util.Utils;
 import java.awt.Color;
@@ -27,20 +33,33 @@ public class CompetitionInfoBox extends InfoBox
 
 	public CompetitionInfoBox(CompetitionCardPanel p, WomUtilsPlugin plugin)
 	{
-		super(p.getCompetition().getMetric().loadIcon(p.getCompetition().getMetric().getType()), plugin);
+		super(null, plugin);
 		this.competition = p.getCompetition();
 		this.rank = p.getRank();
 		this.progress = p.getProgress();
 		this.plugin = plugin;
+
+		int metricsAmount = p.getCompetition().getMetrics().length;
+		BufferedImage icon = p.getCompetition().getMetric().loadIcon(p.getCompetition().getMetric().getType());
+		if (metricsAmount > 1)
+		{
+			Graphics2D g2d = icon.createGraphics();
+			g2d.setFont(new Font("Arial", Font.BOLD, 9));
+			g2d.setColor(Color.WHITE);
+			g2d.drawString("+" + (metricsAmount - 1), icon.getWidth() / 2 - 5, icon.getHeight() / 2 - 2);
+			g2d.dispose();
+		}
+		this.setImage(icon);
 	}
 
 	@Override
 	public String getTooltip()
 	{
-		Metric metric = competition.getMetric();
+		CompetitionMetric[] metrics = competition.getMetrics();
 		StringBuilder sb = new StringBuilder();
 		sb.append(competition.getTitle()).append("</br>")
-			.append("Metric: ").append(metric.getName()).append("</br>")
+			.append("Metrics: ").append(Arrays.stream(metrics).map(m -> m.getMetric().getName())
+				.collect(Collectors.joining(", "))).append("</br>")
 			.append(competition.getTimeStatus());
 		if (progress != null)
 		{
@@ -52,7 +71,7 @@ public class CompetitionInfoBox extends InfoBox
 				sb.append("Ranked: ").append(coloredRank);
 
 				final DecimalFormat df;
-				if (metric == Metric.EHB || metric == Metric.EHP)
+				if (metrics[0].getMetric() == Metric.EHB || metrics[0].getMetric() == Metric.EHP)
 				{
 					// These are the only ones actually in decimal
 					df = new DecimalFormat("####.##");
@@ -66,14 +85,14 @@ public class CompetitionInfoBox extends InfoBox
 				String coloredProgress = ColorUtil.wrapWithColorTag(formattedProgress, Color.GREEN);
 				sb.append(" (Gained ").append(coloredProgress);
 
-				switch (metric)
+				switch (metrics[0].getMetric())
 				{
 					case EHB:
 					case EHP:
 						sb.append(" hours");
 						break;
 					default:
-						sb.append(getUnitForType(metric.getType()));
+						sb.append(getUnitForType(metrics[0].getMetric().getType()));
 				}
 				sb.append(")");
 			}

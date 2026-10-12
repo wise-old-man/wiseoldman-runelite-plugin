@@ -31,6 +31,7 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.ColorUtil;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.LinkBrowser;
+import net.runelite.client.util.QuantityFormatter;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.Competition;
 import net.wiseoldman.beans.CompetitionMetric;
@@ -105,7 +106,7 @@ public class CompetitionCardPanel extends JPanel
 		JLabel gainedLabel = new JLabel(String.format(INFO_LABEL_TEMPLATE, LIGHT_GRAY, "Gained", "", gained > 0 ? GREEN : WHITE,
 			(gained > 0 ? "+" : "") + Format.formatNumber(gained)));
 		gainedLabel.setFont(FontManager.getRunescapeSmallFont());
-//		gainedLabel.setToolTipText(String.format("%,.1f", p.getProgress().getGained()));
+		gainedLabel.setToolTipText(QuantityFormatter.formatNumber(gained));
 		gainedLabel.setPreferredSize(new Dimension(53, gainedLabel.getPreferredSize().height));
 
 		JLabel rankLabel = new JLabel(String.format(INFO_LABEL_TEMPLATE, LIGHT_GRAY, "Rank", "", WHITE, Utils.ordinalOf(rank)));
@@ -276,7 +277,7 @@ public class CompetitionCardPanel extends JPanel
 		ImageIcon iconBg = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "icon_bg.png"));
 
 		int iconWidth = iconBg.getIconWidth();
-		int startX = 4;
+		int startX = 8;
 		int overlap = 7;
 
 		int lastBadgeX = startX + ((totalBadges - 1) * (iconWidth - overlap));
@@ -293,13 +294,13 @@ public class CompetitionCardPanel extends JPanel
 		{
 			ImageIcon metricIcon = new ImageIcon(metrics[i].getMetric().loadIcon(metrics[i].getMetric().getType()));
 			ImageIcon combinedImage = createIconBadge(iconBg, metricIcon);
-			addBadgeToPanel(fixedIconPanel, combinedImage, i, metrics[i].getMetric().getName());
+			addBadgeToPanel(fixedIconPanel, combinedImage, i, startX, metrics[i].getMetric().getName());
 		}
 
 		if (metrics.length > 2)
 		{
 			int extraCount = metrics.length - 2;
-			ImageIcon combinedIcon = createIconBadge(iconBg, "+" + extraCount);
+			ImageIcon combinedIcon = createIconBadge(iconBg, "+" + Math.min(extraCount, 99));
 
 			StringBuilder sb = new StringBuilder("<html><body><b>+</b><br>");
 			for (int i = 2; i < metrics.length; i++)
@@ -312,7 +313,7 @@ public class CompetitionCardPanel extends JPanel
 			}
 			sb.append("</body></html>");
 
-			addBadgeToPanel(fixedIconPanel, combinedIcon, 2, sb.toString());
+			addBadgeToPanel(fixedIconPanel, combinedIcon, 2, startX, sb.toString());
 		}
 
 		statusDotLabel.setFont(new Font("Arial", Font.BOLD, 9));
@@ -368,10 +369,10 @@ public class CompetitionCardPanel extends JPanel
 		return new ImageIcon(combinedImage);
 	}
 
-	private void addBadgeToPanel(JPanel panel, ImageIcon metricBadge, int index, String toolTip)
+	private void addBadgeToPanel(JPanel panel, ImageIcon metricBadge, int index, int startX, String toolTip)
 	{
 		JLabel label = new JLabel(metricBadge);
-		int currentX = 4 + (index * (metricBadge.getIconWidth() - 7));
+		int currentX = startX + (index * (metricBadge.getIconWidth() - 7));
 		int currentY = (40 - metricBadge.getIconHeight()) / 2;
 
 		label.setBounds(currentX, currentY, metricBadge.getIconWidth(), metricBadge.getIconHeight());
@@ -407,7 +408,7 @@ public class CompetitionCardPanel extends JPanel
 		titleLabel.setForeground(Color.white);
 //		titleLabel.setToolTipText(title);
 		titlePanel.add(titleLabel, BorderLayout.NORTH);
-		titlePanel.setBorder(new EmptyBorder(8, 0, 8, 0));
+		titlePanel.setBorder(new EmptyBorder(8, 0, 8, 8));
 
 
 		if (group != null)
