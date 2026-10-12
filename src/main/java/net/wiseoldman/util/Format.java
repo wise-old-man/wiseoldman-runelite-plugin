@@ -24,88 +24,96 @@
  */
 package net.wiseoldman.util;
 
-import net.runelite.client.util.QuantityFormatter;
-
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.time.*;
+import java.text.NumberFormat;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Format
 {
-    public static String formatNumber(long num)
-    {
-        if ((num < 10000 && num > -10000))
-        {
-            return QuantityFormatter.formatNumber(num);
-        }
+	public static String formatNumber(long num)
+	{
+		return formatNumber((double) num);
+	}
 
-        DecimalFormat df = new DecimalFormat();
-        df.setGroupingUsed(false);
-        df.setRoundingMode(RoundingMode.FLOOR);
-        df.setMaximumFractionDigits(2);
+	public static String formatNumber(double num)
+	{
+		NumberFormat nf = NumberFormat.getNumberInstance();
+		nf.setMaximumFractionDigits(0);
 
-        // < 10 million
-        if (num < 10_000_000 && num > -10_000_000)
-        {
-            df.setMaximumFractionDigits(0);
-            return df.format(num / 1000.0) + "k";
-        }
+		if (num < 10000 && num > -10000)
+		{
+			if (num % 1 != 0)
+			{
+				double rounded = Math.round(num * 100.0) / 100.0;
+				return nf.format(rounded);
 
-        // < 1 billion
-        if (num < 1_000_000_000 && num > -1_000_000_000)
-        {
-            return df.format( num / 1_000_000.0) + "m";
-        }
+			}
+			return nf.format(num);
+		}
 
-        return df.format(num / 1_000_000_000.0) + "b";
-    }
+		if (num < 100_000 && num > -100_000)
+		{
+			double val = num / 1000.0;
+			return (long) val + "k";
+		}
 
-    public static String formatNumber(double num)
-    {
-        if ((num < 10000 && num > -10000))
-        {
-            return String.format("%.0f", num);
-        }
+		if (num < 10_000_000 && num > -10_000_000)
+		{
+			return Math.round(num / 1000.0) + "k";
+		}
 
-        DecimalFormat df = new DecimalFormat();
-        df.setRoundingMode(RoundingMode.FLOOR);
-        df.setMaximumFractionDigits(2);
+		if (num < 1_000_000_000 && num > -1_000_000_000)
+		{
+			double val = num / 1_000_000.0;
+			if (val % 1 == 0)
+			{
+				return (long) val + "m";
+			}
+			return String.format("%.2fm", val);
+		}
 
-        return df.format(num / 1000.0) + "k";
-    }
+		double val = num / 1_000_000_000.0;
+		if (val % 1 == 0)
+		{
+			return (long) val + "b";
+		}
+		return String.format("%.2fb", val);
+	}
 
-    public static String formatDate(String date, boolean relative)
-    {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm");
-        ZoneId localZone = ZoneId.systemDefault();
-        ZonedDateTime updatedAt = Instant.parse(date).atZone(localZone);
+	public static String formatDate(String date, boolean relative)
+	{
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm");
+		ZoneId localZone = ZoneId.systemDefault();
+		ZonedDateTime updatedAt = Instant.parse(date).atZone(localZone);
 
-        if (relative)
-        {
-            String lastUpdated = "";
-            ZonedDateTime now = Instant.now().atZone(localZone);
-            long difference = Duration.between(updatedAt, now).toHours();
+		if (relative)
+		{
+			String lastUpdated = "";
+			ZonedDateTime now = Instant.now().atZone(localZone);
+			long difference = Duration.between(updatedAt, now).toHours();
 
-            if (difference == 0)
-            {
-                return "less than 1 hour ago";
-            }
+			if (difference == 0)
+			{
+				return "less than 1 hour ago";
+			}
 
-            long days = difference / 24;
-            long hours = difference % 24;
+			long days = difference / 24;
+			long hours = difference % 24;
 
-            String dayUnit = days > 1 ? " days, " : " day, ";
-            String hourUnit = hours > 1 ? " hours ago" : " hour ago";
+			String dayUnit = days > 1 ? " days, " : " day, ";
+			String hourUnit = hours > 1 ? " hours ago" : " hour ago";
 
-            lastUpdated += days > 0 ? days + dayUnit : "";
-            lastUpdated += hours > 0 ? hours + hourUnit : "";
+			lastUpdated += days > 0 ? days + dayUnit : "";
+			lastUpdated += hours > 0 ? hours + hourUnit : "";
 
-            return lastUpdated;
-        }
-        else
-        {
-            return formatter.format(updatedAt);
-        }
-    }
+			return lastUpdated;
+		}
+		else
+		{
+			return formatter.format(updatedAt);
+		}
+	}
 }

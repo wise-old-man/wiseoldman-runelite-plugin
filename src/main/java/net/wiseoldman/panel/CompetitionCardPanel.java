@@ -31,11 +31,12 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.ColorUtil;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.LinkBrowser;
+import net.runelite.client.util.QuantityFormatter;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.Competition;
+import net.wiseoldman.beans.CompetitionMetric;
 import net.wiseoldman.beans.CompetitionProgress;
 import net.wiseoldman.beans.GroupInfo;
-import net.wiseoldman.beans.Metric;
 import net.wiseoldman.beans.ParticipantWithCompetition;
 import net.wiseoldman.beans.ParticipantWithStanding;
 import net.wiseoldman.util.Format;
@@ -98,15 +99,14 @@ public class CompetitionCardPanel extends JPanel
 		this.progress = p.getProgress();
 		this.rank = p.getRank();
 
-		Metric metric = p.getCompetition().getMetric();
-
-		setupPanel(competition.getTitle(), metric, competition.getGroup());
+		CompetitionMetric[] metrics = p.getCompetition().getMetrics();
+		setupPanel(competition.getTitle(), metrics, competition.getGroup());
 
 		double gained = progress.getGained();
 		JLabel gainedLabel = new JLabel(String.format(INFO_LABEL_TEMPLATE, LIGHT_GRAY, "Gained", "", gained > 0 ? GREEN : WHITE,
 			(gained > 0 ? "+" : "") + Format.formatNumber(gained)));
 		gainedLabel.setFont(FontManager.getRunescapeSmallFont());
-//		gainedLabel.setToolTipText(String.format("%,.1f", p.getProgress().getGained()));
+		gainedLabel.setToolTipText(QuantityFormatter.formatNumber(gained));
 		gainedLabel.setPreferredSize(new Dimension(53, gainedLabel.getPreferredSize().height));
 
 		JLabel rankLabel = new JLabel(String.format(INFO_LABEL_TEMPLATE, LIGHT_GRAY, "Rank", "", WHITE, Utils.ordinalOf(rank)));
@@ -129,10 +129,9 @@ public class CompetitionCardPanel extends JPanel
 		this.progress = null;
 		this.rank = -1;
 
-		Metric metric = p.getCompetition().getMetric();
 		Competition competition = p.getCompetition();
-
-		setupPanel(competition.getTitle(), metric, competition.getGroup());
+		CompetitionMetric[] metrics = competition.getMetrics();
+		setupPanel(competition.getTitle(), metrics, competition.getGroup());
 
 		container.add(headerPanel, BorderLayout.NORTH);
 		container.add(infoPanel, BorderLayout.CENTER);
@@ -140,7 +139,7 @@ public class CompetitionCardPanel extends JPanel
 		add(container);
 	}
 
-	private void setupPanel(String title, Metric metric, GroupInfo group)
+	private void setupPanel(String title, CompetitionMetric[] metrics, GroupInfo group)
 	{
 		groupName = group != null ? group.getName() : null;
 		fetchedStatus = competition.hasStarted() ? "ongoing" : "upcoming";
@@ -151,7 +150,7 @@ public class CompetitionCardPanel extends JPanel
 		container.setLayout(new BorderLayout());
 		container.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
-		createHeaderPanel(title, metric, group);
+		createHeaderPanel(title, metrics, group);
 
 		infoPanel.setLayout(new DynamicGridLayout(1, 4));
 		infoPanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
@@ -254,7 +253,7 @@ public class CompetitionCardPanel extends JPanel
 		timerLabel.setText(String.format(INFO_LABEL_TEMPLATE, LIGHT_GRAY, keyValue[0], "", WHITE, keyValue[1]));
 	}
 
-	private void createHeaderPanel(String title, Metric metric, GroupInfo group)
+	private void createHeaderPanel(String title, CompetitionMetric[] metrics, GroupInfo group)
 	{
 		headerPanel.setLayout(new GridBagLayout());
 		headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
@@ -266,22 +265,68 @@ public class CompetitionCardPanel extends JPanel
 
 		GridBagConstraints iconConstraints = new GridBagConstraints();
 
-		headerPanel.add(createIconPanel(metric), iconConstraints);
+		headerPanel.add(createIconPanel(metrics), iconConstraints);
 		headerPanel.add(createTitlePanel(title, group), titleConstraints);
 	}
 
-	private JPanel createIconPanel(Metric metric)
+	private JPanel createIconPanel(CompetitionMetric[] metrics)
 	{
-		JPanel fixedIconPanel = new JPanel(new BorderLayout());
-		fixedIconPanel.setPreferredSize(new Dimension(41, 40));
-		fixedIconPanel.setMinimumSize(new Dimension(41, 40));
-		fixedIconPanel.setMaximumSize(new Dimension(41, 40));
-		fixedIconPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		fixedIconPanel.setBorder(new EmptyBorder(0, 8, 0, 4));
+		int iconsToShow = Math.min(metrics.length, 2);
+		int totalBadges = iconsToShow + (metrics.length > 2 ? 1 : 0);
 
 		ImageIcon iconBg = new ImageIcon(ImageUtil.loadImageResource(WomUtilsPlugin.class, "icon_bg.png"));
-		ImageIcon metricIcon = new ImageIcon(metric.loadIcon(metric.getType()));
 
+		int iconWidth = iconBg.getIconWidth();
+		int startX = 8;
+		int overlap = 7;
+
+		int lastBadgeX = startX + ((totalBadges - 1) * (iconWidth - overlap));
+		int panelWidth = lastBadgeX + iconWidth + startX;
+
+		JPanel fixedIconPanel = new JPanel(null);
+		fixedIconPanel.setPreferredSize(new Dimension(panelWidth, 40));
+		fixedIconPanel.setMinimumSize(new Dimension(panelWidth, 40));
+		fixedIconPanel.setMaximumSize(new Dimension(panelWidth, 40));
+		fixedIconPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		fixedIconPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
+
+		for (int i = 0; i < iconsToShow; i++)
+		{
+			ImageIcon metricIcon = new ImageIcon(metrics[i].getMetric().loadIcon(metrics[i].getMetric().getType()));
+			ImageIcon combinedImage = createIconBadge(iconBg, metricIcon);
+			addBadgeToPanel(fixedIconPanel, combinedImage, i, startX, metrics[i].getMetric().getName());
+		}
+
+		if (metrics.length > 2)
+		{
+			int extraCount = metrics.length - 2;
+			ImageIcon combinedIcon = createIconBadge(iconBg, "+" + Math.min(extraCount, 99));
+
+			StringBuilder sb = new StringBuilder("<html><body><b>+</b><br>");
+			for (int i = 2; i < metrics.length; i++)
+			{
+				sb.append(metrics[i].getMetric().getName());
+				if (i < metrics.length - 1)
+				{
+					sb.append("<br>");
+				}
+			}
+			sb.append("</body></html>");
+
+			addBadgeToPanel(fixedIconPanel, combinedIcon, 2, startX, sb.toString());
+		}
+
+		statusDotLabel.setFont(new Font("Arial", Font.BOLD, 9));
+		statusDotLabel.setForeground(getStatusColor());
+		statusDotLabel.setBounds(lastBadgeX + iconWidth - 6, 24, 9, 9);
+		fixedIconPanel.add(statusDotLabel);
+		fixedIconPanel.setComponentZOrder(statusDotLabel, 0);
+
+		return fixedIconPanel;
+	}
+
+	private ImageIcon createIconBadge(ImageIcon iconBg, ImageIcon metricIcon)
+	{
 		BufferedImage combinedImage = new BufferedImage(
 			iconBg.getIconWidth(),
 			iconBg.getIconHeight(),
@@ -295,25 +340,47 @@ public class CompetitionCardPanel extends JPanel
 		g2d.drawImage(metricIcon.getImage(), x, y, null);
 		g2d.dispose();
 
-		ImageIcon combinedIcon = new ImageIcon(combinedImage);
+		return new ImageIcon(combinedImage);
+	}
 
-		JLabel metricIconLabel = new JLabel(combinedIcon);
-		metricIconLabel.setBounds(0, 0, 41, 40);
+	private ImageIcon createIconBadge(ImageIcon iconBg, String text)
+	{
+		BufferedImage combinedImage = new BufferedImage(
+			iconBg.getIconWidth(),
+			iconBg.getIconHeight(),
+			BufferedImage.TYPE_INT_ARGB
+		);
 
-		statusDotLabel.setFont(new Font("Arial", Font.BOLD, 9));
-		statusDotLabel.setForeground(getStatusColor());
-		statusDotLabel.setBounds(27, 24, 9, 9);
+		Graphics2D g2d = combinedImage.createGraphics();
+		g2d.drawImage(iconBg.getImage(), 0, 0, null);
 
-		fixedIconPanel.add(metricIconLabel);
-		fixedIconPanel.add(statusDotLabel);
+		g2d.setFont(new Font("Arial", Font.BOLD, 10));
+		g2d.setColor(ColorScheme.LIGHT_GRAY_COLOR);
 
-		metricIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		metricIconLabel.setVerticalAlignment(SwingConstants.CENTER);
-//		metricIconLabel.setToolTipText(metric.getName());
+		FontMetrics fm = g2d.getFontMetrics();
+		int textWidth = fm.stringWidth(text);
+		int textHeight = fm.getAscent();
+		int x = (iconBg.getIconWidth() - textWidth) / 2;
+		int y = (iconBg.getIconHeight() + textHeight) / 2 - 1;
 
-		fixedIconPanel.add(metricIconLabel, BorderLayout.CENTER);
+		g2d.drawString(text, x, y);
+		g2d.dispose();
 
-		return fixedIconPanel;
+		return new ImageIcon(combinedImage);
+	}
+
+	private void addBadgeToPanel(JPanel panel, ImageIcon metricBadge, int index, int startX, String toolTip)
+	{
+		JLabel label = new JLabel(metricBadge);
+		int currentX = startX + (index * (metricBadge.getIconWidth() - 7));
+		int currentY = (40 - metricBadge.getIconHeight()) / 2;
+
+		label.setBounds(currentX, currentY, metricBadge.getIconWidth(), metricBadge.getIconHeight());
+		label.setHorizontalAlignment(SwingConstants.CENTER);
+		label.setVerticalAlignment(SwingConstants.CENTER);
+		label.setToolTipText(toolTip);
+
+		panel.add(label);
 	}
 
 	private Color getStatusColor()
@@ -341,7 +408,7 @@ public class CompetitionCardPanel extends JPanel
 		titleLabel.setForeground(Color.white);
 //		titleLabel.setToolTipText(title);
 		titlePanel.add(titleLabel, BorderLayout.NORTH);
-		titlePanel.setBorder(new EmptyBorder(8, 0, 8, 0));
+		titlePanel.setBorder(new EmptyBorder(8, 0, 8, 8));
 
 
 		if (group != null)

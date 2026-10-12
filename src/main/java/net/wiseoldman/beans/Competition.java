@@ -12,6 +12,7 @@ public class Competition
 	int id;
 	String title;
 	Metric metric;
+	CompetitionMetric[] metrics;
 	CompetitionType type;
 	Date startsAt;
 	Date endsAt;
