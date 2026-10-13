@@ -12,17 +12,11 @@ import net.runelite.api.widgets.WidgetPositionMode;
 import net.runelite.api.widgets.WidgetTextAlignment;
 import net.runelite.api.widgets.WidgetType;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.api.clan.ClanRank;
 import net.wiseoldman.WomUtilsPlugin;
 import net.wiseoldman.beans.GroupMembership;
-import net.wiseoldman.beans.RoleIndex;
 import net.wiseoldman.web.WomClient;
-import net.wiseoldman.beans.Member;
-import java.util.Arrays;
-import java.util.HashMap;
+import net.wiseoldman.util.ClanSyncUtils;
 import java.util.Map;
-import java.util.HashSet;
-import java.util.Set;
 import net.runelite.api.clan.ClanMember;
 import net.runelite.api.clan.ClanSettings;
 import net.runelite.api.clan.ClanTitle;
@@ -48,17 +42,6 @@ public class SyncButton
 	private final List<String> alwaysIncludedOnSync;
 	private Widget textWidget;
 
-	private Set<RoleIndex> roleOrders = new HashSet<>();
-
-	private final List<ClanRank> roleOrder = Arrays.asList(
-		ClanRank.OWNER, ClanRank.DEPUTY_OWNER, new ClanRank(124), new ClanRank(120),
-		new ClanRank(115), new ClanRank(110), new ClanRank(105), new ClanRank(104),
-		new ClanRank(103), new ClanRank(102), new ClanRank(101), ClanRank.ADMINISTRATOR,
-		new ClanRank(99), new ClanRank(98), new ClanRank(97), new ClanRank(96),
-		new ClanRank(95), new ClanRank(90), new ClanRank(80), new ClanRank(70),
-		new ClanRank(60), new ClanRank(50), new ClanRank(40), new ClanRank(30),
-		new ClanRank(20), new ClanRank(10), new ClanRank(0)
-	);
 
 	public SyncButton(Client client, WomUtilsPlugin plugin, ClientThread clientThread, WomClient womClient,
 					  ChatboxPanelManager chatboxPanelManager, int parent, Map<String, GroupMembership> groupMembers,
@@ -141,49 +124,10 @@ public class SyncButton
 
 	private void syncMembers(boolean overwrite)
 	{
-		Map<String, Member> clanMembers = new HashMap<>();
+		ClanSyncUtils.SyncData syncData = ClanSyncUtils.buildSyncData(
+			clanSettings, groupMembers, ignoredRanks, alwaysIncludedOnSync, overwrite);
 
-		if (!overwrite)
-		{
-			groupMembers.forEach((k, v) -> clanMembers.put(k.toLowerCase(), new Member(v.getPlayer().getDisplayName(), v.getRole(), null)));
-		}
-
-		for (ClanMember clanMember : clanSettings.getMembers())
-		{
-			if (clanMember.getName().startsWith("[#"))
-			{
-				continue;
-			}
-
-			String memberName = Text.toJagexName(clanMember.getName());
-			ClanTitle memberTitle = clanSettings.titleForRank(clanMember.getRank());
-
-			String role = memberTitle == null ? "member" : memberTitle.getName().toLowerCase().replaceAll("[-\\s]", "_");
-
-			if (memberTitle != null)
-			{
-				int roleIndex = roleOrder.indexOf(clanMember.getRank());
-				roleOrders.add(new RoleIndex(role, roleIndex));
-			}
-
-			if (ignoredRanks.contains(role))
-			{
-				continue;
-			}
-
-			clanMembers.put(memberName.toLowerCase(), new Member(memberName, role, clanMember.getJoinDate().toString()));
-		}
-
-		for (String name : alwaysIncludedOnSync)
-		{
-			String nameLower = name.toLowerCase();
-			if (!clanMembers.containsKey(nameLower))
-			{
-				clanMembers.put(nameLower, new Member(name, "member", null));
-			}
-		}
-
-		womClient.syncClanMembers(new ArrayList<>(clanMembers.values()), roleOrders);
+		womClient.syncClanMembers(syncData.getMembers(), syncData.getRoleOrders());
 	}
 
 	public void setEnabled(boolean isSyncing)
