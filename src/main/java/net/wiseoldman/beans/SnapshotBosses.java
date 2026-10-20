@@ -58,6 +58,7 @@ public class SnapshotBosses
 	Boss tempoross;
 	Boss the_gauntlet;
 	Boss the_corrupted_gauntlet;
+	Boss the_fractured_archive;
 	Boss the_hueycoatl;
 	Boss the_leviathan;
 	Boss the_royal_titans;
@@ -188,6 +189,8 @@ public class SnapshotBosses
 				return getThe_gauntlet();
 			case THE_CORRUPTED_GAUNTLET:
 				return getThe_corrupted_gauntlet();
+			case FRACTURED_ARCHIVE:
+				return getThe_fractured_archive();
 			case THE_LEVIATHAN:
 				return getThe_leviathan();
 			case THE_ROYAL_TITANS:
