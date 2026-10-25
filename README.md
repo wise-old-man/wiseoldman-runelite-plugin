@@ -24,9 +24,9 @@ on [WOM](https://wiseoldman.net).
 
 ![Friends chat tab menu options](img/friends_chat_tab.png)
 
-#### Group unsynced notification
+#### Group sync
 
-Sends a notification on login telling you if your group needs syncing.
+Sends a notification on login telling you if your group needs syncing. An optional **Auto Sync Clan** setting can automatically sync the in-game clan to the configured WOM group after login when differences are detected. Auto-sync is disabled by default and includes safety checks to avoid large unexpected removals.
 
 ![Group out of sync notification](img/group_out_of_sync.png)
 
@@ -51,6 +51,7 @@ Man.
 - Import Group option: Adds the Import Group option to the clan chat tab.
 - Browse Group option: Adds the Browse Group option to the clan chat tab.
 - Sync Clan Button: Adds a "Sync WOM Group" button to the clan settings interface.
+- Auto Sync Clan: Automatically syncs the in-game clan to the configured WOM group after login when a difference is detected. Disabled by default. Large removals are blocked and must be reviewed with the manual sync button.
 - Always included: Comma separated usernames to always include in the sync, even if they are not in your in-game clan.
 - Group id: This is the group id that can be found on the group page on
   WOM. [Example.](https://wiseoldman.net/groups/139)

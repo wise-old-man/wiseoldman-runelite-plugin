@@ -89,6 +89,7 @@ public class WomClient
 	private ArrayList<Member> clanMembers;
 	private Set<RoleIndex> roleOrders;
 	public boolean isSyncing = false;
+	private boolean automaticSync = false;
 
 	@Inject
 	public WomClient(Gson gson, WomUtilsPlugin plugin, Client client, OkHttpClient okHttpClient)
@@ -231,6 +232,21 @@ public class WomClient
 		postEvent(new WomGroupSynced(groupInfo, true));
 	}
 
+	private void finishClanSync(boolean success, String message)
+	{
+		this.isSyncing = false;
+		if (plugin.syncButton != null)
+		{
+			plugin.syncButton.setEnabled(false);
+		}
+
+		if (automaticSync)
+		{
+			plugin.onAutoSyncFinished(success, message);
+		}
+		automaticSync = false;
+	}
+
 	private void syncClanMembersCallBack(Response response)
 	{
 		final String message;
@@ -241,13 +257,17 @@ public class WomClient
 			if (data != null)
 			{
 				postEvent(new WomGroupSynced(data));
+				finishClanSync(true, null);
 			}
-			this.isSyncing = false;
+			else
+			{
+				finishClanSync(false, "WOM returned an unreadable response");
+			}
 		}
 		else if (response.code() == 429)
 		{
 			log.error("wom-utils: reached api limits while syncing clan members");
-			this.isSyncing = false;
+			finishClanSync(false, "WOM API rate limit reached");
 		}
 		else if (response.code() == 403)
 		{
@@ -255,16 +275,17 @@ public class WomClient
 
 			if (data == null)
 			{
-				this.isSyncing = false;
+				finishClanSync(false, "WOM returned an unreadable response");
 			}
 			else if (data.getCode() == GroupErrorCode.OPTED_OUT_MEMBERS_FOUND)
 			{
 				String[] optedOutPlayers = Arrays.stream(data.getData()).map(String::toLowerCase).toArray(String[]::new);
 				boolean didRemove = this.clanMembers.removeIf(member -> Arrays.asList(optedOutPlayers).contains(member.getUsername().toLowerCase()));
 
-				// If no players were removed, don't send request so we don't end up in an endless loop
+				// If no players were removed, don't send another request so we don't end up in an endless loop.
 				if (!didRemove)
 				{
+					finishClanSync(false, "WOM rejected opted-out members");
 					return;
 				}
 
@@ -275,7 +296,11 @@ public class WomClient
 			else if (data.getCode() == GroupErrorCode.INCORRECT_VERIFICATION_CODE)
 			{
 				sendResponseToChat("Incorrect group verification code.", ERROR);
-				this.isSyncing = false;
+				finishClanSync(false, "incorrect group verification code");
+			}
+			else
+			{
+				finishClanSync(false, data.getMessage());
 			}
 		}
 		else
@@ -287,26 +312,27 @@ public class WomClient
 				log.error("Unhandled error while syncing wom group {}", data.getCode());
 				message = "Error: " + data.getMessage() + (this.plugin.worldType.contains(WorldType.SEASONAL) ? leagueError : "");
 				sendResponseToChat(message, ERROR);
+				finishClanSync(false, data.getMessage());
 			}
-
-			this.isSyncing = false;
+			else
+			{
+				finishClanSync(false, "WOM returned an error");
+			}
 		}
-		plugin.syncButton.setEnabled(this.isSyncing);
 	}
 
 	public void handleSyncClanMembersException(Exception e)
 	{
-		this.isSyncing = false;
-		this.plugin.syncButton.setEnabled(false);
-
 		if (e instanceof java.net.SocketTimeoutException)
 		{
 			sendResponseToChat("Failed to sync clan members due to a timeout. Please try again later.", ERROR);
 			log.warn("Sync group members request timed out.");
+			finishClanSync(false, "request timed out");
 		}
 		else
 		{
 			log.warn("An unexpected error occurred during group sync request.", e);
+			finishClanSync(false, "unexpected request error");
 		}
 	}
 
@@ -436,14 +462,28 @@ public class WomClient
 
 	public void syncClanMembers(ArrayList<Member> clanMembers, Set<RoleIndex> roleOrders)
 	{
+		syncClanMembers(clanMembers, roleOrders, false);
+	}
+
+	public void syncClanMembers(ArrayList<Member> clanMembers, Set<RoleIndex> roleOrders, boolean automaticSync)
+	{
+		if (this.isSyncing)
+		{
+			return;
+		}
+
 		this.clanMembers = clanMembers;
 		this.roleOrders = roleOrders;
+		this.automaticSync = automaticSync;
 
 		GroupMemberAddition payload = new GroupMemberAddition(config.verificationCode(), clanMembers, roleOrders);
 		Request request = createRequest(payload, HttpMethod.PUT, "groups", "" + config.groupId());
-		sendRequest(request, this::syncClanMembersCallBack, this::handleSyncClanMembersException);
 		this.isSyncing = true;
-		plugin.syncButton.setEnabled(true);
+		if (plugin.syncButton != null)
+		{
+			plugin.syncButton.setEnabled(true);
+		}
+		sendRequest(request, this::syncClanMembersCallBack, this::handleSyncClanMembersException);
 	}
 
 	public void commandLookup(String username, WomCommand command, ChatMessage chatMessage)

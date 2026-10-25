@@ -44,6 +44,8 @@ import net.wiseoldman.ui.CodeWordOverlay;
 import net.wiseoldman.ui.CompetitionInfoBox;
 import net.wiseoldman.ui.SyncButton;
 import net.wiseoldman.util.DelayedAction;
+import net.wiseoldman.util.ClanSyncUtils;
+import net.wiseoldman.util.AutoSyncSafety;
 import net.wiseoldman.web.WomRequestType;
 import net.wiseoldman.web.WomClient;
 import net.wiseoldman.web.WomCommand;
@@ -257,6 +259,8 @@ public class WomUtilsPlugin extends Plugin
 	private final Map<Skill, Integer> previousSkillLevels = new EnumMap<>(Skill.class);
 
 	private boolean comparedClanMembers = false;
+	private boolean groupMembersLoaded = false;
+	private boolean autoSyncAttempted = false;
 	private int tickCounter = 0;
 	private boolean hasLoggedInThisSession = false;
 	private static String pluginVersion = "0.0.0";
@@ -698,6 +702,23 @@ public class WomUtilsPlugin extends Plugin
 			alwaysIncludedOnSync.clear();
 			alwaysIncludedOnSync.addAll(SPLITTER.splitToList(config.alwaysIncludedOnSync()));
 		}
+
+		if (event.getKey().equals("autoSyncClan") && config.autoSyncClan())
+		{
+			autoSyncAttempted = false;
+			comparedClanMembers = false;
+			tickCounter = 5;
+		}
+
+		if (event.getKey().equals("groupId") || event.getKey().equals("verificationCode"))
+		{
+			groupMembers.clear();
+			groupMembersLoaded = false;
+			comparedClanMembers = false;
+			autoSyncAttempted = false;
+			tickCounter = 0;
+			womClient.importGroupMembers();
+		}
 	}
 
 	@Subscribe
@@ -886,9 +907,11 @@ public class WomUtilsPlugin extends Plugin
 				womPanel.resetGroupFilter();
 				clearInfoBoxes();
 
-				// Reset so we can compare on log in
+				// Reset so we can compare and optionally auto-sync on the next login
 				tickCounter = 0;
 				comparedClanMembers = false;
+				groupMembersLoaded = false;
+				autoSyncAttempted = false;
 			case HOPPING:
 				long totalXp = client.getOverallExperience();
 				// Don't submit update unless xp threshold is reached
@@ -949,11 +972,18 @@ public class WomUtilsPlugin extends Plugin
 			if (tickCounter >= 5 && !comparedClanMembers)
 			{
 				ClanSettings clanSettings = client.getClanSettings();
-				if (clanSettings != null && config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode()))
+				boolean groupConfigured = config.groupId() > 0 && !Strings.isNullOrEmpty(config.verificationCode());
+
+				// Wait until both RuneLite clan settings and the WOM group have loaded before comparing.
+				if (groupConfigured && clanSettings != null && groupMembersLoaded)
 				{
 					compareClanMembersList(clanSettings);
+					comparedClanMembers = true;
 				}
-				comparedClanMembers = true;
+				else if (!groupConfigured)
+				{
+					comparedClanMembers = true;
+				}
 			}
 			else
 			{
@@ -1004,10 +1034,17 @@ public class WomUtilsPlugin extends Plugin
 		Set<String> groupMemberNames = groupMembers.keySet();
 		Set<String> alwaysIncluded = alwaysIncludedOnSync.stream().map(String::toLowerCase).collect(Collectors.toSet());
 
-		// Don't send the out of sync chat message so we don't encourage syncing
-		// when it's not the same clan.
+		// Don't encourage a manual sync when this looks like a different clan.
+		// For auto-sync, surface the safety stop so the user knows why no write occurred.
 		if (!isSameClan(clanMemberNames, groupMemberNames, SAME_CLAN_TOLERANCE, alwaysIncluded))
 		{
+			if (config.autoSyncClan() && !autoSyncAttempted)
+			{
+				autoSyncAttempted = true;
+				String message = "Auto-sync cancelled because the configured WOM group does not look like the same clan. Use Sync WOM Group manually to review it.";
+				sendResponseToChat(message, womClient.ERROR);
+				notifier.notify("Wise Old Man " + message);
+			}
 			return;
 		}
 
@@ -1020,6 +1057,7 @@ public class WomUtilsPlugin extends Plugin
 		onlyInGroup.removeAll(alwaysIncluded);
 
 		boolean outOfSync = false;
+		int ranksChanged = 0;
 		String outOfSyncMessage = "Your group is out of sync: ";
 		if (!onlyInClan.isEmpty())
 		{
@@ -1041,7 +1079,6 @@ public class WomUtilsPlugin extends Plugin
 		if (onlyInClan.isEmpty() && onlyInGroup.isEmpty())
 		{
 			// check if ranks differ when the member lists are the same
-			int ranksChanged = 0;
 			for (ClanMember cm : clanMembers)
 			{
 				ClanTitle clanTitle = clanSettings.titleForRank(cm.getRank());
@@ -1065,7 +1102,67 @@ public class WomUtilsPlugin extends Plugin
 
 		if (outOfSync)
 		{
-			sendResponseToChat(outOfSyncMessage, womClient.ERROR);
+			if (config.autoSyncClan())
+			{
+				tryAutoSyncClan(clanSettings, onlyInClan.size(), onlyInGroup.size(), ranksChanged);
+			}
+			else
+			{
+				sendResponseToChat(outOfSyncMessage, womClient.ERROR);
+			}
+		}
+	}
+
+	private void tryAutoSyncClan(ClanSettings clanSettings, int membersAdded, int membersRemoved, int ranksChanged)
+	{
+		if (autoSyncAttempted || womClient.isSyncing)
+		{
+			return;
+		}
+
+		autoSyncAttempted = true;
+
+		List<ClanMember> clanMembers = clanSettings.getMembers();
+		if (clanMembers == null || clanMembers.isEmpty())
+		{
+			sendResponseToChat("Auto-sync skipped because the clan roster is empty or not fully loaded.", womClient.ERROR);
+			return;
+		}
+
+		if (!AutoSyncSafety.isRemovalSafe(groupMembers.size(), membersRemoved))
+		{
+			String message = String.format(
+				"Auto-sync cancelled: %d members would be removed. Use Sync WOM Group manually to review this change.",
+				membersRemoved);
+			sendResponseToChat(message, womClient.ERROR);
+			notifier.notify("Wise Old Man " + message);
+			return;
+		}
+
+		ClanSyncUtils.SyncData syncData = ClanSyncUtils.buildSyncData(
+			clanSettings, groupMembers, ignoredRanks, alwaysIncludedOnSync, true);
+
+		if (syncData.getMembers().isEmpty())
+		{
+			sendResponseToChat("Auto-sync skipped because no eligible clan members were found.", womClient.ERROR);
+			return;
+		}
+
+		sendResponseToChat(String.format(
+			"Auto-syncing WOM group: %d added, %d removed, %d ranks changed.",
+			membersAdded, membersRemoved, ranksChanged), getSuccessColor());
+		womClient.syncClanMembers(syncData.getMembers(), syncData.getRoleOrders(), true);
+	}
+
+	public void onAutoSyncFinished(boolean success, String message)
+	{
+		if (success)
+		{
+			notifier.notify("Wise Old Man group auto-sync complete.");
+		}
+		else
+		{
+			notifier.notify("Wise Old Man auto-sync failed" + (Strings.isNullOrEmpty(message) ? "." : ": " + message));
 		}
 	}
 
@@ -1123,12 +1220,13 @@ public class WomUtilsPlugin extends Plugin
 	@Subscribe
 	public void onWomGroupSynced(WomGroupSynced event)
 	{
+		groupMembersLoaded = true;
 		Map<String, GroupMembership> old = new HashMap<>(groupMembers);
 
 		groupMembers.clear();
 		for (GroupMembership member : event.getGroupInfo().getMemberships())
 		{
-			groupMembers.put(member.getPlayer().getUsername(), member);
+			groupMembers.put(member.getPlayer().getUsername().toLowerCase(), member);
 		}
 
 		if (!event.isSilent())
