@@ -189,7 +189,7 @@ public class SnapshotBosses
 				return getThe_gauntlet();
 			case THE_CORRUPTED_GAUNTLET:
 				return getThe_corrupted_gauntlet();
-			case FRACTURED_ARCHIVE:
+			case THE_FRACTURED_ARCHIVE:
 				return getThe_fractured_archive();
 			case THE_LEVIATHAN:
 				return getThe_leviathan();
